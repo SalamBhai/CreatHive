@@ -145,7 +145,6 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
         <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec('insertUnorderedList')} title="List" className="rounded p-1.5 text-stone-600 hover:bg-stone-100">
           <ListBullets size={16} weight="bold" />
         </button>
-        <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-stone-400">WYSIWYG</span>
       </div>
 
       <div className="flex">
