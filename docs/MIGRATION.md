@@ -51,12 +51,15 @@ Policies: creatives manage only their own rows; campaigns and submissions have r
 - Store `public_id` + `secure_url` in Supabase only.
 - Use transformations for card thumbnails and OG images.
 
-## Phase 5 — Submissions & campaigns
+## Phase 5 — Submissions & campaigns (ADMIN ONLY)
 
-- Public campaign page and submission form, routed by niche.
-- Status workflow: `open → reviewing → accepted / rejected`.
-- Studio "Submissions" view replaced with a real queue.
-- Admin moderation view using the same clean UI as Explore.
+Important product decision: **campaigns and the submissions review queue belong to the admin surface only**, never to an individual creator's Studio navigation.
+
+- Admin creates campaigns (brief, niches, dates) from the admin page.
+- Individual creatives submit through the existing **Add New Piece** button in their Studio, where a submission can be assigned to an open campaign — they do not get their own Submissions or Campaigns tabs.
+- The individual Studio bottom tab bar is therefore only: Overview · Pieces · Inquiries · Profile.
+- Status workflow: `open → reviewing → accepted / rejected`, managed from admin.
+- Admin moderation view uses the same clean UI language as Explore.
 
 ## Phase 6 — Admin
 

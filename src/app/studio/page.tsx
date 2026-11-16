@@ -2,16 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import {
-  Plus,
-  Eye,
-  ArrowUpRight,
-  PaperPlaneTilt,
-  Megaphone,
-  Tray,
-  ClockCounterClockwise,
-  PencilSimple,
-} from '@phosphor-icons/react';
+import { Plus, Eye, ArrowUpRight, PaperPlaneTilt, ClockCounterClockwise } from '@phosphor-icons/react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
@@ -206,50 +197,20 @@ export default function StudioPage() {
             </Surface>
 
             <Surface className="p-5">
-              <h2 className="font-editorial text-xl font-semibold">Next actions</h2>
-              <div className="mt-4 space-y-2.5">
-                <button
-                  type="button"
-                  onClick={openAdd}
-                  className="flex w-full items-center gap-3 rounded-xl border border-stone-200 p-3.5 text-left transition-colors hover:border-[#FF5A36]"
-                >
-                  <span className="rounded-lg bg-[#FFF2EE] p-2 text-[#FF5A36]">
-                    <PencilSimple size={18} weight="duotone" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold">Publish a new piece</span>
-                    <span className="block text-[11px] text-stone-500">Audio, video, text or imagery</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setView('inquiries')}
-                  className="flex w-full items-center gap-3 rounded-xl border border-stone-200 p-3.5 text-left transition-colors hover:border-[#FF5A36]"
-                >
-                  <span className="rounded-lg bg-[#F5F3FF] p-2 text-[#8B5CF6]">
-                    <PaperPlaneTilt size={18} weight="duotone" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold">Review inquiries</span>
-                    <span className="block text-[11px] text-stone-500">
-                      {inquiries?.length || 0} received so far
-                    </span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setView('campaigns')}
-                  className="flex w-full items-center gap-3 rounded-xl border border-stone-200 p-3.5 text-left transition-colors hover:border-[#FF5A36]"
-                >
-                  <span className="rounded-lg bg-[#FFF7ED] p-2 text-[#F97316]">
-                    <Megaphone size={18} weight="duotone" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold">Plan a campaign</span>
-                    <span className="block text-[11px] text-stone-500">Collect work by niche</span>
-                  </span>
-                </button>
-              </div>
+              <h2 className="font-editorial text-xl font-semibold">Your work at a glance</h2>
+              <p className="mt-2 text-xs leading-relaxed text-stone-600">
+                You have {pieceCount} published {pieceCount === 1 ? 'piece' : 'pieces'} and {inquiries?.length || 0}{' '}
+                {inquiries?.length === 1 ? 'inquiry' : 'inquiries'}. Keep building — every new piece makes your
+                page easier to find.
+              </p>
+              <button
+                type="button"
+                onClick={openAdd}
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#18181B] px-5 py-2.5 text-xs font-bold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
+              >
+                <Plus size={15} weight="bold" />
+                Add a piece
+              </button>
             </Surface>
           </div>
         </>
@@ -270,23 +231,6 @@ export default function StudioPage() {
           <div className="space-y-2.5">{pieceRows()}</div>
         </>
       ) : null}
-
-      {view === 'submissions'
-        ? emptyPanel(
-            Tray,
-            'Submissions, organized.',
-            'When a campaign opens, submissions will collect here — grouped by niche, ready to review, accept or decline.',
-            undefined
-          )
-        : null}
-
-      {view === 'campaigns'
-        ? emptyPanel(
-            Megaphone,
-            'Campaigns, coming soon.',
-            'Create a call for work, choose the niches it belongs to, and share one link to collect submissions.'
-          )
-        : null}
 
       {view === 'inquiries' ? (
         <>

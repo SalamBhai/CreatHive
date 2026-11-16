@@ -5,29 +5,29 @@ import Link from 'next/link';
 import {
   SquaresFour,
   Stack,
-  Tray,
   UserCircle,
   PaperPlaneTilt,
-  Megaphone,
   ArrowUpRight,
   Eye,
   ArrowLeft,
 } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 
-export type StudioView = 'overview' | 'pieces' | 'submissions' | 'profile' | 'inquiries' | 'campaigns';
+export type StudioView = 'overview' | 'pieces' | 'inquiries' | 'profile';
 
+/**
+ * Individual Studio navigation only. Campaigns and the submissions review
+ * queue are admin surfaces — creators submit through "Add New Piece" with a
+ * campaign assignment instead. See docs/MIGRATION.md.
+ */
 export const STUDIO_NAV: Array<{
   id: StudioView;
   label: string;
   icon: React.ElementType;
-  badge?: string;
 }> = [
   { id: 'overview', label: 'Overview', icon: SquaresFour },
   { id: 'pieces', label: 'Pieces', icon: Stack },
-  { id: 'submissions', label: 'Submissions', icon: Tray, badge: 'Soon' },
   { id: 'inquiries', label: 'Inquiries', icon: PaperPlaneTilt },
-  { id: 'campaigns', label: 'Campaigns', icon: Megaphone, badge: 'Soon' },
   { id: 'profile', label: 'Profile', icon: UserCircle },
 ];
 
@@ -65,11 +65,6 @@ export function StudioShell({
       >
         <Icon size={mobile ? 20 : 18} weight={active ? 'fill' : 'regular'} />
         <span className={mobile ? 'w-full truncate text-center' : ''}>{item.label}</span>
-        {!mobile && item.badge ? (
-          <span className="ml-auto rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-500">
-            {item.badge}
-          </span>
-        ) : null}
       </button>
     );
   };
