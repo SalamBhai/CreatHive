@@ -2,13 +2,13 @@
 
 /* ─── Self-Hosted Fonts (Offline / PWA Ready) ─── */
 
-/* Alex Brush — Script / Cursive Wordmark */
+/* Playball — Script / Cursive Wordmark (open C, never reads as G) */
 @font-face {
-  font-family: 'Alex Brush';
+  font-family: 'Playball';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/AlexBrush-Regular.ttf') format('truetype');
+  src: url('/fonts/Playball-Regular.ttf') format('truetype');
 }
 
 /* Plus Jakarta Sans — UI Font */
@@ -73,7 +73,7 @@
 
 /* ─── Design Tokens ─── */
 :root {
-  --font-script: 'Alex Brush', cursive;
+  --font-script: 'Playball', cursive;
   --font-editorial: 'Newsreader', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
@@ -105,6 +105,34 @@ body {
 .font-script    { font-family: var(--font-script); }
 .font-editorial { font-family: var(--font-editorial); }
 .font-sans-ui   { font-family: var(--font-sans); }
+
+/* ─── Long-form post / case-study content ─── */
+.story-body h2 {
+  font-family: var(--font-editorial);
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 1.8rem 0 0.8rem;
+  line-height: 1.2;
+}
+.story-body p { margin: 0.9rem 0; line-height: 1.85; }
+.story-body blockquote {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  border-left: 2px solid #FF5A36;
+  padding-left: 1rem;
+  margin: 1.4rem 0;
+  color: #57534e;
+}
+.story-body figure { margin: 1.6rem 0; }
+.story-body figure img { width: 100%; border-radius: 0.75rem; border: 1px solid #e7e5e4; }
+.story-body figcaption { margin-top: 0.5rem; text-align: center; font-size: 0.75rem; color: #78716c; font-style: italic; }
+.story-body .photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin: 1.6rem 0; }
+.story-body .photo-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 0.5rem; border: 1px solid #e7e5e4; }
+.story-body .video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 0.75rem; }
+.story-body .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.story-body hr { border-color: #e7e5e4; margin: 2rem 0; }
+.story-body a { color: #FF5A36; text-decoration: underline; }
+.story-body .pdf-link { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; }
 
 /* ─── Scrollbar ─── */
 .no-scrollbar::-webkit-scrollbar { display: none; }

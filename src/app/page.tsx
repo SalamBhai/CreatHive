@@ -1,177 +1,259 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import {
-  ArrowRight,
-  MicrophoneStage,
-  Feather,
-  DeviceMobile,
-  FilmStrip,
-  CheckCircle,
-} from '@phosphor-icons/react';
+import { motion, useScroll, useSpring } from 'framer-motion';
+import { ArrowDown, ArrowRight, ArrowUpRight } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
-import { NeoButton } from '@/components/ui/NeoButton';
+import { VisualScene } from '@/components/landing/VisualScene';
 import { useAllProfiles } from '@/lib/store';
+
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+function GhostLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="group inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/5 px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white hover:text-black"
+    >
+      {children}
+      <ArrowUpRight size={14} weight="bold" className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+    </Link>
+  );
+}
+
+function SolidLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="group inline-flex items-center gap-2 rounded-full bg-[#FF5A36] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-[0_10px_30px_rgba(255,90,54,0.35)] transition-transform hover:scale-[1.03] active:scale-[0.98]"
+    >
+      {children}
+      <ArrowUpRight size={14} weight="bold" className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+    </Link>
+  );
+}
+
+function SceneHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="font-editorial text-4xl font-semibold leading-[1.04] tracking-tight text-white sm:text-6xl lg:text-7xl">
+      {children}
+    </h2>
+  );
+}
+
+function SceneNote({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-5 max-w-lg font-sans-ui text-sm leading-relaxed text-white/75 sm:text-base">
+      {children}
+    </p>
+  );
+}
+
+const SCENE_COUNT = 6;
 
 export default function HomePage() {
   const { data: profiles } = useAllProfiles();
+  const deckRef = useRef<HTMLDivElement>(null);
+  const [activeScene, setActiveScene] = useState(0);
+  const { scrollYProgress } = useScroll();
+  const scrollProgress = useSpring(scrollYProgress, {
+    stiffness: 140,
+    damping: 32,
+    restDelta: 0.001,
+  });
+
+  // On mobile the scenes are a horizontal snap deck; track the active panel.
+  useEffect(() => {
+    const deck = deckRef.current;
+    if (!deck) return;
+    const onScroll = () => {
+      setActiveScene(Math.round(deck.scrollLeft / deck.clientWidth));
+    };
+    deck.addEventListener('scroll', onScroll, { passive: true });
+    return () => deck.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const goToScene = (index: number) => {
+    const deck = deckRef.current;
+    if (!deck) return;
+    deck.scrollTo({ left: index * deck.clientWidth, behavior: 'smooth' });
+  };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex flex-col">
-      {/* Top Navbar */}
-      <header className="border-b border-stone-200/80 bg-[#FDFBF7]/90 backdrop-blur-md px-4 py-3 sticky top-0 z-30">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <CreatHiveWordmark size="sm" />
+    <main className="relative bg-[#0B0B0C] text-white">
+      {/* Reading progress — the only persistent UI chrome. */}
+      <motion.div
+        aria-hidden
+        style={{ scaleX: scrollProgress }}
+        className="fixed inset-x-0 top-0 z-50 hidden h-[2px] origin-left bg-[#FF5A36] md:block"
+      />
 
-          <div className="flex items-center gap-2">
-            <Link href="/studio">
-              <NeoButton variant="secondary" size="sm">
-                Studio
-              </NeoButton>
-            </Link>
-            <Link href="/sheriff">
-              <NeoButton variant="primary" size="sm">
-                View YPAT Showcase
-              </NeoButton>
-            </Link>
-          </div>
-        </div>
+      {/* Fixed, quiet header. */}
+      <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-30 h-28 bg-gradient-to-b from-black/70 to-transparent" />
+      <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-6 py-5 md:px-14">
+        <Link href="/" aria-label="CreatHive (pronounced Creative) — home">
+          <CreatHiveWordmark size="sm" tone="light" href={null} />
+        </Link>
+        <Link
+          href="/studio"
+          className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/80 transition-colors hover:text-white"
+        >
+          Studio <span aria-hidden>↗</span>
+        </Link>
       </header>
 
-      {/* Hero Section */}
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-6 md:py-12 space-y-10 w-full">
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          {/* Hero Wordmark & Tagline (Seamless CreatHive) */}
-          <div className="py-2">
-            <CreatHiveWordmark size="hero" showTagline={true} />
-          </div>
+      {/* Mobile: splash-style page dots. Desktop uses the progress bar above. */}
+      <nav
+        aria-label="Scene navigation"
+        className="fixed inset-x-0 bottom-5 z-40 flex justify-center gap-2 md:hidden"
+      >
+        {Array.from({ length: SCENE_COUNT }, (_, index) => (
+          <button
+            key={index}
+            type="button"
+            aria-label={`Go to scene ${index}`}
+            aria-current={activeScene === index ? 'true' : undefined}
+            onClick={() => goToScene(index)}
+            className={`h-1.5 rounded-full transition-all ${
+              activeScene === index ? 'w-6 bg-[#FF5A36]' : 'w-1.5 bg-white/45'
+            }`}
+          />
+        ))}
+      </nav>
 
-          <p className="text-xs md:text-base text-stone-700 font-sans-ui max-w-lg mx-auto leading-relaxed">
-            No messy Google Drive links. No lost talent in email threads. A single, high-converting stage for spoken word artists, dancers, poets, and visual tech creators.
-          </p>
+      {/* Mobile: one full-screen panel per swipe. Desktop: vertical story. */}
+      <div
+        ref={deckRef}
+        className="no-scrollbar flex h-[100svh] w-screen snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain md:block md:h-auto md:w-full md:overflow-visible"
+      >
+      {/* 00 — The lockup */}
+      <VisualScene
+        image="/images/scenes/hero.jpg"
+        alt="A performer reaching into a haze of stage light"
+        imagePosition="center 35%"
+        priority
+        align="center"
+        centerGlow
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.1, ease: EASE }}
+        >
+          <CreatHiveWordmark size="hero" tone="light" showTagline href={null} />
+        </motion.div>
+        <p className="mt-10 font-sans-ui text-sm tracking-[0.2em] text-white/75 sm:text-base md:mt-12">
+          ONE LINK. EVERY NICHE.
+        </p>
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <SolidLink href="/explore">Explore Arts</SolidLink>
+          <GhostLink href="/studio">Creator Studio</GhostLink>
+        </div>
+        <div className="mt-16 flex flex-col items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-white/45">
+          <span className="md:hidden">Swipe</span>
+          <span className="hidden md:inline">Scroll</span>
+          <motion.span
+            aria-hidden
+            animate={{ x: [0, 8, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="md:hidden"
+          >
+            <ArrowRight size={14} weight="bold" />
+          </motion.span>
+          <motion.span
+            aria-hidden
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="hidden md:block"
+          >
+            <ArrowDown size={14} weight="bold" />
+          </motion.span>
+        </div>
+      </VisualScene>
 
-          {/* Quick Action Buttons */}
-          <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
-            <Link href="/sheriff">
-              <NeoButton
-                variant="primary"
-                size="lg"
-                icon={<ArrowRight size={18} weight="bold" />}
+      {/* 01 — Spoken word */}
+      <VisualScene
+        label="Spoken Word"
+        image="/images/scenes/spoken-word.jpg"
+        alt="A microphone lit by a warm spotlight in a dark room"
+      >
+        <SceneHeading>Let the voice carry.</SceneHeading>
+        <SceneNote>Kinetic waveforms. Read-along scripts. Nothing in between.</SceneNote>
+      </VisualScene>
+
+      {/* 02 — Dance */}
+      <VisualScene
+        label="Dance & Reels"
+        image="/images/scenes/dance.jpg"
+        alt="A dancer in motion against a dark studio backdrop"
+        imagePosition="center 30%"
+      >
+        <SceneHeading>Give movement the frame.</SceneHeading>
+        <SceneNote>Full-screen reels. Ambient previews. No thumbnails.</SceneNote>
+      </VisualScene>
+
+      {/* 03 — Poetry */}
+      <VisualScene
+        label="Poetry & Verse"
+        image="/images/scenes/poetry.jpg"
+        alt="A fountain pen writing on textured paper"
+      >
+        <SceneHeading>Words need room.</SceneHeading>
+        <SceneNote>A quiet reader for loud thoughts.</SceneNote>
+      </VisualScene>
+
+      {/* 04 — Design */}
+      <VisualScene
+        label="Tech Imagery & UI/UX"
+        image="/images/scenes/design.jpg"
+        alt="A design system open on a computer beside a notebook"
+      >
+        <SceneHeading>Show the work. Skip the code.</SceneHeading>
+        <SceneNote>Screens, walkthroughs, 3D worlds.</SceneNote>
+      </VisualScene>
+
+      {/* 05 — The close */}
+      <VisualScene
+        label="One Link"
+        image="/images/scenes/closing.jpg"
+        alt="A crowd under concert lights with hands raised"
+        align="center"
+      >
+        <SceneHeading>One link. All of you.</SceneHeading>
+        <SceneNote>Book. Applaud. Share.</SceneNote>
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <SolidLink href="/explore">Explore Arts</SolidLink>
+          <GhostLink href="/studio">Creator Studio</GhostLink>
+        </div>
+
+        {profiles && profiles.length > 0 ? (
+          <div className="mt-14 flex flex-wrap items-center justify-center gap-2">
+            {profiles.map((profile) => (
+              <Link
+                key={profile.id}
+                href={`/${profile.username}`}
+                className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 py-1.5 pl-1.5 pr-3 text-[11px] font-semibold text-white/80 backdrop-blur-sm transition-colors hover:border-white/60 hover:text-white"
               >
-                Explore @sheriff Showcase
-              </NeoButton>
-            </Link>
-
-            <Link href="/studio">
-              <NeoButton variant="amber" size="lg">
-                Enter Creator Studio
-              </NeoButton>
-            </Link>
-          </div>
-        </div>
-
-        {/* The 4 Creative Pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white border-2 border-[#18181B] rounded-2xl p-5 neo-shadow space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-[#FFF2EE] border-2 border-[#18181B] flex items-center justify-center text-[#FF5A36]">
-              <MicrophoneStage size={22} weight="duotone" />
-            </div>
-            <h3 className="text-base font-bold font-sans-ui text-[#18181B]">
-              Spoken Word & Audio Streaming
-            </h3>
-            <p className="text-xs text-stone-600 leading-relaxed font-sans-ui">
-              Integrated tactile audio player with dynamic pulsing waveforms and synchronized read-along performance transcripts.
-            </p>
-          </div>
-
-          <div className="bg-white border-2 border-[#18181B] rounded-2xl p-5 neo-shadow space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-[#FFFBEB] border-2 border-[#18181B] flex items-center justify-center text-[#F59E0B]">
-              <DeviceMobile size={22} weight="duotone" />
-            </div>
-            <h3 className="text-base font-bold font-sans-ui text-[#18181B]">
-              UI/UX & Tech Imagery
-            </h3>
-            <p className="text-xs text-stone-600 leading-relaxed font-sans-ui">
-              Showcase mobile screen flows, 3D Afro-futurist renders, and design prototypes visually without code clutter.
-            </p>
-          </div>
-
-          <div className="bg-white border-2 border-[#18181B] rounded-2xl p-5 neo-shadow space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-[#F5F3FF] border-2 border-[#18181B] flex items-center justify-center text-[#8B5CF6]">
-              <Feather size={22} weight="duotone" />
-            </div>
-            <h3 className="text-base font-bold font-sans-ui text-[#18181B]">
-              Substack-Grade Poetry Reader
-            </h3>
-            <p className="text-xs text-stone-600 leading-relaxed font-sans-ui">
-              Literary typography and distraction-free reader mode that gives poems and creative writing the prestige they deserve.
-            </p>
-          </div>
-
-          <div className="bg-white border-2 border-[#18181B] rounded-2xl p-5 neo-shadow space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-[#FDF2F8] border-2 border-[#18181B] flex items-center justify-center text-[#EC4899]">
-              <FilmStrip size={22} weight="duotone" />
-            </div>
-            <h3 className="text-base font-bold font-sans-ui text-[#18181B]">
-              Dance & Motion Reels
-            </h3>
-            <p className="text-xs text-stone-600 leading-relaxed font-sans-ui">
-              Fluid video cards with ambient previews, instant applause feedback, and direct booking inquiry triggers.
-            </p>
-          </div>
-        </div>
-
-        {/* Featured Profiles Section */}
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold font-sans-ui text-[#18181B]">
-              Featured YPAT Creatives
-            </h2>
-            <span className="text-xs text-stone-500 font-medium">Cohort 2026–27</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {profiles?.map((p) => (
-              <Link key={p.id} href={`/${p.username}`} className="group block">
-                <div className="bg-white border-2 border-[#18181B] rounded-2xl p-4 neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-4">
-                  <img
-                    src={p.avatarUrl}
-                    alt={p.displayName}
-                    className="w-16 h-16 rounded-xl object-cover border-2 border-[#18181B] shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="text-sm font-bold text-[#18181B] truncate group-hover:text-[#FF5A36] transition-colors">
-                        {p.displayName}
-                      </h4>
-                      <CheckCircle size={14} weight="fill" className="text-[#FF5A36] shrink-0" />
-                    </div>
-                    <p className="text-xs text-stone-600 font-medium truncate mt-0.5">
-                      {p.tagline}
-                    </p>
-                    <div className="text-[11px] font-mono font-bold text-stone-400 mt-1">
-                      @{p.username} • {p.stats.piecesCount} works
-                    </div>
-                  </div>
-                  <ArrowRight size={18} weight="bold" className="text-stone-400 group-hover:text-[#18181B] transition-colors shrink-0" />
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={profile.avatarUrl}
+                  alt=""
+                  className="h-6 w-6 rounded-full object-cover"
+                />
+                @{profile.username}
               </Link>
             ))}
           </div>
-        </div>
-      </main>
+        ) : null}
+      </VisualScene>
+      </div>
 
-      {/* Footer */}
-      <footer className="border-t border-stone-200/80 bg-white py-6 px-4 mt-auto">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
-          <CreatHiveWordmark size="sm" />
-          <p className="text-xs text-stone-500 font-sans-ui">
-            Crafted for the Young People&apos;s Action Team (YPAT 2026–27) & limitless creatives everywhere.
-          </p>
-        </div>
+      {/* Quiet footer, kept off the visual narrative. */}
+      <footer className="hidden items-center justify-between bg-[#0B0B0C] px-6 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 md:flex md:px-14">
+        <span>YPAT 2026 — 27</span>
+        <span>Built for the limitless Creatives...</span>
       </footer>
-    </div>
+    </main>
   );
 }

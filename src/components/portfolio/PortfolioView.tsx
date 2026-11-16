@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CirclesThree } from '@phosphor-icons/react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { ArrowUpRight } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { ProfileHero } from '@/components/portfolio/ProfileHero';
 import { PieceRenderer } from '@/components/portfolio/PieceRenderer';
 import { ConversionBar } from '@/components/portfolio/ConversionBar';
-import { DisciplineChip } from '@/components/ui/DisciplineChip';
+import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
+import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { useCreativeProfile, useCreativePieces } from '@/lib/store';
 import { CreativeDiscipline } from '@/lib/types';
 
@@ -38,6 +40,12 @@ export function PortfolioView({ username }: PortfolioViewProps) {
     ...profile.disciplines,
   ];
 
+  const filterOptions: Array<FilterOption<CreativeDiscipline | 'ALL'>> =
+    availableDisciplines.map((discipline) => {
+      const config = DISCIPLINE_CONFIG[discipline] || DISCIPLINE_CONFIG.OTHER;
+      return { value: discipline, label: config.label, icon: config.icon };
+    });
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] pb-28">
       {/* Top App Header (Mobile Native Feeling) */}
@@ -60,17 +68,12 @@ export function PortfolioView({ username }: PortfolioViewProps) {
 
         {/* Sticky Filter Bar */}
         <div className="sticky top-14 z-20 -mx-4 px-4 py-2 bg-[#FDFBF7]/95 backdrop-blur-xs border-y border-stone-200">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-            {availableDisciplines.map((disc) => (
-              <DisciplineChip
-                key={disc}
-                discipline={disc}
-                size="sm"
-                isSelected={selectedDiscipline === disc}
-                onClick={() => setSelectedDiscipline(disc)}
-              />
-            ))}
-          </div>
+          <FilterTabs
+            options={filterOptions}
+            value={selectedDiscipline}
+            onChange={setSelectedDiscipline}
+            ariaLabel="Filter work by niche"
+          />
         </div>
 
         {/* Pieces List Feed */}
@@ -97,6 +100,17 @@ export function PortfolioView({ username }: PortfolioViewProps) {
               </p>
             </div>
           )}
+        </div>
+
+        {/* The only "get your own" moment — a quiet floating pill. */}
+        <div className="flex justify-center pt-4 pb-6">
+          <Link
+            href="/studio"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#18181B] shadow-[0_8px_30px_rgba(24,24,27,0.14)] border border-stone-200 transition-transform hover:scale-[1.03] active:scale-[0.98]"
+          >
+            Get your own CreatHive
+            <ArrowUpRight size={15} weight="bold" />
+          </Link>
         </div>
       </main>
 

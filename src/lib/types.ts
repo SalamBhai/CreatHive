@@ -11,6 +11,15 @@ export type CreativeDiscipline =
 
 export type MediaType = 'AUDIO' | 'VIDEO' | 'TEXT' | 'IMAGE_GALLERY';
 
+/** One block in a long-form post / article. */
+export interface ContentBlock {
+  id: string;
+  type: 'heading' | 'paragraph' | 'quote' | 'image' | 'divider';
+  html?: string;
+  url?: string;
+  caption?: string;
+}
+
 export interface SocialLinks {
   email?: string;
   whatsapp?: string;
@@ -52,6 +61,9 @@ export interface CreativePiece {
   mediaType: MediaType;
   mediaUrl?: string; // Streamable audio URL or Video embed
   textContent?: string; // Lyrics, spoken word script, or poem verses
+  contentBlocks?: ContentBlock[]; // Long-form editorial post / article
+  bodyHtml?: string; // WYSIWYG full-post body
+  pdfUrl?: string; // Attached case-study PDF
   coverImageUrl?: string;
   galleryImages?: string[]; // For UI/UX designs, tech imagery & graphics
   isFeatured?: boolean;

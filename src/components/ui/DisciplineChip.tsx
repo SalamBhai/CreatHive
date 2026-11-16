@@ -111,12 +111,12 @@ export function DisciplineChip({
       onClick={onClick}
       whileTap={{ scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className={`inline-flex items-center font-bold rounded-full border-2 border-[#18181B] transition-colors select-none cursor-pointer focus:outline-none whitespace-nowrap ${
+      className={`inline-flex items-center whitespace-nowrap rounded-full border border-stone-200 bg-white font-bold transition-colors select-none focus:outline-none ${
         sizeClasses[size]
       } ${
         isSelected
-          ? 'bg-[#18181B] text-white neo-shadow-coral'
-          : 'bg-white text-[#18181B] neo-shadow hover:bg-stone-50'
+          ? 'border-[#18181B] bg-[#18181B] text-white'
+          : 'text-stone-700 hover:border-stone-400'
       }`}
     >
       <IconComponent

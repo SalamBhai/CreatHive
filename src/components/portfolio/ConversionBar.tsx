@@ -1,15 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import {
-  Sparkle,
-  ShareNetwork,
-  Check,
-  Faders,
-  PaperPlaneTilt,
-} from '@phosphor-icons/react';
-import { NeoButton } from '../ui/NeoButton';
+import { ShareNetwork, Check, PaperPlaneTilt } from '@phosphor-icons/react';
 import { InquiryDrawer } from './InquiryDrawer';
 import { CreativeProfile } from '@/lib/types';
 
@@ -34,69 +26,48 @@ export function ConversionBar({ profile }: ConversionBarProps) {
         await navigator.share(shareData);
         return;
       } catch {
-        // Fallback to clipboard
+        // Fall back to copying the link.
       }
     }
 
-    // Fallback: Copy link
     try {
       await navigator.clipboard.writeText(url);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2500);
     } catch {
-      // Ignored
+      // Ignored.
     }
   };
 
   return (
     <>
-      {/* Sticky Bottom Action Dock (Native App Feeling) */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-3 md:p-4 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/90 to-transparent pointer-events-none">
-        <div className="max-w-xl mx-auto bg-white/95 backdrop-blur-md border-2 border-[#18181B] rounded-2xl p-2 neo-shadow flex items-center justify-between gap-2 pointer-events-auto">
-          {/* Book / Performance Button */}
-          <NeoButton
-            variant="primary"
-            size="md"
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/95 to-transparent p-3 pt-8 md:p-4 md:pt-10">
+        <div className="mx-auto flex max-w-xl items-center gap-2 rounded-2xl border border-stone-200 bg-white/95 p-2 shadow-[0_10px_40px_rgba(24,24,27,0.08)] backdrop-blur-md">
+          <button
+            type="button"
             onClick={() => setIsInquiryOpen(true)}
-            className="flex-1 shadow-none"
-            icon={<PaperPlaneTilt size={17} weight="bold" />}
+            className="inline-flex min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#FF5A36] px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-white transition-transform hover:bg-[#f04e2b] active:scale-[0.98]"
           >
-            Book for Gig
-          </NeoButton>
+            <PaperPlaneTilt size={16} weight="bold" />
+            Book a Gig
+          </button>
 
-          {/* Share Button */}
-          <NeoButton
-            variant="secondary"
-            size="md"
+          <button
+            type="button"
             onClick={handleShare}
-            className="shadow-none"
-            icon={
-              isCopied ? (
-                <Check size={17} weight="bold" className="text-emerald-600" />
-              ) : (
-                <ShareNetwork size={17} weight="bold" />
-              )
-            }
+            aria-label={isCopied ? 'Link copied' : 'Share this profile'}
+            title={isCopied ? 'Link copied' : 'Share this profile'}
+            className="inline-flex shrink-0 items-center justify-center rounded-xl border border-stone-200 px-3.5 py-3 text-stone-700 transition-colors hover:border-stone-400 hover:bg-stone-50 active:scale-[0.98]"
           >
-            {isCopied ? 'Copied!' : 'Share'}
-          </NeoButton>
-
-          {/* Studio Quick Link */}
-          <Link href="/studio">
-            <NeoButton
-              variant="amber"
-              size="md"
-              className="shadow-none"
-              icon={<Faders size={17} weight="bold" />}
-              title="Creator Studio"
-            >
-              Studio
-            </NeoButton>
-          </Link>
+            {isCopied ? (
+              <Check size={17} weight="bold" className="text-emerald-600" />
+            ) : (
+              <ShareNetwork size={17} weight="bold" />
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Inquiry Drawer Modal */}
       <InquiryDrawer
         isOpen={isInquiryOpen}
         onClose={() => setIsInquiryOpen(false)}

@@ -91,7 +91,7 @@ export function InquiryDrawer({
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
                 placeholder="e.g. Emmanuel Bamidele"
-                className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#18181B] bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none"
               />
             </div>
 
@@ -104,7 +104,7 @@ export function InquiryDrawer({
                 value={senderOrg}
                 onChange={(e) => setSenderOrg(e.target.value)}
                 placeholder="e.g. UNICEF Nigeria / GenU 9JA"
-                className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#18181B] bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none"
               />
             </div>
           </div>
@@ -120,7 +120,7 @@ export function InquiryDrawer({
                 value={senderEmail}
                 onChange={(e) => setSenderEmail(e.target.value)}
                 placeholder="you@unicef.org"
-                className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#18181B] bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none"
               />
             </div>
 
@@ -133,7 +133,7 @@ export function InquiryDrawer({
                 value={senderPhone}
                 onChange={(e) => setSenderPhone(e.target.value)}
                 placeholder="+234..."
-                className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#18181B] bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none"
               />
             </div>
           </div>
@@ -145,7 +145,7 @@ export function InquiryDrawer({
             <select
               value={eventType}
               onChange={(e) => setEventType(e.target.value as any)}
-              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#18181B] bg-white text-xs font-sans-ui outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs font-sans-ui outline-none"
             >
               <option value="PERFORMANCE">Creative Performance / Spoken Word / Showcase</option>
               <option value="TECH_DESIGN">UI/UX, Product Engineering or Tech Imagery Project</option>
@@ -165,7 +165,7 @@ export function InquiryDrawer({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Tell the creative about the performance opportunity, timeline, and expectations..."
-              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#18181B] bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs font-sans-ui focus:bg-[#FFFDF7] outline-none resize-none"
             />
           </div>
 

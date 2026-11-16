@@ -63,6 +63,20 @@ export function useAllProfiles() {
   });
 }
 
+export function useInquiries() {
+  return useQuery({
+    queryKey: ['inquiries'],
+    queryFn: async (): Promise<PerformanceInquiry[]> => getStoredInquiries(),
+  });
+}
+
+export function useAllPieces() {
+  return useQuery({
+    queryKey: ['pieces-all'],
+    queryFn: async (): Promise<CreativePiece[]> => getStoredPieces(),
+  });
+}
+
 export function useCreativePieces(username: string = 'sheriff', filterDiscipline?: CreativeDiscipline | 'ALL') {
   const { data: profile } = useCreativeProfile(username);
 

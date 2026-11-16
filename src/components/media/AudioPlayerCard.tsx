@@ -14,6 +14,7 @@ import confetti from 'canvas-confetti';
 import { CreativePiece } from '@/lib/types';
 import { NeoButton } from '../ui/NeoButton';
 import { useApplaudPiece } from '@/lib/store';
+import { StoryReader } from './StoryReader';
 
 interface AudioPlayerCardProps {
   piece: CreativePiece;
@@ -24,6 +25,7 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(165); // default fallback ~2:45
   const [showTranscript, setShowTranscript] = useState(false);
+  const [showStory, setShowStory] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const applaudMutation = useApplaudPiece();
@@ -93,35 +95,27 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
   };
 
   return (
-    <div className="bg-white border-2 border-[#18181B] rounded-2xl neo-shadow overflow-hidden transition-all">
+    <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_8px_30px_rgba(24,24,27,0.04)] transition-all">
       {/* Audio element */}
       {piece.mediaUrl && (
         <audio ref={audioRef} src={piece.mediaUrl} preload="metadata" />
       )}
 
       {/* Header Info */}
-      <div className="p-4 md:p-5 border-b border-stone-200 flex items-start justify-between gap-3 bg-[#FAF8F5]">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF2EE] border border-[#FF5A36]/40 text-[#FF5A36] text-xs font-bold">
-            <MicrophoneStage size={13} weight="duotone" />
-            <span>Spoken Word Audio</span>
-          </div>
-
-          <h3 className="text-base md:text-lg font-bold font-sans-ui text-[#18181B] leading-snug">
-            {piece.title}
-          </h3>
-
-          {piece.subtitle && (
-            <p className="text-xs text-stone-600 leading-relaxed font-sans-ui">
-              {piece.subtitle}
-            </p>
-          )}
+      <div className="border-b border-stone-200 bg-[#FAF8F5] p-4 md:p-5">
+        <div className="mb-3 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#FF5A36]/40 bg-[#FFF2EE] px-2.5 py-1 text-xs font-bold text-[#FF5A36]">
+          <MicrophoneStage size={13} weight="duotone" />
+          <span>Spoken Word</span>
         </div>
 
-        {piece.contextNote && (
-          <span className="text-[11px] font-semibold text-stone-500 bg-white px-2 py-1 rounded-lg border border-stone-200 shrink-0">
-            {piece.contextNote}
-          </span>
+        <h3 className="font-editorial text-xl font-semibold leading-tight text-[#18181B] md:text-2xl">
+          {piece.title}
+        </h3>
+
+        {piece.subtitle && (
+          <p className="mt-2 line-clamp-2 font-sans-ui text-xs leading-relaxed text-stone-600">
+            {piece.subtitle}
+          </p>
         )}
       </div>
 
@@ -195,6 +189,17 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
           </NeoButton>
 
           <div className="flex items-center gap-2">
+            {piece.contentBlocks && piece.contentBlocks.length > 0 ? (
+              <NeoButton
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowStory(true)}
+                icon={<Article size={16} weight="duotone" />}
+              >
+                Read Story
+              </NeoButton>
+            ) : null}
+
             {/* Read Transcript Toggle */}
             {piece.textContent && (
               <NeoButton
@@ -239,6 +244,12 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
           )}
         </AnimatePresence>
       </div>
+
+      <StoryReader
+        piece={piece}
+        isOpen={showStory}
+        onClose={() => setShowStory(false)}
+      />
     </div>
   );
 }

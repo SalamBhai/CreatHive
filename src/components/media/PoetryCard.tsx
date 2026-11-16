@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Feather, HandsClapping, BookOpen } from '@phosphor-icons/react';
 import confetti from 'canvas-confetti';
 import { CreativePiece } from '@/lib/types';
+import { StoryReader } from './StoryReader';
 import { NeoButton } from '../ui/NeoButton';
 import { BottomSheet } from '../ui/BottomSheet';
 import { useApplaudPiece } from '@/lib/store';
@@ -14,6 +15,7 @@ interface PoetryCardProps {
 
 export function PoetryCard({ piece }: PoetryCardProps) {
   const [isReaderOpen, setIsReaderOpen] = useState(false);
+  const [showStory, setShowStory] = useState(false);
   const applaudMutation = useApplaudPiece();
 
   const handleApplaud = (e: React.MouseEvent) => {
@@ -33,21 +35,13 @@ export function PoetryCard({ piece }: PoetryCardProps) {
 
   return (
     <>
-      <div className="bg-white border-2 border-[#18181B] rounded-2xl neo-shadow overflow-hidden transition-all">
+      <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_8px_30px_rgba(24,24,27,0.04)] transition-all">
         {/* Editorial Top Accent */}
         <div className="p-5 md:p-6 bg-[#FCFAF6] border-b border-stone-200 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#F5F3FF] border border-[#8B5CF6]/40 text-[#8B5CF6] text-xs font-bold">
-              <Feather size={13} weight="duotone" />
-              <span>Poetry & Verse</span>
-            </span>
-
-            {piece.contextNote && (
-              <span className="text-[11px] font-semibold text-stone-500">
-                {piece.contextNote}
-              </span>
-            )}
-          </div>
+          <span className="inline-flex w-fit shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#8B5CF6]/40 bg-[#F5F3FF] px-2.5 py-1 text-xs font-bold leading-none text-[#8B5CF6]">
+            <Feather size={13} weight="duotone" />
+            <span>Poetry</span>
+          </span>
 
           <h3 className="text-xl md:text-2xl font-editorial font-bold text-[#18181B] leading-tight italic">
             “{piece.title}”
@@ -69,14 +63,21 @@ export function PoetryCard({ piece }: PoetryCardProps) {
 
         {/* Footer controls */}
         <div className="p-4 md:p-5 flex items-center justify-between bg-white">
-          <NeoButton
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsReaderOpen(true)}
-            icon={<BookOpen size={16} weight="duotone" />}
-          >
-            Read Full Poem
-          </NeoButton>
+          <div className="flex items-center gap-2">
+            {piece.contentBlocks && piece.contentBlocks.length > 0 ? (
+              <NeoButton variant="secondary" size="sm" onClick={() => setShowStory(true)}>
+                Read Story
+              </NeoButton>
+            ) : null}
+            <NeoButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsReaderOpen(true)}
+              icon={<BookOpen size={16} weight="duotone" />}
+            >
+              Read Full Poem
+            </NeoButton>
+          </div>
 
           <NeoButton
             variant="amber"
@@ -103,7 +104,7 @@ export function PoetryCard({ piece }: PoetryCardProps) {
 
           <div className="pt-6 border-t border-stone-200 flex items-center justify-between">
             <span className="text-xs text-stone-500 font-sans-ui">
-              {piece.contextNote || 'Original Creative Writing'}
+              Original creative writing
             </span>
             <NeoButton
               variant="amber"
@@ -116,6 +117,8 @@ export function PoetryCard({ piece }: PoetryCardProps) {
           </div>
         </div>
       </BottomSheet>
+
+      <StoryReader piece={piece} isOpen={showStory} onClose={() => setShowStory(false)} />
     </>
   );
 }

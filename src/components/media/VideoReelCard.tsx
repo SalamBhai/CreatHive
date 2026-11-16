@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Sparkle, HandsClapping, Play, Pause } from '@phosphor-icons/react';
 import confetti from 'canvas-confetti';
+import { toEmbedUrl } from '@/lib/media';
 import { CreativePiece } from '@/lib/types';
 import { NeoButton } from '../ui/NeoButton';
 import { useApplaudPiece } from '@/lib/store';
+import { StoryReader } from './StoryReader';
 
 interface VideoReelCardProps {
   piece: CreativePiece;
@@ -13,11 +16,13 @@ interface VideoReelCardProps {
 
 export function VideoReelCard({ piece }: VideoReelCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showStory, setShowStory] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const applaudMutation = useApplaudPiece();
+  const embedUrl = toEmbedUrl(piece.mediaUrl);
 
   const togglePlay = () => {
-    if (!videoRef.current) return;
+    if (embedUrl || !videoRef.current) return;
     if (isPlaying) {
       videoRef.current.pause();
       setIsPlaying(false);
@@ -43,10 +48,19 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
   };
 
   return (
-    <div className="bg-white border-2 border-[#18181B] rounded-2xl neo-shadow overflow-hidden transition-all">
+    <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_8px_30px_rgba(24,24,27,0.04)] transition-all">
       {/* Media Video Viewport */}
       <div className="relative aspect-video md:aspect-video w-full bg-black overflow-hidden group">
-        {piece.mediaUrl ? (
+        {embedUrl ? (
+          <iframe
+            src={embedUrl}
+            title={piece.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            className="absolute inset-0 h-full w-full border-0"
+          />
+        ) : piece.mediaUrl ? (
           <video
             ref={videoRef}
             src={piece.mediaUrl}
@@ -64,7 +78,8 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
           />
         )}
 
-        {/* Play / Pause Overlay Button */}
+        {/* Play / Pause Overlay Button (native files only) */}
+        {!embedUrl ? (
         <button
           type="button"
           onClick={togglePlay}
@@ -72,7 +87,7 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
             isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
           }`}
         >
-          <div className="w-14 h-14 rounded-full bg-white/90 border-2 border-[#18181B] neo-shadow flex items-center justify-center text-[#18181B] hover:scale-105 transition-transform">
+          <div className="w-14 h-14 rounded-full bg-white/90 border border-stone-200 shadow-[0_4px_14px_rgba(24,24,27,0.12)] flex items-center justify-center text-[#18181B] hover:scale-105 transition-transform">
             {isPlaying ? (
               <Pause size={24} weight="bold" />
             ) : (
@@ -80,6 +95,7 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
             )}
           </div>
         </button>
+        ) : null}
 
         {/* Top Discipline Tag */}
         <div className="absolute top-3 left-3 pointer-events-none">
@@ -124,21 +140,30 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
         </div>
 
         {/* Conversion / Action Bar */}
-        <div className="pt-2 border-t border-stone-200 flex items-center justify-between">
-          <span className="text-xs font-medium text-stone-500">
-            {piece.contextNote || 'Performance Showcase'}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-stone-200 pt-2">
+          <Link href={`/p/${piece.id}`} className="text-xs font-bold text-[#FF5A36] hover:underline">
+            View full post ↗
+          </Link>
 
-          <NeoButton
-            variant="amber"
-            size="sm"
-            onClick={handleApplaud}
-            icon={<HandsClapping size={16} weight="duotone" />}
-          >
-            <span>{piece.applauseCount}</span>
-          </NeoButton>
+          <div className="flex items-center gap-2">
+            {piece.contentBlocks && piece.contentBlocks.length > 0 ? (
+              <NeoButton variant="secondary" size="sm" onClick={() => setShowStory(true)}>
+                Read Story
+              </NeoButton>
+            ) : null}
+            <NeoButton
+              variant="amber"
+              size="sm"
+              onClick={handleApplaud}
+              icon={<HandsClapping size={16} weight="duotone" />}
+            >
+              <span>{piece.applauseCount}</span>
+            </NeoButton>
+          </div>
         </div>
       </div>
+
+      <StoryReader piece={piece} isOpen={showStory} onClose={() => setShowStory(false)} />
     </div>
   );
 }

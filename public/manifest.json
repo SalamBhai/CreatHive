@@ -1,7 +1,7 @@
 {
   "name": "CreatHive — Built for the limitless Creatives...",
   "short_name": "CreatHive",
-  "description": "Mobile-first PWA for creatives to showcase multi-discipline portfolios, capture performance opportunities, and manage work.",
+  "description": "CreatHive — pronounced Creative — a mobile-first PWA for creatives to showcase multi-discipline portfolios, capture performance opportunities, and manage work.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FDFBF7",

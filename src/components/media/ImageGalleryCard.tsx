@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { DeviceMobile, HandsClapping, CaretLeft, CaretRight, Cube } from '@phosphor-icons/react';
 import confetti from 'canvas-confetti';
 import { CreativePiece } from '@/lib/types';
@@ -47,7 +48,7 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
   const isUIUX = piece.discipline === 'UIUX_DESIGN';
 
   return (
-    <div className="bg-white border-2 border-[#18181B] rounded-2xl neo-shadow overflow-hidden transition-all">
+    <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_8px_30px_rgba(24,24,27,0.04)] transition-all">
       {/* Visual Image Viewport */}
       <div className="relative aspect-[16/10] w-full bg-[#18181B] overflow-hidden group">
         {images.length > 0 && (
@@ -64,14 +65,14 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
             <button
               type="button"
               onClick={handlePrev}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 border border-[#18181B] neo-shadow-sm flex items-center justify-center text-[#18181B] hover:bg-white cursor-pointer"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 border border-stone-200 shadow-sm flex items-center justify-center text-[#18181B] hover:bg-white cursor-pointer"
             >
               <CaretLeft size={16} weight="bold" />
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 border border-[#18181B] neo-shadow-sm flex items-center justify-center text-[#18181B] hover:bg-white cursor-pointer"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 border border-stone-200 shadow-sm flex items-center justify-center text-[#18181B] hover:bg-white cursor-pointer"
             >
               <CaretRight size={16} weight="bold" />
             </button>
@@ -105,6 +106,26 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
         )}
       </div>
 
+      {/* Thumbnail strip */}
+      {images.length > 1 ? (
+        <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-stone-200 bg-[#FCFAF6] p-2.5">
+          {images.map((src, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setCurrentIndex(idx)}
+              aria-label={`Show image ${idx + 1}`}
+              className={`h-12 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
+                idx === currentIndex ? 'border-[#FF5A36]' : 'border-transparent opacity-70 hover:opacity-100'
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       {/* Info & Footer Controls */}
       <div className="p-4 md:p-5 space-y-3">
         <div>
@@ -131,10 +152,13 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
         </div>
 
         {/* Conversion / Action Bar */}
-        <div className="pt-2 border-t border-stone-200 flex items-center justify-between">
-          <span className="text-xs font-medium text-stone-500">
-            {piece.contextNote || 'Visual Artifact'}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-stone-200 pt-2">
+          <Link
+            href={`/p/${piece.id}`}
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#FF5A36] hover:underline"
+          >
+            View full case study ↗
+          </Link>
 
           <NeoButton
             variant="amber"

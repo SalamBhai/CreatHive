@@ -6,8 +6,11 @@ import Link from 'next/link';
 interface CreatHiveWordmarkProps {
   size?: 'sm' | 'md' | 'lg' | 'hero';
   showTagline?: boolean;
-  href?: string;
+  /** Pass `null` to render without a link (e.g. inside another link). */
+  href?: string | null;
   className?: string;
+  /** Use `light` when placing the wordmark over dark imagery. */
+  tone?: 'dark' | 'light';
 }
 
 export function CreatHiveWordmark({
@@ -15,6 +18,7 @@ export function CreatHiveWordmark({
   showTagline = false,
   href = '/',
   className = '',
+  tone = 'dark',
 }: CreatHiveWordmarkProps) {
   const sizeMap = {
     sm: {
@@ -30,19 +34,26 @@ export function CreatHiveWordmark({
       tagline: 'text-sm md:text-base',
     },
     hero: {
-      text: 'text-6xl md:text-7xl lg:text-8xl',
-      tagline: 'text-base md:text-xl',
+      text: 'text-5xl sm:text-7xl md:text-8xl lg:text-9xl',
+      tagline: 'text-base sm:text-lg md:text-2xl',
     },
   };
 
   const currentSize = sizeMap[size];
+  const taglineSpacing = size === 'hero' ? 'mt-5 md:mt-7' : 'mt-2';
 
   const content = (
-    <div className={`inline-flex flex-col items-center select-none ${className}`}>
+    <div
+      className={`inline-flex flex-col items-center select-none ${className}`}
+      title="CreatHive — pronounced “Creative”"
+    >
+      {/* Spoken form of the neologism, for assistive tech. */}
+      <span className="sr-only">CreatHive, pronounced Creative.</span>
+
       {/* Seamless Joined Cursive Wordmark: Creat + Hive */}
-      <div className="inline-flex items-center font-script font-bold tracking-tight leading-none">
-        {/* "Creat" in Deep Charcoal */}
-        <span className={`${currentSize.text} text-[#18181B]`}>
+      <div aria-hidden="true" className="inline-flex items-center font-script font-bold tracking-tight leading-none">
+        {/* "Creat" in Deep Charcoal (or white on dark surfaces) */}
+        <span className={`${currentSize.text} ${tone === 'light' ? 'text-white' : 'text-[#18181B]'}`}>
           Creat
         </span>
 
@@ -56,7 +67,7 @@ export function CreatHiveWordmark({
 
       {/* Tagline */}
       {showTagline && (
-        <p className={`font-editorial italic text-stone-600 tracking-wide mt-2 text-center ${currentSize.tagline}`}>
+        <p className={`font-editorial italic tracking-wide text-center ${taglineSpacing} ${tone === 'light' ? 'text-white/80' : 'text-stone-600'} ${currentSize.tagline}`}>
           “Built for the limitless Creatives...”
         </p>
       )}
