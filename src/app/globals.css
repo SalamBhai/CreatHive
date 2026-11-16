@@ -1,11 +1,82 @@
-@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* ─── Self-Hosted Fonts (Offline / PWA Ready) ─── */
+
+/* Alex Brush — Script / Cursive Wordmark */
+@font-face {
+  font-family: 'Alex Brush';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/AlexBrush-Regular.ttf') format('truetype');
+}
+
+/* Plus Jakarta Sans — UI Font */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/PlusJakartaSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/PlusJakartaSans-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/PlusJakartaSans-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/PlusJakartaSans-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/PlusJakartaSans-ExtraBold.ttf') format('truetype');
+}
+
+/* Newsreader — Editorial / Poetry Serif */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Newsreader-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/Newsreader-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Newsreader-Italic.ttf') format('truetype');
+}
+
+/* ─── Design Tokens ─── */
 :root {
-  --font-script: 'Snell Roundhand', 'Alex Brush', cursive, sans-serif;
+  --font-script: 'Alex Brush', cursive;
   --font-editorial: 'Newsreader', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  
+
   --bg-canvas: #FDFBF7;
   --ink-black: #18181B;
   --brand-coral: #FF5A36;
@@ -24,41 +95,17 @@ body {
   padding-right: env(safe-area-inset-right, 0px);
 }
 
-/* Tactile Soft-Brutal Shadows */
-.neo-shadow-sm {
-  box-shadow: 2px 2px 0px #18181B;
-}
+/* ─── Tactile Soft-Brutal Shadows ─── */
+.neo-shadow-sm  { box-shadow: 2px 2px 0px #18181B; }
+.neo-shadow     { box-shadow: 3px 3px 0px #18181B; }
+.neo-shadow-lg  { box-shadow: 5px 5px 0px #18181B; }
+.neo-shadow-coral { box-shadow: 3px 3px 0px #FF5A36; }
 
-.neo-shadow {
-  box-shadow: 3px 3px 0px #18181B;
-}
+/* ─── Font Utility Classes ─── */
+.font-script    { font-family: var(--font-script); }
+.font-editorial { font-family: var(--font-editorial); }
+.font-sans-ui   { font-family: var(--font-sans); }
 
-.neo-shadow-lg {
-  box-shadow: 5px 5px 0px #18181B;
-}
-
-.neo-shadow-coral {
-  box-shadow: 3px 3px 0px #FF5A36;
-}
-
-/* Custom font helper classes */
-.font-script {
-  font-family: var(--font-script);
-}
-
-.font-editorial {
-  font-family: var(--font-editorial);
-}
-
-.font-sans-ui {
-  font-family: var(--font-sans);
-}
-
-/* Hide scrollbar for clean horizontal tab reels */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+/* ─── Scrollbar ─── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

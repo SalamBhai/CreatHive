@@ -4,7 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  Sparkle,
   ArrowRight,
   MicrophoneStage,
   Feather,
@@ -44,12 +43,6 @@ export default function HomePage() {
       {/* Hero Section */}
       <main className="flex-1 max-w-4xl mx-auto px-4 py-6 md:py-12 space-y-10 w-full">
         <div className="text-center space-y-4 max-w-2xl mx-auto">
-          {/* Subtle Clean Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFF2EE] border border-[#FF5A36]/30 text-[#FF5A36] text-xs font-bold uppercase tracking-wider">
-            <Sparkle size={13} weight="fill" className="text-[#FF5A36]" />
-            <span>Mobile-First PWA for Creatives</span>
-          </div>
-
           {/* Hero Wordmark & Tagline (Seamless CreatHive) */}
           <div className="py-2">
             <CreatHiveWordmark size="hero" showTagline={true} />
