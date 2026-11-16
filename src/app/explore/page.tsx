@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
+import { StudioLink } from '@/components/ui/StudioLink';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { Surface } from '@/components/ui/Surface';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
@@ -59,12 +60,9 @@ export default function ExplorePage() {
           <Link href="/" aria-label="CreatHive (pronounced Creative) — home">
             <CreatHiveWordmark size="sm" href={null} />
           </Link>
-          <Link
-            href="/studio"
-            className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-600 hover:text-[#FF5A36]"
-          >
+          <StudioLink className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-600 hover:text-[#FF5A36]">
             Studio <span aria-hidden>↗</span>
-          </Link>
+          </StudioLink>
         </div>
       </header>
 

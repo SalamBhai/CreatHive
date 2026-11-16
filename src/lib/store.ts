@@ -68,6 +68,25 @@ export function useAllProfiles() {
   });
 }
 
+export function useCreateProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profile: CreativeProfile): Promise<CreativeProfile> => {
+      const profiles = getStoredProfiles();
+      const next = { ...profiles, [profile.username]: profile };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(next));
+      }
+      return profile;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profiles-all'] });
+    },
+  });
+}
+
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
 

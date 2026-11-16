@@ -9,7 +9,8 @@ import { ArrowLeft, ArrowRight, CheckCircle } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
-import { useSendInquiry } from '@/lib/store';
+import { useCreateProfile, useSendInquiry } from '@/lib/store';
+import { signIn, useSession } from '@/lib/auth';
 
 export default function JoinPage() {
   const router = useRouter();
@@ -18,7 +19,9 @@ export default function JoinPage() {
   const [email, setEmail] = useState('');
   const [tagline, setTagline] = useState('');
   const [isDone, setIsDone] = useState(false);
+  const session = useSession();
   const inquiry = useSendInquiry();
+  const createProfile = useCreateProfile();
 
   const canSubmit = displayName.trim() && username.trim() && email.trim();
 
@@ -35,7 +38,34 @@ export default function JoinPage() {
         message: `New CreatHive request — tagline: ${tagline || 'not provided'}`,
       },
       {
-        onSuccess: () => setIsDone(true),
+        onSuccess: () => {
+          const handle = username.trim().toLowerCase();
+          createProfile.mutate(
+            {
+              id: `c-${handle}-${Date.now()}`,
+              username: handle,
+              displayName: displayName.trim(),
+              tagline: tagline.trim() || 'Creative on CreatHive',
+              bio: 'Making things and sharing them with the hive.',
+              avatarUrl:
+                'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=400&q=80',
+              bannerGradient: 'from-amber-500/20 via-orange-500/20 to-red-500/20',
+              disciplines: ['OTHER'],
+              location: '',
+              isAvailableForGigs: true,
+              socialLinks: { email: email.trim() },
+              themeStyle: 'soft-brutal',
+              stats: { viewsCount: 0, applauseCount: 0, piecesCount: 0 },
+              createdAt: new Date().toISOString(),
+            },
+            {
+              onSuccess: () => {
+                signIn({ username: handle, displayName: displayName.trim(), email: email.trim() });
+                setIsDone(true);
+              },
+            }
+          );
+        },
       }
     );
   };
@@ -135,7 +165,10 @@ export default function JoinPage() {
               </form>
             </Surface>
             <p className="mt-4 text-center text-[11px] text-stone-500">
-              Already a member? <Link href="/studio" className="font-bold text-[#FF5A36]">Open your Studio</Link>
+              Already a member?{' '}
+              <Link href={session ? '/studio' : '/join'} className="font-bold text-[#FF5A36]">
+                {session ? 'Open your Studio' : 'Sign in'}
+              </Link>
             </p>
           </>
         )}

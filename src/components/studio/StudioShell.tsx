@@ -37,6 +37,7 @@ interface StudioShellProps {
   username: string;
   children: React.ReactNode;
   preview?: React.ReactNode;
+  onSignOut?: () => void;
 }
 
 export function StudioShell({
@@ -45,6 +46,7 @@ export function StudioShell({
   username,
   children,
   preview,
+  onSignOut,
 }: StudioShellProps) {
   const renderNavItem = (item: (typeof STUDIO_NAV)[number], mobile = false) => {
     const Icon = item.icon;
@@ -107,6 +109,15 @@ export function StudioShell({
             <div className="ml-1 hidden rounded-full bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-600 md:block">
               @{username}
             </div>
+            {onSignOut ? (
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="hidden rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-bold text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36] md:inline-flex"
+              >
+                Sign out
+              </button>
+            ) : null}
           </div>
         </div>
       </header>

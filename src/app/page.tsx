@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { ArrowDown, ArrowRight, ArrowUpRight } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
+import { StudioLink } from '@/components/ui/StudioLink';
 import { VisualScene } from '@/components/landing/VisualScene';
 import { useAllProfiles } from '@/lib/store';
 
@@ -95,12 +96,9 @@ export default function HomePage() {
         <Link href="/" aria-label="CreatHive (pronounced Creative) — home">
           <CreatHiveWordmark size="sm" tone="light" href={null} />
         </Link>
-        <Link
-          href="/studio"
-          className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/80 transition-colors hover:text-white"
-        >
+        <StudioLink className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/80 transition-colors hover:text-white">
           Studio <span aria-hidden>↗</span>
-        </Link>
+        </StudioLink>
       </header>
 
       {/* Mobile: splash-style page dots. Desktop uses the progress bar above. */}

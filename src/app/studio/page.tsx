@@ -22,13 +22,16 @@ import type { CreativePiece } from '@/lib/types';
 import {
   useCreativePieces,
   useCreativeProfile,
+  useCreateProfile,
   useDeletePiece,
   useInquiries,
   useUpdateInquiryStatus,
   useUpdateProfile,
 } from '@/lib/store';
+import { signIn, signOut, useSession } from '@/lib/auth';
+import { StudioGate } from '@/components/studio/StudioGate';
 
-const currentUsername = 'sheriff';
+const DEMO_USERNAME = 'sheriff';
 
 function StatCard({
   value,
@@ -83,12 +86,16 @@ function SectionHeading({
 }
 
 export default function StudioPage() {
+  const session = useSession();
+  const currentUsername = session?.username || DEMO_USERNAME;
+
   const [view, setView] = useState<StudioView>('overview');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPiece, setEditingPiece] = useState<CreativePiece | null>(null);
   const { data: profile } = useCreativeProfile(currentUsername);
   const { data: pieces } = useCreativePieces(currentUsername);
   const { data: inquiries } = useInquiries();
+  const createProfile = useCreateProfile();
   const deletePiece = useDeletePiece();
   const updateInquiry = useUpdateInquiryStatus();
 
@@ -111,6 +118,40 @@ export default function StudioPage() {
       deletePiece.mutate(piece.id);
     }
   };
+
+  const handleEnter = (handle: string) => {
+    const existing = profile?.username === handle ? profile : undefined;
+    if (!existing) {
+      createProfile.mutate(
+        {
+          id: `c-${handle}-${Date.now()}`,
+          username: handle,
+          displayName: handle,
+          tagline: 'Creative on CreatHive',
+          bio: 'Making things and sharing them with the hive.',
+          avatarUrl:
+            'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=400&q=80',
+          bannerGradient: 'from-amber-500/20 via-orange-500/20 to-red-500/20',
+          disciplines: ['OTHER'],
+          location: '',
+          isAvailableForGigs: true,
+          socialLinks: {},
+          themeStyle: 'soft-brutal',
+          stats: { viewsCount: 0, applauseCount: 0, piecesCount: 0 },
+          createdAt: new Date().toISOString(),
+        },
+        {
+          onSuccess: () => signIn({ username: handle, displayName: handle, email: '' }),
+        }
+      );
+    } else {
+      signIn({ username: handle, displayName: existing.displayName, email: '' });
+    }
+  };
+
+  if (!session) {
+    return <StudioGate onEnter={handleEnter} isPending={createProfile.isPending} />;
+  }
 
   const pieceRows = (limit?: number) =>
     (pieces || [])
@@ -227,6 +268,7 @@ export default function StudioPage() {
       view={view}
       onViewChange={setView}
       username={currentUsername}
+      onSignOut={() => signOut()}
       preview={
         <Surface className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
