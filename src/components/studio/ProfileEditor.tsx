@@ -27,6 +27,7 @@ export function ProfileEditor({ profile }: { profile: CreativeProfile }) {
   const [location, setLocation] = useState(profile.location);
   const [socials, setSocials] = useState<SocialLinks>(profile.socialLinks || {});
   const [available, setAvailable] = useState(profile.isAvailableForGigs);
+  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const mutation = useUpdateProfile();
 
   useEffect(() => {
@@ -61,8 +62,25 @@ export function ProfileEditor({ profile }: { profile: CreativeProfile }) {
     JSON.stringify(socials) !== JSON.stringify(profile.socialLinks || {});
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <Surface className="space-y-4 p-5 md:p-6">
+    <div>
+      {/* Mobile: swap between form and preview to avoid a long scroll. */}
+      <div className="mb-4 flex gap-2 rounded-xl border border-stone-200 bg-white p-1 lg:hidden">
+        {(['edit', 'preview'] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setMobileTab(tab)}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold capitalize transition-colors ${
+              mobileTab === tab ? 'bg-[#18181B] text-white' : 'text-stone-600'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Surface className={`space-y-4 p-5 md:p-6 ${mobileTab === 'edit' ? '' : 'hidden lg:block'}`}>
         <div>
           <label className="mb-1 block text-xs font-bold">Display name</label>
           <input className={inputClass} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
@@ -123,7 +141,7 @@ export function ProfileEditor({ profile }: { profile: CreativeProfile }) {
         </div>
       </Surface>
 
-      <Surface className="h-fit p-5 md:p-6">
+        <Surface className={`h-fit p-5 md:p-6 ${mobileTab === 'preview' ? '' : 'hidden lg:block'}`}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-editorial text-lg font-semibold">Live preview</h3>
           <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Public card</span>
@@ -167,6 +185,7 @@ export function ProfileEditor({ profile }: { profile: CreativeProfile }) {
           </div>
         ) : null}
       </Surface>
+      </div>
     </div>
   );
 }

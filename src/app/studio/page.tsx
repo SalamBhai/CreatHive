@@ -90,30 +90,54 @@ export default function StudioPage() {
         const config = DISCIPLINE_CONFIG[piece.discipline] || DISCIPLINE_CONFIG.OTHER;
         const Icon = config.icon;
         return (
-          <div
+          <Link
             key={piece.id}
-            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-colors hover:border-stone-300 md:p-4"
+            href={`/p/${piece.id}`}
+            className="group block overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors hover:border-stone-300 md:flex md:items-center md:gap-3 md:p-4"
           >
+            {/* Cover — full-width banner on mobile, small icon tile on desktop */}
+            <div className="relative aspect-[16/7] w-full overflow-hidden bg-stone-100 md:hidden">
+              {piece.coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={piece.coverImageUrl}
+                  alt=""
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : null}
+              <span
+                className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-[#18181B] backdrop-blur"
+                style={{ color: config.color }}
+              >
+                <Icon size={12} weight="duotone" />
+                {config.label}
+              </span>
+            </div>
+
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-stone-200 md:h-11 md:w-11"
+              className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-stone-200 md:flex"
               style={{ backgroundColor: config.bg, color: config.color }}
             >
               <Icon size={19} weight="duotone" />
             </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="line-clamp-2 text-sm font-bold leading-snug text-[#18181B]">{piece.title}</h3>
-              <p className="mt-0.5 text-[11px] text-stone-500">
-                {config.label} · {piece.applauseCount} applauses
+
+            <div className="min-w-0 flex-1 p-3.5 md:p-0">
+              <h3 className="text-sm font-bold leading-snug text-[#18181B] md:line-clamp-2">
+                {piece.title}
+              </h3>
+              <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-stone-500">
+                <span className="md:hidden">{config.label} · </span>
+                {piece.applauseCount} applauses
+                <span className="ml-auto inline-flex items-center gap-1 font-bold text-[#FF5A36] md:hidden">
+                  Open post <ArrowUpRight size={13} weight="bold" />
+                </span>
               </p>
             </div>
-            <Link
-              href={`/${currentUsername}`}
-              className="rounded-lg border border-stone-200 p-2 text-stone-600 transition-colors hover:border-stone-400 hover:text-[#18181B]"
-              title="View on public portfolio"
-            >
+
+            <span className="hidden shrink-0 rounded-lg border border-stone-200 p-2 text-stone-500 transition-colors group-hover:border-[#FF5A36] group-hover:text-[#FF5A36] md:block">
               <Eye size={15} weight="bold" />
-            </Link>
-          </div>
+            </span>
+          </Link>
         );
       });
 
