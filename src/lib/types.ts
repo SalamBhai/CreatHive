@@ -1,0 +1,76 @@
+export type CreativeDiscipline =
+  | 'SPOKEN_WORD'
+  | 'POETRY'
+  | 'MUSIC'
+  | 'DANCE'
+  | 'TECH_IMAGERY'
+  | 'UIUX_DESIGN'
+  | 'GRAPHIC_DESIGN'
+  | 'MOTION_ANIMATION'
+  | 'OTHER';
+
+export type MediaType = 'AUDIO' | 'VIDEO' | 'TEXT' | 'IMAGE_GALLERY';
+
+export interface SocialLinks {
+  email?: string;
+  whatsapp?: string;
+  twitter?: string;
+  instagram?: string;
+  linkedin?: string;
+  github?: string;
+  portfolioUrl?: string;
+}
+
+export interface CreativeProfile {
+  id: string;
+  username: string; // e.g. "sheriff"
+  displayName: string;
+  tagline: string;
+  bio: string;
+  avatarUrl: string;
+  bannerGradient: string;
+  disciplines: CreativeDiscipline[];
+  location: string;
+  cohortBadge?: string; // e.g. "UNICEF / GenU 9JA YPAT 2026–27"
+  isAvailableForGigs: boolean;
+  socialLinks: SocialLinks;
+  themeStyle: 'soft-brutal' | 'editorial';
+  stats: {
+    viewsCount: number;
+    applauseCount: number;
+    piecesCount: number;
+  };
+  createdAt: string;
+}
+
+export interface CreativePiece {
+  id: string;
+  creativeId: string;
+  title: string;
+  subtitle?: string;
+  discipline: CreativeDiscipline;
+  mediaType: MediaType;
+  mediaUrl?: string; // Streamable audio URL or Video embed
+  textContent?: string; // Lyrics, spoken word script, or poem verses
+  coverImageUrl?: string;
+  galleryImages?: string[]; // For UI/UX designs, tech imagery & graphics
+  isFeatured?: boolean;
+  applauseCount: number;
+  duration?: string; // e.g. "03:14"
+  contextNote?: string; // e.g. "Live performance at YPAT Summit"
+  tags: string[];
+  createdAt: string;
+}
+
+export interface PerformanceInquiry {
+  id: string;
+  creativeId: string;
+  senderName: string;
+  senderOrganization?: string;
+  senderEmail: string;
+  senderPhone?: string;
+  eventType: 'PERFORMANCE' | 'COLLABORATION' | 'TECH_DESIGN' | 'SPEAKING' | 'OTHER';
+  eventDate?: string;
+  message: string;
+  createdAt: string;
+}
