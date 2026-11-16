@@ -10,9 +10,7 @@ import {
   Feather,
   DeviceMobile,
   FilmStrip,
-  Cube,
   CheckCircle,
-  Browsers,
 } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { NeoButton } from '@/components/ui/NeoButton';
@@ -24,7 +22,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex flex-col">
       {/* Top Navbar */}
-      <header className="border-b-2 border-[#18181B] bg-white px-4 py-3 neo-shadow-sm sticky top-0 z-30">
+      <header className="border-b border-stone-200/80 bg-[#FDFBF7]/90 backdrop-blur-md px-4 py-3 sticky top-0 z-30">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <CreatHiveWordmark size="sm" />
 
@@ -44,20 +42,20 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8 md:py-16 space-y-12 w-full">
-        <div className="text-center space-y-5 max-w-2xl mx-auto">
-          {/* Tag Pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border-2 border-[#18181B] neo-shadow text-xs font-bold uppercase tracking-wider">
-            <Sparkle size={14} weight="fill" className="text-[#FFAE19]" />
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-6 md:py-12 space-y-10 w-full">
+        <div className="text-center space-y-4 max-w-2xl mx-auto">
+          {/* Subtle Clean Badge */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFF2EE] border border-[#FF5A36]/30 text-[#FF5A36] text-xs font-bold uppercase tracking-wider">
+            <Sparkle size={13} weight="fill" className="text-[#FF5A36]" />
             <span>Mobile-First PWA for Creatives</span>
           </div>
 
-          {/* Hero Wordmark & Tagline */}
+          {/* Hero Wordmark & Tagline (Seamless CreatHive) */}
           <div className="py-2">
             <CreatHiveWordmark size="hero" showTagline={true} />
           </div>
 
-          <p className="text-sm md:text-base text-stone-700 font-sans-ui max-w-lg mx-auto leading-relaxed">
+          <p className="text-xs md:text-base text-stone-700 font-sans-ui max-w-lg mx-auto leading-relaxed">
             No messy Google Drive links. No lost talent in email threads. A single, high-converting stage for spoken word artists, dancers, poets, and visual tech creators.
           </p>
 
@@ -133,7 +131,7 @@ export default function HomePage() {
         </div>
 
         {/* Featured Profiles Section */}
-        <div className="space-y-4 pt-4">
+        <div className="space-y-4 pt-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold font-sans-ui text-[#18181B]">
               Featured YPAT Creatives
@@ -173,7 +171,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t-2 border-[#18181B] bg-white py-6 px-4 mt-auto">
+      <footer className="border-t border-stone-200/80 bg-white py-6 px-4 mt-auto">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
           <CreatHiveWordmark size="sm" />
           <p className="text-xs text-stone-500 font-sans-ui">

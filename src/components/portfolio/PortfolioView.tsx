@@ -41,7 +41,7 @@ export function PortfolioView({ username }: PortfolioViewProps) {
   return (
     <div className="min-h-screen bg-[#FDFBF7] pb-28">
       {/* Top App Header (Mobile Native Feeling) */}
-      <header className="sticky top-0 z-30 bg-[#FDFBF7]/90 backdrop-blur-md border-b-2 border-[#18181B] px-4 py-2.5">
+      <header className="sticky top-0 z-30 bg-[#FDFBF7]/90 backdrop-blur-md border-b border-stone-200/80 px-4 py-2.5">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <CreatHiveWordmark size="sm" />
 
