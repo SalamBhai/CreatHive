@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CreativeProfile, CreativePiece, PerformanceInquiry, CreativeDiscipline } from './types';
 import { INITIAL_PROFILES, INITIAL_PIECES } from './sample-data';
@@ -59,6 +58,34 @@ export function useAllProfiles() {
     queryFn: async (): Promise<CreativeProfile[]> => {
       const profiles = getStoredProfiles();
       return Object.values(profiles);
+    },
+  });
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      username,
+      patch,
+    }: {
+      username: string;
+      patch: Partial<CreativeProfile>;
+    }): Promise<CreativeProfile> => {
+      const profiles = getStoredProfiles();
+      const clean = username.toLowerCase().replace('@', '');
+      const existing = profiles[clean] || profiles['sheriff'];
+      const updated: CreativeProfile = { ...existing, ...patch };
+      const next = { ...profiles, [clean]: updated };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(next));
+      }
+      return updated;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profiles-all'] });
     },
   });
 }

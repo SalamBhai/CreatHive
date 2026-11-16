@@ -8,8 +8,14 @@ import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { PieceForm } from '@/components/studio/PieceForm';
+import { ProfileEditor } from '@/components/studio/ProfileEditor';
 import { StudioShell, type StudioView } from '@/components/studio/StudioShell';
-import { useCreativePieces, useCreativeProfile, useInquiries } from '@/lib/store';
+import {
+  useCreativePieces,
+  useCreativeProfile,
+  useInquiries,
+  useUpdateProfile,
+} from '@/lib/store';
 
 const currentUsername = 'sheriff';
 
@@ -95,8 +101,8 @@ export default function StudioPage() {
               <Icon size={19} weight="duotone" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-sm font-bold text-[#18181B]">{piece.title}</h3>
-              <p className="mt-0.5 truncate text-[11px] text-stone-500">
+              <h3 className="line-clamp-2 text-sm font-bold leading-snug text-[#18181B]">{piece.title}</h3>
+              <p className="mt-0.5 text-[11px] text-stone-500">
                 {config.label} · {piece.applauseCount} applauses
               </p>
             </div>
@@ -197,19 +203,18 @@ export default function StudioPage() {
             </Surface>
 
             <Surface className="p-5">
-              <h2 className="font-editorial text-xl font-semibold">Your work at a glance</h2>
+              <h2 className="font-editorial text-xl font-semibold">Your page</h2>
               <p className="mt-2 text-xs leading-relaxed text-stone-600">
-                You have {pieceCount} published {pieceCount === 1 ? 'piece' : 'pieces'} and {inquiries?.length || 0}{' '}
-                {inquiries?.length === 1 ? 'inquiry' : 'inquiries'}. Keep building — every new piece makes your
-                page easier to find.
+                {pieceCount} published {pieceCount === 1 ? 'piece' : 'pieces'} · {inquiries?.length || 0}{' '}
+                {inquiries?.length === 1 ? 'inquiry' : 'inquiries'}. Your name, bio and socials are what
+                reviewers see first.
               </p>
               <button
                 type="button"
-                onClick={openAdd}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#18181B] px-5 py-2.5 text-xs font-bold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
+                onClick={() => setView('profile')}
+                className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5A36] hover:underline"
               >
-                <Plus size={15} weight="bold" />
-                Add a piece
+                Edit profile &amp; socials <ArrowUpRight size={14} weight="bold" />
               </button>
             </Surface>
           </div>
@@ -276,35 +281,7 @@ export default function StudioPage() {
             title="Profile settings"
             description="The basics that appear across your public page, Explore cards and share previews."
           />
-          <Surface className="p-5 md:p-6">
-            <div className="flex flex-wrap items-start gap-5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={profile.avatarUrl}
-                alt={profile.displayName}
-                className="h-20 w-20 rounded-2xl border border-stone-200 object-cover"
-              />
-              <div className="min-w-0 flex-1">
-                <h2 className="font-editorial text-2xl font-semibold">{profile.displayName}</h2>
-                <p className="text-xs font-semibold text-[#FF5A36]">@{profile.username}</p>
-                <p className="mt-2 text-sm text-stone-700">{profile.tagline}</p>
-                <p className="mt-1 text-xs leading-relaxed text-stone-600">{profile.bio}</p>
-              </div>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2 border-t border-stone-200 pt-4">
-              {profile.disciplines.map((d) => {
-                const config = DISCIPLINE_CONFIG[d] || DISCIPLINE_CONFIG.OTHER;
-                return (
-                  <span
-                    key={d}
-                    className="rounded-full border border-stone-200 px-3 py-1 text-[11px] font-bold text-stone-600"
-                  >
-                    {config.label}
-                  </span>
-                );
-              })}
-            </div>
-          </Surface>
+          <ProfileEditor profile={profile} />
         </>
       ) : null}
     </StudioShell>
