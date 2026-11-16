@@ -5,6 +5,7 @@ import { PaperPlaneTilt, CheckCircle } from '@phosphor-icons/react';
 import { BottomSheet } from '../ui/BottomSheet';
 import { NeoButton } from '../ui/NeoButton';
 import { useSendInquiry } from '@/lib/store';
+import type { InquiryEventType } from '@/lib/types';
 
 interface InquiryDrawerProps {
   isOpen: boolean;
@@ -23,8 +24,8 @@ export function InquiryDrawer({
   const [senderOrg, setSenderOrg] = useState('');
   const [senderEmail, setSenderEmail] = useState('');
   const [senderPhone, setSenderPhone] = useState('');
-  const [eventType, setEventType] = useState<'PERFORMANCE' | 'COLLABORATION' | 'TECH_DESIGN' | 'SPEAKING' | 'OTHER'>('PERFORMANCE');
-  const [eventDate, setEventDate] = useState('');
+  const [eventType, setEventType] = useState<InquiryEventType>('PERFORMANCE');
+
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -42,7 +43,6 @@ export function InquiryDrawer({
         senderEmail,
         senderPhone,
         eventType,
-        eventDate,
         message,
       },
       {
@@ -144,7 +144,7 @@ export function InquiryDrawer({
             </label>
             <select
               value={eventType}
-              onChange={(e) => setEventType(e.target.value as any)}
+              onChange={(e) => setEventType(e.target.value as InquiryEventType)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs font-sans-ui outline-none"
             >
               <option value="PERFORMANCE">Creative Performance / Spoken Word / Showcase</option>

@@ -105,7 +105,7 @@ export function PortfolioView({ username }: PortfolioViewProps) {
         {/* The only "get your own" moment — a quiet floating pill. */}
         <div className="flex justify-center pt-4 pb-6">
           <Link
-            href="/studio"
+            href="/join"
             className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#18181B] shadow-[0_8px_30px_rgba(24,24,27,0.14)] border border-stone-200 transition-transform hover:scale-[1.03] active:scale-[0.98]"
           >
             Get your own CreatHive

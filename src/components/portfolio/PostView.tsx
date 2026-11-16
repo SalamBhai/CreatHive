@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight } from '@phosphor-icons/react';
+import { motion, useScroll, useSpring } from 'framer-motion';
+import { ArrowLeft, ArrowRight, ArrowUpRight, ShareNetwork, Check } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { Surface } from '@/components/ui/Surface';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
@@ -12,9 +13,36 @@ import { toEmbedUrl } from '@/lib/media';
 export function PostView({ id }: { id: string }) {
   const { data: pieces, isLoading } = useAllPieces();
   const { data: profiles } = useAllProfiles();
+  const [copied, setCopied] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30 });
 
   const piece = (pieces || []).find((p) => p.id === id);
   const author = piece ? (profiles || []).find((p) => p.id === piece.creativeId) : undefined;
+
+  const sorted = [...(pieces || [])].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  const index = sorted.findIndex((p) => p.id === id);
+  const previous = index > 0 ? sorted[index - 1] : undefined;
+  const next = index >= 0 && index < sorted.length - 1 ? sorted[index + 1] : undefined;
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: piece?.title, url });
+        return;
+      } catch {
+        // fall through to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignored
+    }
+  };
 
   if (isLoading) {
     return (
@@ -41,6 +69,11 @@ export function PostView({ id }: { id: string }) {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#18181B]">
+      <motion.div
+        aria-hidden
+        style={{ scaleX: progress }}
+        className="fixed inset-x-0 top-0 z-50 h-[2px] origin-left bg-[#FF5A36]"
+      />
       <header className="sticky top-0 z-30 border-b border-stone-200 bg-[#FDFBF7]/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-5">
           <div className="flex items-center gap-3">
@@ -51,11 +84,22 @@ export function PostView({ id }: { id: string }) {
               <CreatHiveWordmark size="sm" href={null} />
             </Link>
           </div>
-          {author ? (
-            <Link href={`/${author.username}`} className="text-[11px] font-bold uppercase tracking-widest text-stone-600 hover:text-[#FF5A36]">
-              @{author.username}
-            </Link>
-          ) : null}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleShare}
+              aria-label={copied ? 'Link copied' : 'Share this post'}
+              title={copied ? 'Link copied' : 'Share this post'}
+              className="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
+            >
+              {copied ? <Check size={16} weight="bold" className="text-emerald-600" /> : <ShareNetwork size={16} weight="bold" />}
+            </button>
+            {author ? (
+              <Link href={`/${author.username}`} className="text-[11px] font-bold uppercase tracking-widest text-stone-600 hover:text-[#FF5A36]">
+                @{author.username}
+              </Link>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -137,6 +181,31 @@ export function PostView({ id }: { id: string }) {
               </span>
             ))}
           </div>
+        ) : null}
+
+        {(previous || next) ? (
+          <nav aria-label="More posts" className="mt-10 grid gap-3 border-t border-stone-200 pt-6 sm:grid-cols-2">
+            {previous ? (
+              <Link href={`/p/${previous.id}`} className="group rounded-xl border border-stone-200 bg-white p-4 transition-colors hover:border-[#FF5A36]">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                  <ArrowLeft size={12} weight="bold" /> Previous
+                </span>
+                <span className="mt-2 block text-sm font-bold leading-snug text-[#18181B] group-hover:text-[#FF5A36]">
+                  {previous.title}
+                </span>
+              </Link>
+            ) : <span />}
+            {next ? (
+              <Link href={`/p/${next.id}`} className="group rounded-xl border border-stone-200 bg-white p-4 transition-colors hover:border-[#FF5A36] sm:text-right">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                  Next <ArrowRight size={12} weight="bold" />
+                </span>
+                <span className="mt-2 block text-sm font-bold leading-snug text-[#18181B] group-hover:text-[#FF5A36]">
+                  {next.title}
+                </span>
+              </Link>
+            ) : null}
+          </nav>
         ) : null}
       </main>
     </div>

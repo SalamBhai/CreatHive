@@ -1,7 +1,13 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CreativeProfile, CreativePiece, PerformanceInquiry, CreativeDiscipline } from './types';
+import {
+  CreativeProfile,
+  CreativePiece,
+  PerformanceInquiry,
+  CreativeDiscipline,
+  InquiryStatus,
+} from './types';
 import { INITIAL_PROFILES, INITIAL_PIECES } from './sample-data';
 
 const STORAGE_KEY_PROFILES = 'creathive_profiles_v1';
@@ -169,15 +175,86 @@ export function useAddPiece() {
   });
 }
 
+export function useUpdatePiece() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: Partial<CreativePiece>;
+    }): Promise<CreativePiece> => {
+      const pieces = getStoredPieces();
+      const updated = pieces.map((piece) =>
+        piece.id === id ? { ...piece, ...patch } : piece
+      );
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(updated));
+      }
+      return updated.find((piece) => piece.id === id)!;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pieces'] });
+    },
+  });
+}
+
+export function useDeletePiece() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<string> => {
+      const pieces = getStoredPieces().filter((piece) => piece.id !== id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(pieces));
+      }
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pieces'] });
+    },
+  });
+}
+
+export function useUpdateInquiryStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: InquiryStatus;
+    }): Promise<string> => {
+      const inquiries = getStoredInquiries().map((inquiry) =>
+        inquiry.id === id ? { ...inquiry, status } : inquiry
+      );
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_INQUIRIES, JSON.stringify(inquiries));
+      }
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inquiries'] });
+    },
+  });
+}
+
 export function useSendInquiry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (inquiryData: Omit<PerformanceInquiry, 'id' | 'createdAt'>) => {
+    mutationFn: async (
+      inquiryData: Omit<PerformanceInquiry, 'id' | 'createdAt' | 'status'>
+    ) => {
       const inquiries = getStoredInquiries();
       const inquiry: PerformanceInquiry = {
         ...inquiryData,
         id: `inq-${Date.now()}`,
+        status: 'PENDING',
         createdAt: new Date().toISOString(),
       };
       const updated = [inquiry, ...inquiries];

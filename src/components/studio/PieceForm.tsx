@@ -2,15 +2,16 @@
 
 import React, { useMemo, useState } from 'react';
 import { NeoButton } from '@/components/ui/NeoButton';
-import { useAddPiece, useAllPieces } from '@/lib/store';
+import { useAddPiece, useAllPieces, useUpdatePiece } from '@/lib/store';
 import { ALLOWED_EMBED_HOSTS } from '@/lib/media';
 import { MEDIA_LABELS, mediaTypeForNiche } from '@/lib/media-format';
 import { MAX_TAGS, normalizeTags } from '@/lib/tags';
 import { StoryComposer } from '@/components/studio/StoryComposer';
-import type { CreativeDiscipline, CreativeProfile } from '@/lib/types';
+import type { CreativeDiscipline, CreativePiece, CreativeProfile } from '@/lib/types';
 
 interface PieceFormProps {
   profile: CreativeProfile;
+  piece?: CreativePiece;
   onSuccess?: () => void;
 }
 
@@ -20,21 +21,23 @@ const inputClass =
   'w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]';
 const labelClass = 'mb-1 block text-xs font-bold text-[#18181B]';
 
-export function PieceForm({ profile, onSuccess }: PieceFormProps) {
+export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [step, setStep] = useState<Step>('details');
-  const [title, setTitle] = useState('');
-  const [subtitle, setSubtitle] = useState('');
-  const [discipline, setDiscipline] = useState<CreativeDiscipline>('SPOKEN_WORD');
-  const [mediaUrl, setMediaUrl] = useState('');
-  const [textContent, setTextContent] = useState('');
-  const [coverImageUrl, setCoverImageUrl] = useState('');
-  const [tagsInput, setTagsInput] = useState('');
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
-  const [bodyHtml, setBodyHtml] = useState('');
-  const [pdfUrl, setPdfUrl] = useState('');
+  const [title, setTitle] = useState(piece?.title || '');
+  const [subtitle, setSubtitle] = useState(piece?.subtitle || '');
+  const [discipline, setDiscipline] = useState<CreativeDiscipline>(piece?.discipline || 'SPOKEN_WORD');
+  const [mediaUrl, setMediaUrl] = useState(piece?.mediaUrl || '');
+  const [textContent, setTextContent] = useState(piece?.textContent || '');
+  const [coverImageUrl, setCoverImageUrl] = useState(piece?.coverImageUrl || '');
+  const [tagsInput, setTagsInput] = useState((piece?.tags || []).join(', '));
+  const [galleryImages, setGalleryImages] = useState<string[]>(piece?.galleryImages || []);
+  const [bodyHtml, setBodyHtml] = useState(piece?.bodyHtml || '');
+  const [pdfUrl, setPdfUrl] = useState(piece?.pdfUrl || '');
   const mediaType = mediaTypeForNiche(discipline);
   const addPieceMutation = useAddPiece();
+  const updatePieceMutation = useUpdatePiece();
   const { data: allPieces } = useAllPieces();
+  const isPending = addPieceMutation.isPending || updatePieceMutation.isPending;
 
   const currentTags = useMemo(() => normalizeTags(tagsInput), [tagsInput]);
 
@@ -58,6 +61,7 @@ export function PieceForm({ profile, onSuccess }: PieceFormProps) {
   };
 
   const reset = () => {
+    if (piece) return;
     setStep('details');
     setTitle('');
     setSubtitle('');
@@ -73,30 +77,34 @@ export function PieceForm({ profile, onSuccess }: PieceFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) return;
-    addPieceMutation.mutate(
-      {
-        creativeId: profile.id,
-        title,
-        subtitle,
-        discipline,
-        mediaType,
-        mediaUrl: mediaUrl || undefined,
-        textContent: textContent || undefined,
-        bodyHtml: bodyHtml || undefined,
-        pdfUrl: pdfUrl || undefined,
-        galleryImages: galleryImages.filter(Boolean).length ? galleryImages.filter(Boolean) : undefined,
-        coverImageUrl:
-          coverImageUrl ||
-          'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
-        tags: currentTags.length ? currentTags : ['creative', discipline.toLowerCase()],
-      },
-      {
-        onSuccess: () => {
-          reset();
-          onSuccess?.();
-        },
-      }
-    );
+
+    const payload = {
+      creativeId: profile.id,
+      title,
+      subtitle,
+      discipline,
+      mediaType,
+      mediaUrl: mediaUrl || undefined,
+      textContent: textContent || undefined,
+      bodyHtml: bodyHtml || undefined,
+      pdfUrl: pdfUrl || undefined,
+      galleryImages: galleryImages.filter(Boolean).length ? galleryImages.filter(Boolean) : undefined,
+      coverImageUrl:
+        coverImageUrl ||
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+      tags: currentTags.length ? currentTags : ['creative', discipline.toLowerCase()],
+    };
+
+    const onDone = () => {
+      reset();
+      onSuccess?.();
+    };
+
+    if (piece) {
+      updatePieceMutation.mutate({ id: piece.id, patch: payload }, { onSuccess: onDone });
+    } else {
+      addPieceMutation.mutate(payload, { onSuccess: onDone });
+    }
   };
 
   // On mobile only the active step shows; on desktop all steps stack.
@@ -327,7 +335,7 @@ export function PieceForm({ profile, onSuccess }: PieceFormProps) {
 
       <div className="sticky bottom-0 mt-5 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
         <NeoButton type="submit" variant="primary" size="lg" className="w-full">
-          {addPieceMutation.isPending ? 'Publishing…' : 'Publish to Portfolio'}
+          {isPending ? 'Saving…' : piece ? 'Save changes' : 'Publish to Portfolio'}
         </NeoButton>
       </div>
     </form>

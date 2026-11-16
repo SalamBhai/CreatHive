@@ -54,13 +54,13 @@ _As of 2026-11-16. Working tree clean; all work pushed to `main`._
 
 ## 🔲 Next picks (choose tomorrow)
 
-### Quick wins
-- [ ] Wire the "Get your own CreatHive" pill to a real signup/onboarding flow (currently → `/studio`).
-- [ ] Make the inquiry submit path store status and notify (currently local only).
-- [ ] Add edit/delete for pieces in Studio (currently add-only).
-- [ ] Polish the full-post page: prev/next piece, reading progress, share button.
-- [ ] Add `generateMetadata` for `/explore` and `/p/[id]` (dynamic OG per piece).
-- [ ] Fix the remaining pre-existing lint error: `InquiryDrawer.tsx:147` (`any` type).
+### Quick wins — ✅ ALL DONE
+- [x] "Get your own CreatHive" pill → `/join` onboarding request flow.
+- [x] Inquiry status (`PENDING → REVIEWED → RESPONDED`) stored + Studio review actions; two-lint-error-free.
+- [x] Edit + delete for pieces in Studio.
+- [x] Full-post page: reading progress, prev/next, share button.
+- [x] `generateMetadata` for `/explore`, `/join` and `/p/[id]` (dynamic OG per piece).
+- [x] Fixed the `any` lint error in `InquiryDrawer.tsx`.
 
 ### Medium — Studio / UX
 - [ ] Live preview panel: refresh on edit, not just on route load.

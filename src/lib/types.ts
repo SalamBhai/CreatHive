@@ -74,6 +74,15 @@ export interface CreativePiece {
   createdAt: string;
 }
 
+export type InquiryEventType =
+  | 'PERFORMANCE'
+  | 'COLLABORATION'
+  | 'TECH_DESIGN'
+  | 'SPEAKING'
+  | 'OTHER';
+
+export type InquiryStatus = 'PENDING' | 'REVIEWED' | 'RESPONDED';
+
 export interface PerformanceInquiry {
   id: string;
   creativeId: string;
@@ -81,8 +90,9 @@ export interface PerformanceInquiry {
   senderOrganization?: string;
   senderEmail: string;
   senderPhone?: string;
-  eventType: 'PERFORMANCE' | 'COLLABORATION' | 'TECH_DESIGN' | 'SPEAKING' | 'OTHER';
+  eventType: InquiryEventType;
   eventDate?: string;
   message: string;
+  status: InquiryStatus;
   createdAt: string;
 }

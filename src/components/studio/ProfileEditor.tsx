@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
@@ -29,15 +29,6 @@ export function ProfileEditor({ profile }: { profile: CreativeProfile }) {
   const [available, setAvailable] = useState(profile.isAvailableForGigs);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const mutation = useUpdateProfile();
-
-  useEffect(() => {
-    setDisplayName(profile.displayName);
-    setTagline(profile.tagline);
-    setBio(profile.bio);
-    setLocation(profile.location);
-    setSocials(profile.socialLinks || {});
-    setAvailable(profile.isAvailableForGigs);
-  }, [profile]);
 
   const save = () => {
     mutation.mutate({
