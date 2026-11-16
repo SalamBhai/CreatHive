@@ -14,7 +14,14 @@ interface PieceFormProps {
   onSuccess?: () => void;
 }
 
+type Step = 'details' | 'media' | 'story';
+
+const inputClass =
+  'w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]';
+const labelClass = 'mb-1 block text-xs font-bold text-[#18181B]';
+
 export function PieceForm({ profile, onSuccess }: PieceFormProps) {
+  const [step, setStep] = useState<Step>('details');
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [discipline, setDiscipline] = useState<CreativeDiscipline>('SPOKEN_WORD');
@@ -47,11 +54,11 @@ export function PieceForm({ profile, onSuccess }: PieceFormProps) {
   }, [allPieces, currentTags]);
 
   const addTag = (tag: string) => {
-    const next = normalizeTags([...currentTags, tag], MAX_TAGS);
-    setTagsInput(next.join(', '));
+    setTagsInput(normalizeTags([...currentTags, tag], MAX_TAGS).join(', '));
   };
 
   const reset = () => {
+    setStep('details');
     setTitle('');
     setSubtitle('');
     setMediaUrl('');
@@ -92,137 +99,219 @@ export function PieceForm({ profile, onSuccess }: PieceFormProps) {
     );
   };
 
+  // On mobile only the active step shows; on desktop all steps stack.
+  const sectionClass = (id: Step) =>
+    `space-y-4 ${step === id ? '' : 'hidden lg:block'}`;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-      <div>
-        <label className="mb-1 block text-xs font-bold text-[#18181B]">Title *</label>
-        <input
-          required
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Echoes of the Sahel / Mobile Interface Prototype"
-          className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]"
-        />
-      </div>
-
-      <div>
-        <label className="mb-1 block text-xs font-bold text-[#18181B]">Subtitle / Hook</label>
-        <input
-          type="text"
-          value={subtitle}
-          onChange={(e) => setSubtitle(e.target.value)}
-          placeholder="A brief one-line description of the piece"
-          className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1 block text-xs font-bold text-[#18181B]">Niche *</label>
-          <select
-            value={discipline}
-            onChange={(e) => {
-              setDiscipline(e.target.value as CreativeDiscipline);
-            }}
-            className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-xs font-sans-ui outline-none"
+    <form onSubmit={handleSubmit} className="pt-1">
+      {/* Mobile step switcher */}
+      <div className="mb-5 grid grid-cols-3 gap-1 rounded-xl border border-stone-200 bg-white p-1 lg:hidden">
+        {(['details', 'media', 'story'] as const).map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setStep(id)}
+            className={`rounded-lg py-2 text-[11px] font-bold capitalize transition-colors ${
+              step === id ? 'bg-[#18181B] text-white' : 'text-stone-600'
+            }`}
           >
-            <option value="SPOKEN_WORD">Spoken Word</option>
-            <option value="POETRY">Poetry & Verse</option>
-            <option value="UIUX_DESIGN">UI/UX Mobile Design</option>
-            <option value="TECH_IMAGERY">Tech Imagery & 3D</option>
-            <option value="DANCE">Dance & Performance</option>
-            <option value="MOTION_ANIMATION">Motion Graphics</option>
-            <option value="MUSIC">Music & Vocals</option>
-            <option value="GRAPHIC_DESIGN">Brand & Visuals</option>
-          </select>
+            {id}
+          </button>
+        ))}
+      </div>
+
+      {/* DETAILS */}
+      <div className={sectionClass('details')}>
+        <div>
+          <label className={labelClass}>Title *</label>
+          <input
+            required
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Echoes of the Sahel / Mobile Interface Prototype"
+            className={inputClass}
+          />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-bold text-[#18181B]">Media Format</label>
-          <div className="rounded-xl border border-stone-200 bg-[#FCFAF6] px-3 py-2.5 text-xs font-semibold text-stone-600">
-            {MEDIA_LABELS[mediaType]}
+          <label className={labelClass}>Subtitle / Hook</label>
+          <input
+            type="text"
+            value={subtitle}
+            onChange={(e) => setSubtitle(e.target.value)}
+            placeholder="A brief one-line description of the piece"
+            className={inputClass}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Niche *</label>
+            <select
+              value={discipline}
+              onChange={(e) => setDiscipline(e.target.value as CreativeDiscipline)}
+              className={inputClass}
+            >
+              <option value="SPOKEN_WORD">Spoken Word</option>
+              <option value="POETRY">Poetry & Verse</option>
+              <option value="UIUX_DESIGN">UI/UX Mobile Design</option>
+              <option value="TECH_IMAGERY">Tech Imagery & 3D</option>
+              <option value="DANCE">Dance & Performance</option>
+              <option value="MOTION_ANIMATION">Motion Graphics</option>
+              <option value="MUSIC">Music & Vocals</option>
+              <option value="GRAPHIC_DESIGN">Brand & Visuals</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Media Format</label>
+            <div className="rounded-xl border border-stone-200 bg-[#FCFAF6] px-3 py-2.5 text-xs font-semibold text-stone-600">
+              {MEDIA_LABELS[mediaType]}
+            </div>
           </div>
         </div>
-      </div>
 
-      {(mediaType === 'AUDIO' || mediaType === 'VIDEO') && (
-        <div>
-          <label className="mb-1 block text-xs font-bold text-[#18181B]">Work link</label>
-          <input
-            type="url"
-            value={mediaUrl}
-            onChange={(e) => setMediaUrl(e.target.value)}
-            placeholder="Paste a direct .mp3/.mp4 link, or a share URL"
-            className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]"
-          />
-          <p className="mt-1.5 text-[11px] leading-relaxed text-stone-500">
-            Direct media files play natively. Video embeds are supported from {ALLOWED_EMBED_HOSTS} only.
-          </p>
-        </div>
-      )}
-
-      {(mediaType === 'TEXT' || mediaType === 'AUDIO' || mediaType === 'VIDEO') && (
-        <div>
-          <label className="mb-1 block text-xs font-bold text-[#18181B]">
-            {mediaType === 'TEXT' ? 'Full text / Poem' : 'Script / Notes (Optional)'}
-          </label>
-          <textarea
-            rows={4}
-            value={textContent}
-            onChange={(e) => setTextContent(e.target.value)}
-            placeholder="Plain text version — readers can also open the long-form story below."
-            className="w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 font-editorial text-base italic outline-none"
-          />
-        </div>
-      )}
-
-      {mediaType === 'IMAGE_GALLERY' ? (
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <label className="block text-xs font-bold text-[#18181B]">Gallery images</label>
-            <button
-              type="button"
-              onClick={() => setGalleryImages([...galleryImages, ''])}
-              className="text-[11px] font-bold text-[#FF5A36] hover:underline"
-            >
-              + Add image
-            </button>
+            <label className="block text-xs font-bold text-[#18181B]">Tags</label>
+            <span className={`text-[10px] font-bold ${currentTags.length >= MAX_TAGS ? 'text-[#FF5A36]' : 'text-stone-400'}`}>
+              {currentTags.length}/{MAX_TAGS}
+            </span>
           </div>
-          {galleryImages.length === 0 ? (
-            <p className="text-[11px] text-stone-500">
-              Add two or more image URLs to build a swipeable carousel.
-            </p>
-          ) : null}
-          <div className="space-y-2">
-            {galleryImages.map((url, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => {
-                    const next = [...galleryImages];
-                    next[index] = e.target.value;
-                    setGalleryImages(next);
-                  }}
-                  placeholder={`Image ${index + 1} URL`}
-                  className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs outline-none"
-                />
+          <input
+            type="text"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(normalizeTags(e.target.value).join(', '))}
+            placeholder="Comma-separated: lagos, acoustic, voice"
+            className={inputClass}
+          />
+          <p className="mt-1.5 text-[11px] leading-relaxed text-stone-500">
+            Your words — lowercase, max {MAX_TAGS}. Used for search, not the niche filter.
+          </p>
+          {suggestedTags.length > 0 && currentTags.length < MAX_TAGS ? (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Suggested</span>
+              {suggestedTags.map((tag) => (
                 <button
+                  key={tag}
                   type="button"
-                  onClick={() => setGalleryImages(galleryImages.filter((_, i) => i !== index))}
-                  aria-label={`Remove image ${index + 1}`}
-                  className="rounded-lg border border-stone-200 p-2 text-stone-500 hover:border-[#FF5A36] hover:text-[#FF5A36]"
+                  onClick={() => addTag(tag)}
+                  className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-stone-600 hover:border-[#FF5A36] hover:text-[#FF5A36]"
                 >
-                  ×
+                  + {tag}
                 </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
 
-      {(mediaType === 'TEXT' || mediaType === 'AUDIO' || mediaType === 'VIDEO' || mediaType === 'IMAGE_GALLERY') && (
+      {/* MEDIA */}
+      <div className={`${sectionClass('media')} pt-4 lg:pt-2`}>
+        {(mediaType === 'AUDIO' || mediaType === 'VIDEO') && (
+          <div>
+            <label className={labelClass}>Work link</label>
+            <input
+              type="url"
+              value={mediaUrl}
+              onChange={(e) => setMediaUrl(e.target.value)}
+              placeholder="Paste a direct .mp3/.mp4 link, or a share URL"
+              className={inputClass}
+            />
+            <p className="mt-1.5 text-[11px] leading-relaxed text-stone-500">
+              Direct media files play natively. Video embeds are supported from {ALLOWED_EMBED_HOSTS} only.
+            </p>
+          </div>
+        )}
+
+        {(mediaType === 'TEXT' || mediaType === 'AUDIO' || mediaType === 'VIDEO') && (
+          <div>
+            <label className={labelClass}>
+              {mediaType === 'TEXT' ? 'Full text / Poem' : 'Script / Notes (Optional)'}
+            </label>
+            <textarea
+              rows={4}
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
+              placeholder="Plain text version — readers can also open the long-form story below."
+              className="w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 font-editorial text-base italic outline-none"
+            />
+          </div>
+        )}
+
+        {mediaType === 'IMAGE_GALLERY' ? (
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-xs font-bold text-[#18181B]">Gallery images</label>
+              <button
+                type="button"
+                onClick={() => setGalleryImages([...galleryImages, ''])}
+                className="text-[11px] font-bold text-[#FF5A36] hover:underline"
+              >
+                + Add image
+              </button>
+            </div>
+            {galleryImages.length === 0 ? (
+              <p className="text-[11px] text-stone-500">
+                Add two or more image URLs to build a swipeable carousel.
+              </p>
+            ) : null}
+            <div className="space-y-2">
+              {galleryImages.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => {
+                      const next = [...galleryImages];
+                      next[index] = e.target.value;
+                      setGalleryImages(next);
+                    }}
+                    placeholder={`Image ${index + 1} URL`}
+                    className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setGalleryImages(galleryImages.filter((_, i) => i !== index))}
+                    aria-label={`Remove image ${index + 1}`}
+                    className="rounded-lg border border-stone-200 p-2 text-stone-500 hover:border-[#FF5A36] hover:text-[#FF5A36]"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {mediaType === 'IMAGE_GALLERY' ? (
+          <div>
+            <label className={labelClass}>Case study PDF (optional)</label>
+            <input
+              type="url"
+              value={pdfUrl}
+              onChange={(e) => setPdfUrl(e.target.value)}
+              placeholder="Link to a PDF — rendered in the full post view"
+              className={inputClass}
+            />
+          </div>
+        ) : null}
+
+        <div>
+          <label className={labelClass}>Cover Image URL</label>
+          <input
+            type="url"
+            value={coverImageUrl}
+            onChange={(e) => setCoverImageUrl(e.target.value)}
+            placeholder="https://..."
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      {/* STORY */}
+      <div className={`${sectionClass('story')} pt-4 lg:pt-2`}>
         <div>
           <div className="mb-2 flex items-center justify-between">
             <label className="block text-xs font-bold text-[#18181B]">Full post</label>
@@ -234,67 +323,9 @@ export function PieceForm({ profile, onSuccess }: PieceFormProps) {
             placeholder={mediaType === 'IMAGE_GALLERY' ? 'Tell the story behind this case study…' : 'Tell your story…'}
           />
         </div>
-      )}
-
-      {mediaType === 'IMAGE_GALLERY' ? (
-        <div>
-          <label className="mb-1 block text-xs font-bold text-[#18181B]">Case study PDF (optional)</label>
-          <input
-            type="url"
-            value={pdfUrl}
-            onChange={(e) => setPdfUrl(e.target.value)}
-            placeholder="Link to a PDF — rendered in the full post view"
-            className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none"
-          />
-        </div>
-      ) : null}
-
-      <div>
-        <label className="mb-1 block text-xs font-bold text-[#18181B]">Cover Image URL</label>
-        <input
-          type="url"
-          value={coverImageUrl}
-          onChange={(e) => setCoverImageUrl(e.target.value)}
-          placeholder="https://..."
-          className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none"
-        />
       </div>
 
-      <div>
-        <div className="mb-1 flex items-center justify-between">
-          <label className="block text-xs font-bold text-[#18181B]">Tags</label>
-          <span className={`text-[10px] font-bold ${currentTags.length >= MAX_TAGS ? 'text-[#FF5A36]' : 'text-stone-400'}`}>
-            {currentTags.length}/{MAX_TAGS}
-          </span>
-        </div>
-        <input
-          type="text"
-          value={tagsInput}
-          onChange={(e) => setTagsInput(normalizeTags(e.target.value).join(', '))}
-          placeholder="Comma-separated: lagos, acoustic, voice"
-          className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]"
-        />
-        <p className="mt-1.5 text-[11px] leading-relaxed text-stone-500">
-          Your words — lowercase, max {MAX_TAGS}. Used for search, not the niche filter.
-        </p>
-        {suggestedTags.length > 0 && currentTags.length < MAX_TAGS ? (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Suggested</span>
-            {suggestedTags.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => addTag(tag)}
-                className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-stone-600 hover:border-[#FF5A36] hover:text-[#FF5A36]"
-              >
-                + {tag}
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="pt-2">
+      <div className="sticky bottom-0 mt-5 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
         <NeoButton type="submit" variant="primary" size="lg" className="w-full">
           {addPieceMutation.isPending ? 'Publishing…' : 'Publish to Portfolio'}
         </NeoButton>
