@@ -61,6 +61,12 @@ Important product decision: **campaigns and the submissions review queue belong 
 - Status workflow: `open → reviewing → accepted / rejected`, managed from admin.
 - Admin moderation view uses the same clean UI language as Explore.
 
+### Data boundary: creator vs admin
+
+- **Creator-scoped:** pieces, inquiries (real "Book a Gig" requests), applause — always filtered by the creator's `profile.id`.
+- **Admin-scoped:** join/signup requests (stored separately in `creathive_join_requests_v1`), campaigns, submissions queue, moderation, platform metrics.
+- Never write onboarding/signup records into the creator inquiry store. Studio's `useInquiries(creativeId)` scopes by owner; admin reads join requests via `useJoinRequests()`.
+
 ## Phase 6 — Admin
 
 - Users / profiles, pieces, campaigns, submissions, inquiries, flags, analytics.

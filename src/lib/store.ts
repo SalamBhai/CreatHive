@@ -13,6 +13,7 @@ import { INITIAL_PROFILES, INITIAL_PIECES } from './sample-data';
 const STORAGE_KEY_PROFILES = 'creathive_profiles_v1';
 const STORAGE_KEY_PIECES = 'creathive_pieces_v1';
 const STORAGE_KEY_INQUIRIES = 'creathive_inquiries_v1';
+const STORAGE_KEY_JOIN_REQUESTS = 'creathive_join_requests_v1';
 
 // Helper for initial hydration with fallback to localStorage
 function getStoredProfiles(): Record<string, CreativeProfile> {
@@ -39,6 +40,26 @@ function getStoredInquiries(): PerformanceInquiry[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_INQUIRIES);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export interface JoinRequest {
+  id: string;
+  handle: string;
+  displayName: string;
+  email: string;
+  tagline: string;
+  status: 'PENDING' | 'APPROVED';
+  createdAt: string;
+}
+
+function getStoredJoinRequests(): JoinRequest[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_JOIN_REQUESTS);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -115,10 +136,47 @@ export function useUpdateProfile() {
   });
 }
 
-export function useInquiries() {
+/** Inquiries scoped to one creative — never admin/onboarding records. */
+export function useInquiries(creativeId?: string) {
   return useQuery({
-    queryKey: ['inquiries'],
-    queryFn: async (): Promise<PerformanceInquiry[]> => getStoredInquiries(),
+    queryKey: ['inquiries', creativeId],
+    queryFn: async (): Promise<PerformanceInquiry[]> => {
+      const all = getStoredInquiries();
+      return creativeId ? all.filter((i) => i.creativeId === creativeId) : all;
+    },
+  });
+}
+
+/** Join requests are an admin concern — kept in their own store. */
+export function useJoinRequests() {
+  return useQuery({
+    queryKey: ['join-requests'],
+    queryFn: async (): Promise<JoinRequest[]> => getStoredJoinRequests(),
+  });
+}
+
+export function useSubmitJoinRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      data: Omit<JoinRequest, 'id' | 'status' | 'createdAt'>
+    ): Promise<JoinRequest> => {
+      const request: JoinRequest = {
+        ...data,
+        id: `join-${Date.now()}`,
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+      };
+      const next = [request, ...getStoredJoinRequests()];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_JOIN_REQUESTS, JSON.stringify(next));
+      }
+      return request;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['join-requests'] });
+    },
   });
 }
 

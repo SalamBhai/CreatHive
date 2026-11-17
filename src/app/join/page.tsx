@@ -9,7 +9,7 @@ import { ArrowLeft, ArrowRight, CheckCircle } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
-import { useCreateProfile, useSendInquiry } from '@/lib/store';
+import { useCreateProfile, useSubmitJoinRequest } from '@/lib/store';
 import { signIn, useSession } from '@/lib/auth';
 
 export default function JoinPage() {
@@ -20,7 +20,7 @@ export default function JoinPage() {
   const [tagline, setTagline] = useState('');
   const [isDone, setIsDone] = useState(false);
   const session = useSession();
-  const inquiry = useSendInquiry();
+  const joinRequest = useSubmitJoinRequest();
   const createProfile = useCreateProfile();
 
   const canSubmit = displayName.trim() && username.trim() && email.trim();
@@ -28,14 +28,12 @@ export default function JoinPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    inquiry.mutate(
+    joinRequest.mutate(
       {
-        creativeId: 'creathive-onboarding',
-        senderName: displayName.trim(),
-        senderEmail: email.trim(),
-        senderOrganization: `@${username.trim()}`,
-        eventType: 'OTHER',
-        message: `New CreatHive request — tagline: ${tagline || 'not provided'}`,
+        handle: username.trim().toLowerCase(),
+        displayName: displayName.trim(),
+        email: email.trim(),
+        tagline: tagline.trim(),
       },
       {
         onSuccess: () => {
@@ -159,8 +157,8 @@ export default function JoinPage() {
                     className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]"
                   />
                 </div>
-                <NeoButton type="submit" variant="primary" size="lg" className="w-full" disabled={!canSubmit || inquiry.isPending}>
-                  {inquiry.isPending ? 'Sending…' : 'Request my space'}
+                <NeoButton type="submit" variant="primary" size="lg" className="w-full" disabled={!canSubmit || joinRequest.isPending}>
+                  {joinRequest.isPending ? 'Sending…' : 'Request my space'}
                 </NeoButton>
               </form>
             </Surface>

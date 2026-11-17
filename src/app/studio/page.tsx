@@ -94,7 +94,7 @@ export default function StudioPage() {
   const [editingPiece, setEditingPiece] = useState<CreativePiece | null>(null);
   const { data: profile } = useCreativeProfile(currentUsername);
   const { data: pieces } = useCreativePieces(currentUsername);
-  const { data: inquiries } = useInquiries();
+  const { data: inquiries } = useInquiries(profile?.id);
   const createProfile = useCreateProfile();
   const deletePiece = useDeletePiece();
   const updateInquiry = useUpdateInquiryStatus();
