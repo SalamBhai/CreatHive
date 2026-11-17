@@ -7,7 +7,10 @@ const nextConfig: NextConfig = {
   // React Compiler handles memoisation automatically (no manual useMemo/useCallback needed).
   reactCompiler: true,
   images: {
-    remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+    ],
   },
   turbopack: {
     rules: {
