@@ -72,7 +72,9 @@ _As of 2026-11-16. Working tree clean; all work pushed to `main`._
 - [x] Images: `next/image` + `remotePatterns` for Unsplash; all avatar/gallery/reel images migrated.
 
 ### Large — data & platform (see `docs/MIGRATION.md`)
-- [ ] Repository seam (`src/lib/repository/`) so UI stops touching localStorage directly.
+- [x] Repository seam (`src/lib/repository/`) — UI now calls `repository`, with `local` and `supabase` adapters. `NEXT_PUBLIC_DATA_SOURCE` switches them (default `local`).
+- [ ] Apply `supabase/schema.sql` (tables + RLS) to the Supabase project, then flip `NEXT_PUBLIC_DATA_SOURCE=supabase`.
+- [ ] Wire Supabase Auth to replace the local session gate (RLS write policies need `auth.uid()`).
 - [ ] Supabase project: `profiles`, `pieces`, `inquiries`, `campaigns`, `submissions`, `applause_events`; RLS policies.
 - [ ] Supabase Auth + onboarding: signup, username claim, YPAT verification, `isYPATData` flag.
 - [ ] Cloudinary: signed uploads, folder structure, transformations; store URL + public_id.

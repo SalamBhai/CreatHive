@@ -8,7 +8,6 @@ import {
   HandsClapping,
   Article,
   MicrophoneStage,
-  ShareNetwork,
 } from '@phosphor-icons/react';
 import confetti from 'canvas-confetti';
 import { CreativePiece } from '@/lib/types';

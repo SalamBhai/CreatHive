@@ -1,106 +1,82 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
+import type {
   CreativeProfile,
   CreativePiece,
   PerformanceInquiry,
   CreativeDiscipline,
   InquiryStatus,
 } from './types';
-import { INITIAL_PROFILES, INITIAL_PIECES } from './sample-data';
+import type { JoinRequest } from './store-types';
+import { repository } from './repository';
 
-const STORAGE_KEY_PROFILES = 'creathive_profiles_v1';
-const STORAGE_KEY_PIECES = 'creathive_pieces_v1';
-const STORAGE_KEY_INQUIRIES = 'creathive_inquiries_v1';
-const STORAGE_KEY_JOIN_REQUESTS = 'creathive_join_requests_v1';
+export type { JoinRequest } from './store-types';
 
-// Helper for initial hydration with fallback to localStorage
-function getStoredProfiles(): Record<string, CreativeProfile> {
-  if (typeof window === 'undefined') return INITIAL_PROFILES;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_PROFILES);
-    return raw ? JSON.parse(raw) : INITIAL_PROFILES;
-  } catch {
-    return INITIAL_PROFILES;
-  }
-}
+/* ---------- Queries ---------- */
 
-function getStoredPieces(): CreativePiece[] {
-  if (typeof window === 'undefined') return INITIAL_PIECES;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_PIECES);
-    return raw ? JSON.parse(raw) : INITIAL_PIECES;
-  } catch {
-    return INITIAL_PIECES;
-  }
-}
-
-function getStoredInquiries(): PerformanceInquiry[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_INQUIRIES);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-export interface JoinRequest {
-  id: string;
-  handle: string;
-  displayName: string;
-  email: string;
-  tagline: string;
-  status: 'PENDING' | 'APPROVED';
-  createdAt: string;
-}
-
-function getStoredJoinRequests(): JoinRequest[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_JOIN_REQUESTS);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-// TanStack Query Hooks
 export function useCreativeProfile(username: string = 'sheriff') {
   return useQuery({
     queryKey: ['profile', username.toLowerCase()],
-    queryFn: async (): Promise<CreativeProfile> => {
-      const profiles = getStoredProfiles();
-      const cleanUser = username.toLowerCase().replace('@', '');
-      const profile = profiles[cleanUser] || profiles['sheriff'];
-      return profile;
-    },
+    queryFn: () => repository.getProfile(username),
   });
 }
 
 export function useAllProfiles() {
   return useQuery({
     queryKey: ['profiles-all'],
-    queryFn: async (): Promise<CreativeProfile[]> => {
-      const profiles = getStoredProfiles();
-      return Object.values(profiles);
-    },
+    queryFn: () => repository.listProfiles(),
   });
 }
 
+/** Inquiries scoped to one creative — never admin/onboarding records. */
+export function useInquiries(creativeId?: string) {
+  return useQuery({
+    queryKey: ['inquiries', creativeId],
+    queryFn: () => repository.listInquiries(creativeId),
+  });
+}
+
+/** Join requests are an admin concern — kept in their own store. */
+export function useJoinRequests() {
+  return useQuery({
+    queryKey: ['join-requests'],
+    queryFn: () => repository.listJoinRequests(),
+  });
+}
+
+/** Public feed: only published pieces, newest first. */
+export function useAllPieces() {
+  return useQuery({
+    queryKey: ['pieces-all'],
+    queryFn: () => repository.listPieces(),
+  });
+}
+
+export function useCreativePieces(
+  username: string = 'sheriff',
+  filterDiscipline?: CreativeDiscipline | 'ALL'
+) {
+  const { data: profile } = useCreativeProfile(username);
+
+  return useQuery({
+    queryKey: ['pieces', profile?.id, filterDiscipline],
+    enabled: !!profile?.id,
+    queryFn: () =>
+      repository.listPieces({
+        creativeId: profile!.id,
+        discipline: filterDiscipline,
+        includeDrafts: true,
+      }),
+  });
+}
+
+/* ---------- Mutations ---------- */
+
 export function useCreateProfile() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (profile: CreativeProfile): Promise<CreativeProfile> => {
-      const profiles = getStoredProfiles();
-      const next = { ...profiles, [profile.username]: profile };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(next));
-      }
-      return profile;
-    },
+    mutationFn: (profile: CreativeProfile) => repository.createProfile(profile),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profiles-all'] });
@@ -110,25 +86,14 @@ export function useCreateProfile() {
 
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       username,
       patch,
     }: {
       username: string;
       patch: Partial<CreativeProfile>;
-    }): Promise<CreativeProfile> => {
-      const profiles = getStoredProfiles();
-      const clean = username.toLowerCase().replace('@', '');
-      const existing = profiles[clean] || profiles['sheriff'];
-      const updated: CreativeProfile = { ...existing, ...patch };
-      const next = { ...profiles, [clean]: updated };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(next));
-      }
-      return updated;
-    },
+    }) => repository.updateProfile(username, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profiles-all'] });
@@ -136,115 +101,18 @@ export function useUpdateProfile() {
   });
 }
 
-/** Inquiries scoped to one creative — never admin/onboarding records. */
-export function useInquiries(creativeId?: string) {
-  return useQuery({
-    queryKey: ['inquiries', creativeId],
-    queryFn: async (): Promise<PerformanceInquiry[]> => {
-      const all = getStoredInquiries();
-      return creativeId ? all.filter((i) => i.creativeId === creativeId) : all;
-    },
-  });
-}
-
-/** Join requests are an admin concern — kept in their own store. */
-export function useJoinRequests() {
-  return useQuery({
-    queryKey: ['join-requests'],
-    queryFn: async (): Promise<JoinRequest[]> => getStoredJoinRequests(),
-  });
-}
-
-export function useSubmitJoinRequest() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (
-      data: Omit<JoinRequest, 'id' | 'status' | 'createdAt'>
-    ): Promise<JoinRequest> => {
-      const request: JoinRequest = {
-        ...data,
-        id: `join-${Date.now()}`,
-        status: 'PENDING',
-        createdAt: new Date().toISOString(),
-      };
-      const next = [request, ...getStoredJoinRequests()];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_JOIN_REQUESTS, JSON.stringify(next));
-      }
-      return request;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['join-requests'] });
-    },
-  });
-}
-
-/** Public feed: only published pieces, newest first. */
-export function useAllPieces() {
-  return useQuery({
-    queryKey: ['pieces-all'],
-    queryFn: async (): Promise<CreativePiece[]> =>
-      getStoredPieces()
-        .filter((piece) => (piece.status || 'PUBLIC') === 'PUBLIC')
-        .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
-  });
-}
-
 export function useReorderPieces() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (ids: string[]): Promise<string[]> => {
-      const pieces = getStoredPieces().map((piece) => {
-        const index = ids.indexOf(piece.id);
-        return index >= 0 ? { ...piece, sortOrder: index } : piece;
-      });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(pieces));
-      }
-      return ids;
-    },
+    mutationFn: (ids: string[]) => repository.reorderPieces(ids),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
-  });
-}
-
-export function useCreativePieces(username: string = 'sheriff', filterDiscipline?: CreativeDiscipline | 'ALL') {
-  const { data: profile } = useCreativeProfile(username);
-
-  return useQuery({
-    queryKey: ['pieces', profile?.id, filterDiscipline],
-    enabled: !!profile?.id,
-    queryFn: async (): Promise<CreativePiece[]> => {
-      const pieces = getStoredPieces();
-      // Studio shows everything (including drafts) sorted by manual order.
-      const userPieces = pieces
-        .filter((p) => p.creativeId === profile?.id)
-        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-      if (!filterDiscipline || filterDiscipline === 'ALL') {
-        return userPieces;
-      }
-      return userPieces.filter((p) => p.discipline === filterDiscipline);
-    },
   });
 }
 
 export function useApplaudPiece() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (pieceId: string) => {
-      const pieces = getStoredPieces();
-      const updated = pieces.map((p) => {
-        if (p.id === pieceId) {
-          return { ...p, applauseCount: p.applauseCount + 1 };
-        }
-        return p;
-      });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(updated));
-      }
-      return pieceId;
-    },
+    mutationFn: (pieceId: string) => repository.applaudPiece(pieceId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pieces'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
@@ -254,118 +122,53 @@ export function useApplaudPiece() {
 
 export function useAddPiece() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (newPiece: Omit<CreativePiece, 'id' | 'createdAt' | 'applauseCount'>) => {
-      const pieces = getStoredPieces();
-      const piece: CreativePiece = {
-        ...newPiece,
-        id: `piece-${Date.now()}`,
-        applauseCount: 0,
-        createdAt: new Date().toISOString(),
-      };
-      const updated = [piece, ...pieces];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(updated));
-      }
-      return piece;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pieces'] });
-    },
+    mutationFn: (piece: Omit<CreativePiece, 'id' | 'createdAt' | 'applauseCount'>) =>
+      repository.addPiece(piece),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
   });
 }
 
 export function useUpdatePiece() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async ({
-      id,
-      patch,
-    }: {
-      id: string;
-      patch: Partial<CreativePiece>;
-    }): Promise<CreativePiece> => {
-      const pieces = getStoredPieces();
-      const updated = pieces.map((piece) =>
-        piece.id === id ? { ...piece, ...patch } : piece
-      );
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(updated));
-      }
-      return updated.find((piece) => piece.id === id)!;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pieces'] });
-    },
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<CreativePiece> }) =>
+      repository.updatePiece(id, patch),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
   });
 }
 
 export function useDeletePiece() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (id: string): Promise<string> => {
-      const pieces = getStoredPieces().filter((piece) => piece.id !== id);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(pieces));
-      }
-      return id;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pieces'] });
-    },
+    mutationFn: (id: string) => repository.deletePiece(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
   });
 }
 
 export function useUpdateInquiryStatus() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: InquiryStatus;
-    }): Promise<string> => {
-      const inquiries = getStoredInquiries().map((inquiry) =>
-        inquiry.id === id ? { ...inquiry, status } : inquiry
-      );
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_INQUIRIES, JSON.stringify(inquiries));
-      }
-      return id;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inquiries'] });
-    },
+    mutationFn: ({ id, status }: { id: string; status: InquiryStatus }) =>
+      repository.updateInquiryStatus(id, status),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inquiries'] }),
   });
 }
 
 export function useSendInquiry() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (
-      inquiryData: Omit<PerformanceInquiry, 'id' | 'createdAt' | 'status'>
-    ) => {
-      const inquiries = getStoredInquiries();
-      const inquiry: PerformanceInquiry = {
-        ...inquiryData,
-        id: `inq-${Date.now()}`,
-        status: 'PENDING',
-        createdAt: new Date().toISOString(),
-      };
-      const updated = [inquiry, ...inquiries];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_INQUIRIES, JSON.stringify(updated));
-      }
-      return inquiry;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inquiries'] });
-    },
+    mutationFn: (inquiry: Omit<PerformanceInquiry, 'id' | 'createdAt' | 'status'>) =>
+      repository.sendInquiry(inquiry),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inquiries'] }),
+  });
+}
+
+export function useSubmitJoinRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: Omit<JoinRequest, 'id' | 'status' | 'createdAt'>) =>
+      repository.submitJoinRequest(request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['join-requests'] }),
   });
 }
