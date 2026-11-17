@@ -20,7 +20,13 @@ const SOCIAL_FIELDS: Array<{ key: keyof SocialLinks; label: string; placeholder:
 const inputClass =
   'w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]';
 
-export function ProfileEditor({ profile }: { profile: CreativeProfile }) {
+export function ProfileEditor({
+  profile,
+  onSaved,
+}: {
+  profile: CreativeProfile;
+  onSaved?: () => void;
+}) {
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [tagline, setTagline] = useState(profile.tagline);
   const [bio, setBio] = useState(profile.bio);
@@ -31,17 +37,20 @@ export function ProfileEditor({ profile }: { profile: CreativeProfile }) {
   const mutation = useUpdateProfile();
 
   const save = () => {
-    mutation.mutate({
-      username: profile.username,
-      patch: {
-        displayName,
-        tagline,
-        bio,
-        location,
-        socialLinks: socials,
-        isAvailableForGigs: available,
+    mutation.mutate(
+      {
+        username: profile.username,
+        patch: {
+          displayName,
+          tagline,
+          bio,
+          location,
+          socialLinks: socials,
+          isAvailableForGigs: available,
+        },
       },
-    });
+      { onSuccess: onSaved }
+    );
   };
 
   const hasChanges =

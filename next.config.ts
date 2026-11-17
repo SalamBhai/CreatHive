@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  // React Compiler handles memoisation automatically (no manual useMemo/useCallback needed).
+  reactCompiler: true,
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }],
+  },
   turbopack: {
     rules: {
       "*.css": {

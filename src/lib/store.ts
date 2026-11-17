@@ -180,10 +180,31 @@ export function useSubmitJoinRequest() {
   });
 }
 
+/** Public feed: only published pieces, newest first. */
 export function useAllPieces() {
   return useQuery({
     queryKey: ['pieces-all'],
-    queryFn: async (): Promise<CreativePiece[]> => getStoredPieces(),
+    queryFn: async (): Promise<CreativePiece[]> =>
+      getStoredPieces()
+        .filter((piece) => (piece.status || 'PUBLIC') === 'PUBLIC')
+        .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
+  });
+}
+
+export function useReorderPieces() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]): Promise<string[]> => {
+      const pieces = getStoredPieces().map((piece) => {
+        const index = ids.indexOf(piece.id);
+        return index >= 0 ? { ...piece, sortOrder: index } : piece;
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(pieces));
+      }
+      return ids;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
   });
 }
 
@@ -195,7 +216,10 @@ export function useCreativePieces(username: string = 'sheriff', filterDiscipline
     enabled: !!profile?.id,
     queryFn: async (): Promise<CreativePiece[]> => {
       const pieces = getStoredPieces();
-      const userPieces = pieces.filter((p) => p.creativeId === profile?.id);
+      // Studio shows everything (including drafts) sorted by manual order.
+      const userPieces = pieces
+        .filter((p) => p.creativeId === profile?.id)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
       if (!filterDiscipline || filterDiscipline === 'ALL') {
         return userPieces;
       }

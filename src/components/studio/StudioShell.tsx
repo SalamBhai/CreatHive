@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   Eye,
   ArrowLeft,
+  ArrowsClockwise,
 } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 
@@ -38,6 +39,7 @@ interface StudioShellProps {
   children: React.ReactNode;
   preview?: React.ReactNode;
   onSignOut?: () => void;
+  onRefreshPreview?: () => void;
 }
 
 export function StudioShell({
@@ -47,6 +49,7 @@ export function StudioShell({
   children,
   preview,
   onSignOut,
+  onRefreshPreview,
 }: StudioShellProps) {
   const renderNavItem = (item: (typeof STUDIO_NAV)[number], mobile = false) => {
     const Icon = item.icon;
@@ -109,6 +112,16 @@ export function StudioShell({
             <div className="ml-1 hidden rounded-full bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-600 md:block">
               @{username}
             </div>
+            {onRefreshPreview ? (
+              <button
+                type="button"
+                onClick={onRefreshPreview}
+                title="Refresh preview"
+                className="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
+              >
+                <ArrowsClockwise size={16} weight="bold" />
+              </button>
+            ) : null}
             {onSignOut ? (
               <button
                 type="button"

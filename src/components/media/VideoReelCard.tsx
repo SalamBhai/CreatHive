@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Sparkle, HandsClapping, Play, Pause } from '@phosphor-icons/react';
 import confetti from 'canvas-confetti';
 import { toEmbedUrl } from '@/lib/media';
@@ -71,10 +72,12 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
             className="w-full h-full object-cover cursor-pointer"
           />
         ) : (
-          <img
-            src={piece.coverImageUrl}
+          <Image
+            src={piece.coverImageUrl || '/images/scenes/hero.jpg'}
             alt={piece.title}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, 640px"
+            className="object-cover"
           />
         )}
 

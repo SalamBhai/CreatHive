@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import {
   MapPin,
   Sparkle,
@@ -8,7 +9,6 @@ import {
   WhatsappLogo,
   TwitterLogo,
   GithubLogo,
-  LinkedinLogo,
   CheckCircle,
 } from '@phosphor-icons/react';
 import { CreativeProfile } from '@/lib/types';
@@ -41,9 +41,11 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         {/* Avatar positioned over banner */}
         <div className="-mt-12 md:-mt-16 mb-4 flex items-end justify-between">
           <div className="relative">
-            <img
+            <Image
               src={profile.avatarUrl}
               alt={profile.displayName}
+              width={112}
+              height={112}
               className="h-24 w-24 rounded-2xl border-[3px] border-white bg-white object-cover shadow-[0_6px_18px_rgba(24,24,27,0.12)] md:h-28 md:w-28"
             />
             <div className="absolute -bottom-1 -right-1 rounded-full border-2 border-white bg-[#FFAE19] p-1 text-[#18181B]">

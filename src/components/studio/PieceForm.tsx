@@ -7,7 +7,7 @@ import { ALLOWED_EMBED_HOSTS } from '@/lib/media';
 import { MEDIA_LABELS, mediaTypeForNiche } from '@/lib/media-format';
 import { MAX_TAGS, normalizeTags } from '@/lib/tags';
 import { StoryComposer } from '@/components/studio/StoryComposer';
-import type { CreativeDiscipline, CreativePiece, CreativeProfile } from '@/lib/types';
+import type { CreativeDiscipline, CreativePiece, CreativeProfile, PieceStatus } from '@/lib/types';
 
 interface PieceFormProps {
   profile: CreativeProfile;
@@ -33,6 +33,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [galleryImages, setGalleryImages] = useState<string[]>(piece?.galleryImages || []);
   const [bodyHtml, setBodyHtml] = useState(piece?.bodyHtml || '');
   const [pdfUrl, setPdfUrl] = useState(piece?.pdfUrl || '');
+  const [status, setStatus] = useState<PieceStatus>(piece?.status || 'PUBLIC');
   const mediaType = mediaTypeForNiche(discipline);
   const addPieceMutation = useAddPiece();
   const updatePieceMutation = useUpdatePiece();
@@ -74,11 +75,15 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setPdfUrl('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (
+    e: React.FormEvent | React.MouseEvent<HTMLButtonElement>,
+    forcedStatus?: PieceStatus
+  ) => {
     e.preventDefault();
     if (!title) return;
 
     const payload = {
+      status: forcedStatus || status,
       creativeId: profile.id,
       title,
       subtitle,
@@ -178,6 +183,19 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               {MEDIA_LABELS[mediaType]}
             </div>
           </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Visibility</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as PieceStatus)}
+            className={inputClass}
+          >
+            <option value="PUBLIC">Public — appears everywhere</option>
+            <option value="UNLISTED">Unlisted — only via direct link</option>
+            <option value="DRAFT">Draft — private to you</option>
+          </select>
         </div>
 
         <div>
@@ -333,10 +351,20 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         </div>
       </div>
 
-      <div className="sticky bottom-0 mt-5 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
+      <div className="sticky bottom-0 mt-5 space-y-2 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
         <NeoButton type="submit" variant="primary" size="lg" className="w-full">
           {isPending ? 'Saving…' : piece ? 'Save changes' : 'Publish to Portfolio'}
         </NeoButton>
+        {!piece ? (
+          <button
+            type="button"
+            disabled={isPending || !title}
+            onClick={(e) => handleSubmit(e, 'DRAFT')}
+            className="w-full rounded-xl border border-stone-200 py-2.5 text-xs font-bold text-stone-600 transition-colors hover:border-stone-400 disabled:opacity-50"
+          >
+            Save as draft
+          </button>
+        ) : null}
       </div>
     </form>
   );

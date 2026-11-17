@@ -63,11 +63,13 @@ _As of 2026-11-16. Working tree clean; all work pushed to `main`._
 - [x] Fixed the `any` lint error in `InquiryDrawer.tsx`.
 
 ### Medium — Studio / UX
-- [ ] Live preview panel: refresh on edit, not just on route load.
-- [ ] Drafts: "Save as draft" vs "Publish"; unlisted/private pieces.
-- [ ] Reordering pieces (drag/drop) + featured toggle.
-- [ ] Avatar/banner upload UI (URL field only today).
-- [ ] Richer full-post composer: image upload, alignment, captions, video poster.
+- [x] Live preview panel: refresh button + auto-refresh after piece/profile saves.
+- [x] Drafts: "Save as draft", Public/Unlisted/Draft visibility; public feed excludes drafts.
+- [x] Reordering pieces (drag on desktop, up/down on mobile) + featured toggle + status badges.
+- [ ] Avatar/banner upload UI (URL field only today) — needs Cloudinary (large phase).
+- [ ] Richer full-post composer: image upload, alignment, captions, video poster — upload part needs Cloudinary.
+- [x] Performance: React Compiler enabled (auto-memoisation) — no manual `useMemo`/`useCallback`.
+- [x] Images: `next/image` + `remotePatterns` for Unsplash; all avatar/gallery/reel images migrated.
 
 ### Large — data & platform (see `docs/MIGRATION.md`)
 - [ ] Repository seam (`src/lib/repository/`) so UI stops touching localStorage directly.

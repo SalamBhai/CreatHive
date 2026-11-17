@@ -2,15 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import {
-  Plus,
-  Eye,
-  ArrowUpRight,
-  PaperPlaneTilt,
-  ClockCounterClockwise,
-  PencilSimple,
-  Trash,
-} from '@phosphor-icons/react';
+import { Plus, ArrowUpRight, PaperPlaneTilt, ClockCounterClockwise } from '@phosphor-icons/react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
@@ -23,13 +15,13 @@ import {
   useCreativePieces,
   useCreativeProfile,
   useCreateProfile,
-  useDeletePiece,
   useInquiries,
   useUpdateInquiryStatus,
-  useUpdateProfile,
 } from '@/lib/store';
 import { signIn, signOut, useSession } from '@/lib/auth';
 import { StudioGate } from '@/components/studio/StudioGate';
+import { LivePreview } from '@/components/studio/LivePreview';
+import { PieceManager } from '@/components/studio/PieceManager';
 
 const DEMO_USERNAME = 'sheriff';
 
@@ -92,11 +84,12 @@ export default function StudioPage() {
   const [view, setView] = useState<StudioView>('overview');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPiece, setEditingPiece] = useState<CreativePiece | null>(null);
+  const [previewKey, setPreviewKey] = useState(0);
+  const refreshPreview = () => setPreviewKey((k) => k + 1);
   const { data: profile } = useCreativeProfile(currentUsername);
   const { data: pieces } = useCreativePieces(currentUsername);
   const { data: inquiries } = useInquiries(profile?.id);
   const createProfile = useCreateProfile();
-  const deletePiece = useDeletePiece();
   const updateInquiry = useUpdateInquiryStatus();
 
   const pieceCount = pieces?.length || 0;
@@ -111,12 +104,6 @@ export default function StudioPage() {
   const openEdit = (piece: CreativePiece) => {
     setEditingPiece(piece);
     setIsAddOpen(true);
-  };
-
-  const handleDelete = (piece: CreativePiece) => {
-    if (window.confirm(`Delete “${piece.title}”? This can't be undone.`)) {
-      deletePiece.mutate(piece.id);
-    }
   };
 
   const handleEnter = (handle: string) => {
@@ -153,86 +140,30 @@ export default function StudioPage() {
     return <StudioGate onEnter={handleEnter} isPending={createProfile.isPending} />;
   }
 
-  const pieceRows = (limit?: number) =>
+  const recentRows = (limit: number) =>
     (pieces || [])
-      .slice(0, limit ?? pieces?.length ?? 0)
+      .slice(0, limit)
       .map((piece) => {
         const config = DISCIPLINE_CONFIG[piece.discipline] || DISCIPLINE_CONFIG.OTHER;
         const Icon = config.icon;
         return (
-          <div
+          <Link
             key={piece.id}
-            className="group relative overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors hover:border-stone-300 md:flex md:items-center md:gap-3 md:p-4"
+            href={`/p/${piece.id}`}
+            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-colors hover:border-stone-300"
           >
-            <Link href={`/p/${piece.id}`} className="block md:flex md:min-w-0 md:flex-1 md:items-center md:gap-3">
-              {/* Cover — full-width banner on mobile, small icon tile on desktop */}
-              <div className="relative aspect-[16/7] w-full overflow-hidden bg-stone-100 md:hidden">
-                {piece.coverImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={piece.coverImageUrl}
-                    alt=""
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : null}
-                <span
-                  className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-[#18181B] backdrop-blur"
-                  style={{ color: config.color }}
-                >
-                  <Icon size={12} weight="duotone" />
-                  {config.label}
-                </span>
-              </div>
-
-              <div
-                className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-stone-200 md:flex"
-                style={{ backgroundColor: config.bg, color: config.color }}
-              >
-                <Icon size={19} weight="duotone" />
-              </div>
-
-              <div className="min-w-0 flex-1 p-3.5 md:p-0">
-                <h3 className="text-sm font-bold leading-snug text-[#18181B] md:line-clamp-2">
-                  {piece.title}
-                </h3>
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-stone-500">
-                  <span className="md:hidden">{config.label} · </span>
-                  {piece.applauseCount} applauses
-                  <span className="ml-auto inline-flex items-center gap-1 font-bold text-[#FF5A36] md:hidden">
-                    Open post <ArrowUpRight size={13} weight="bold" />
-                  </span>
-                </p>
-              </div>
-            </Link>
-
-            <div className="absolute right-3 top-3 flex items-center gap-1.5 md:static md:shrink-0">
-              <button
-                type="button"
-                onClick={() => openEdit(piece)}
-                title="Edit piece"
-                aria-label={`Edit ${piece.title}`}
-                className="rounded-lg border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
-              >
-                <PencilSimple size={15} weight="bold" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(piece)}
-                title="Delete piece"
-                aria-label={`Delete ${piece.title}`}
-                className="rounded-lg border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-red-500 hover:text-red-600"
-              >
-                <Trash size={15} weight="bold" />
-              </button>
-              <Link
-                href={`/p/${piece.id}`}
-                title="View full post"
-                className="hidden rounded-lg border border-stone-200 bg-white p-2 text-stone-500 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36] md:block"
-              >
-                <Eye size={15} weight="bold" />
-              </Link>
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-stone-200"
+              style={{ backgroundColor: config.bg, color: config.color }}
+            >
+              <Icon size={17} weight="duotone" />
             </div>
-          </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-sm font-bold text-[#18181B]">{piece.title}</h3>
+              <p className="text-[11px] text-stone-500">{config.label} · {piece.applauseCount} applauses</p>
+            </div>
+            <ArrowUpRight size={14} weight="bold" className="shrink-0 text-stone-400" />
+          </Link>
         );
       });
 
@@ -269,24 +200,8 @@ export default function StudioPage() {
       onViewChange={setView}
       username={currentUsername}
       onSignOut={() => signOut()}
-      preview={
-        <Surface className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-stone-700">
-              <Eye size={15} weight="bold" />
-              Live public preview
-            </div>
-            <Link href={`/${currentUsername}`} target="_blank" aria-label="Open public portfolio">
-              <ArrowUpRight size={15} weight="bold" className="text-stone-400 hover:text-[#FF5A36]" />
-            </Link>
-          </div>
-          <iframe
-            src={`/${currentUsername}`}
-            title="Public portfolio preview"
-            className="h-[640px] w-full border-0 bg-white"
-          />
-        </Surface>
-      }
+      onRefreshPreview={refreshPreview}
+      preview={<LivePreview username={currentUsername} refreshKey={previewKey} />}
     >
       {view === 'overview' ? (
         <>
@@ -319,7 +234,7 @@ export default function StudioPage() {
                   Manage all →
                 </button>
               </div>
-              <div className="mt-4 space-y-2.5">{pieceRows(3)}</div>
+              <div className="mt-4 space-y-2.5">{recentRows(3)}</div>
             </Surface>
 
             <Surface className="p-5">
@@ -353,7 +268,11 @@ export default function StudioPage() {
               </NeoButton>
             }
           />
-          <div className="space-y-2.5">{pieceRows()}</div>
+          <PieceManager
+            pieces={pieces || []}
+            onEdit={openEdit}
+            onRefreshPreview={refreshPreview}
+          />
         </>
       ) : null}
 
@@ -434,7 +353,7 @@ export default function StudioPage() {
             title="Profile settings"
             description="The basics that appear across your public page, Explore cards and share previews."
           />
-          <ProfileEditor profile={profile} />
+          <ProfileEditor profile={profile} onSaved={refreshPreview} />
         </>
       ) : null}
     </StudioShell>
@@ -454,7 +373,10 @@ export default function StudioPage() {
             key={editingPiece?.id || 'new'}
             profile={profile}
             piece={editingPiece || undefined}
-            onSuccess={() => setIsAddOpen(false)}
+            onSuccess={() => {
+              setIsAddOpen(false);
+              refreshPreview();
+            }}
           />
         ) : null}
       </BottomSheet>

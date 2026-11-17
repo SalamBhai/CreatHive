@@ -11,6 +11,8 @@ export type CreativeDiscipline =
 
 export type MediaType = 'AUDIO' | 'VIDEO' | 'TEXT' | 'IMAGE_GALLERY';
 
+export type PieceStatus = 'PUBLIC' | 'UNLISTED' | 'DRAFT';
+
 /** One block in a long-form post / article. */
 export interface ContentBlock {
   id: string;
@@ -67,6 +69,8 @@ export interface CreativePiece {
   coverImageUrl?: string;
   galleryImages?: string[]; // For UI/UX designs, tech imagery & graphics
   isFeatured?: boolean;
+  status?: PieceStatus;
+  sortOrder?: number;
   applauseCount: number;
   duration?: string; // e.g. "03:14"
   contextNote?: string; // e.g. "Live performance at YPAT Summit"

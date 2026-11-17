@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { DeviceMobile, HandsClapping, CaretLeft, CaretRight, Cube } from '@phosphor-icons/react';
 import confetti from 'canvas-confetti';
 import { CreativePiece } from '@/lib/types';
@@ -52,10 +53,12 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
       {/* Visual Image Viewport */}
       <div className="relative aspect-[16/10] w-full bg-[#18181B] overflow-hidden group">
         {images.length > 0 && (
-          <img
+          <Image
             src={images[currentIndex]}
             alt={`${piece.title} - ${currentIndex + 1}`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            fill
+            sizes="(max-width: 768px) 100vw, 640px"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />
         )}
 
@@ -115,12 +118,11 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
               type="button"
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Show image ${idx + 1}`}
-              className={`h-12 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
+              className={`relative h-12 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
                 idx === currentIndex ? 'border-[#FF5A36]' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="h-full w-full object-cover" />
+              <Image src={src} alt="" fill sizes="64px" className="object-cover" />
             </button>
           ))}
         </div>
