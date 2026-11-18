@@ -2,7 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { QueryProvider } from '@/lib/query-provider';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://creathive.app';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'CreatHive — Built for the limitless Creatives...',
   applicationName: 'CreatHive (pronounced “Creative”)',
   keywords: [
@@ -38,7 +41,7 @@ const structuredData = {
   name: 'CreatHive',
   alternateName: ['Creative', 'Creative Hive'],
   description: 'CreatHive, pronounced “Creative”, is a stage built for the limitless creatives.',
-  url: 'https://creathive.app',
+  url: SITE_URL,
 };
 
 export const viewport: Viewport = {
