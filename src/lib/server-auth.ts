@@ -42,6 +42,9 @@ function friendlyAuthError(message: string): string {
   if (lower.includes('rate limit') || lower.includes('too many')) {
     return 'Too many attempts. Please wait a moment and try again.';
   }
+  if (lower.includes('confirmation email') || lower.includes('error sending')) {
+    return 'We couldn’t send your confirmation email. Please try again in a moment.';
+  }
   if (lower.includes('invalid email')) return 'Enter a valid email address.';
   if (lower.includes('password')) return 'Password must be at least 6 characters.';
   return 'Could not create your account. Please try again.';
@@ -73,7 +76,12 @@ export async function signUpUser(input: SignUpInput): Promise<SignUpResult> {
       },
     },
   });
-  if (error) throw new Error(friendlyAuthError(error.message));
+  if (error) {
+    console.error(
+      '[signup] Supabase auth error raw — message: ' + error.message + ' | status: ' + error.status + ' | json: ' + JSON.stringify(error)
+    );
+    throw new Error(friendlyAuthError(error.message));
+  }
 
   const user = data.user;
   if (!user) throw new Error('Could not create your account. Please try again.');
