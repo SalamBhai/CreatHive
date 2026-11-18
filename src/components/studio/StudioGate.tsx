@@ -18,7 +18,7 @@ export function StudioGate({ onEnter, isPending }: StudioGateProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[#FDFBF7] text-[#18181B]">
       <div className="px-6 pt-8">
-        <Link href="/" aria-label="CreatHive home">
+        <Link href="/explore" aria-label="CreatHive home">
           <CreatHiveWordmark size="sm" href={null} />
         </Link>
       </div>

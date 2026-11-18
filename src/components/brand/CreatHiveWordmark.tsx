@@ -16,7 +16,7 @@ interface CreatHiveWordmarkProps {
 export function CreatHiveWordmark({
   size = 'md',
   showTagline = false,
-  href = '/',
+  href = '/explore',
   className = '',
   tone = 'dark',
 }: CreatHiveWordmarkProps) {

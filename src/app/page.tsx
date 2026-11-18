@@ -93,7 +93,7 @@ export default function HomePage() {
       {/* Fixed, quiet header. */}
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-30 h-28 bg-gradient-to-b from-black/70 to-transparent" />
       <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-6 py-5 md:px-14">
-        <Link href="/" aria-label="CreatHive (pronounced Creative) — home">
+        <Link href="/explore" aria-label="CreatHive (pronounced Creative) — home">
           <CreatHiveWordmark size="sm" tone="light" href={null} />
         </Link>
         <StudioLink className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/80 transition-colors hover:text-white">

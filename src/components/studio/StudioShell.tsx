@@ -87,7 +87,7 @@ export function StudioShell({
             >
               <ArrowLeft size={18} weight="bold" />
             </Link>
-            <Link href="/" aria-label="CreatHive home">
+            <Link href="/explore" aria-label="CreatHive home">
               <CreatHiveWordmark size="sm" href={null} />
             </Link>
           </div>

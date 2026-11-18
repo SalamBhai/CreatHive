@@ -80,7 +80,7 @@ export function PostView({ id }: { id: string }) {
             <Link href={author ? `/${author.username}` : '/explore'} aria-label="Back" className="rounded-xl border border-stone-200 bg-white p-2">
               <ArrowLeft size={17} weight="bold" />
             </Link>
-            <Link href="/" aria-label="CreatHive home">
+            <Link href="/explore" aria-label="CreatHive home">
               <CreatHiveWordmark size="sm" href={null} />
             </Link>
           </div>

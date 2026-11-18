@@ -57,7 +57,7 @@ export default function ExplorePage() {
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-stone-200 bg-[#FDFBF7]/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/" aria-label="CreatHive (pronounced Creative) — home">
+          <Link href="/explore" aria-label="CreatHive (pronounced Creative) — home">
             <CreatHiveWordmark size="sm" href={null} />
           </Link>
           <StudioLink className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-600 hover:text-[#FF5A36]">
