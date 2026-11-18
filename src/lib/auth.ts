@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase, usingSupabase } from './supabase';
 import { repository } from './repository';
+import type { CreativeDiscipline } from './types';
 
 export interface AppSession {
   username: string;
@@ -11,6 +12,7 @@ export interface AppSession {
   email: string;
   /** Supabase auth user id, used by RLS as auth.uid(). */
   userId?: string;
+  disciplines?: CreativeDiscipline[];
 }
 
 /* ---------- Local session (mock mode) ---------- */
@@ -70,6 +72,7 @@ function toAppSession(session: Session | null): AppSession | null {
     displayName: String(meta.display_name || meta.name || meta.username || 'Creative'),
     email: session.user.email || '',
     userId: session.user.id,
+    disciplines: (meta.disciplines as CreativeDiscipline[]) || undefined,
   };
 }
 
@@ -111,7 +114,7 @@ async function ensureProfile(app: AppSession) {
     bio: 'Making things and sharing them with the hive.',
     avatarUrl: '',
     bannerGradient: 'from-amber-500/20 via-orange-500/20 to-red-500/20',
-    disciplines: ['OTHER'],
+    disciplines: app.disciplines?.length ? app.disciplines : ['OTHER'],
     location: '',
     isAvailableForGigs: true,
     socialLinks: { email: app.email || undefined },
@@ -133,13 +136,19 @@ export async function signInWithPassword(email: string, password: string) {
 export async function signUpWithPassword(
   email: string,
   password: string,
-  meta: { username: string; displayName: string }
+  meta: { username: string; displayName: string; disciplines: CreativeDiscipline[] }
 ) {
   if (!supabase) throw new Error('Supabase is not configured');
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username: meta.username, display_name: meta.displayName } },
+    options: {
+      data: {
+        username: meta.username,
+        display_name: meta.displayName,
+        disciplines: meta.disciplines,
+      },
+    },
   });
   if (error) throw error;
   const app = toAppSession(data.session);

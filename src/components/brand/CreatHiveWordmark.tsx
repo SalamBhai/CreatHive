@@ -51,15 +51,15 @@ export function CreatHiveWordmark({
       <span className="sr-only">CreatHive, pronounced Creative.</span>
 
       {/* Seamless Joined Cursive Wordmark: Creat + Hive */}
-      <div aria-hidden="true" className="inline-flex items-center font-script font-bold tracking-tight leading-none">
+      <div aria-hidden="true" className="inline-flex items-center font-script">
         {/* "Creat" in Deep Charcoal (or white on dark surfaces) */}
-        <span className={`${currentSize.text} ${tone === 'light' ? 'text-white' : 'text-[#18181B]'}`}>
+        <span className={`${currentSize.text} leading-[1.3] ${tone === 'light' ? 'text-white' : 'text-[#18181B]'}`}>
           Creat
         </span>
 
         {/* "Hive" in Warm Coral-Amber Gradient - smoothly joined */}
         <span
-          className={`${currentSize.text} text-transparent bg-clip-text bg-gradient-to-r from-[#FF5A36] via-[#FF8438] to-[#FFAE19]`}
+          className={`${currentSize.text} leading-[1.3] text-transparent bg-clip-text bg-gradient-to-r from-[#FF5A36] via-[#FF8438] to-[#FFAE19]`}
         >
           Hive
         </span>

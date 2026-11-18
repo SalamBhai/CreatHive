@@ -8,7 +8,9 @@ import { ArrowRight, CheckCircle } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
+import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { signUpWithPassword } from '@/lib/auth';
+import type { CreativeDiscipline } from '@/lib/types';
 
 export default function JoinPage() {
   const router = useRouter();
@@ -16,7 +18,7 @@ export default function JoinPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [tagline, setTagline] = useState('');
+  const [disciplines, setDisciplines] = useState<CreativeDiscipline[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
@@ -34,6 +36,7 @@ export default function JoinPage() {
       const session = await signUpWithPassword(email.trim(), password, {
         username: handle,
         displayName: displayName.trim(),
+        disciplines,
       });
       // Email confirmation is on: no session until they click the link.
       if (!session) {
@@ -105,8 +108,39 @@ export default function JoinPage() {
                   <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-bold">What do you do?</label>
-                  <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Spoken word poet & visual artist" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
+                  <label className="mb-2 block text-xs font-bold">What do you do?</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(Object.keys(DISCIPLINE_CONFIG) as Array<CreativeDiscipline | 'ALL'>)
+                      .filter((key): key is CreativeDiscipline => key !== 'ALL')
+                      .map((key) => {
+                      const config = DISCIPLINE_CONFIG[key];
+                      const Icon = config.icon;
+                      const active = disciplines.includes(key);
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() =>
+                            setDisciplines((prev) =>
+                              active ? prev.filter((d) => d !== key) : [...prev, key]
+                            )
+                          }
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors ${
+                            active
+                              ? 'border-[#FF5A36] bg-[#FFF2EE] text-[#FF5A36]'
+                              : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+                          }`}
+                        >
+                          <Icon size={13} weight="duotone" />
+                          {config.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-stone-500">
+                    Pick all that fit — {disciplines.length || 'none'} selected.
+                  </p>
                 </div>
 
                 {error ? <p className="text-xs text-red-600">{error}</p> : null}
@@ -122,9 +156,6 @@ export default function JoinPage() {
             </p>
           </>
         )}
-        <p className="mt-5 text-center text-xs text-stone-600">
-          Browse the work first — <Link href="/explore" className="font-bold text-[#FF5A36]">Explore the commons</Link>
-        </p>
       </main>
     </div>
   );

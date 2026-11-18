@@ -77,9 +77,6 @@ export function SupabaseAuthGate() {
           </Link>
         </Surface>
 
-        <p className="mt-5 text-center text-xs text-stone-600">
-          Browse the work first — <Link href="/explore" className="font-bold text-[#FF5A36]">Explore the commons</Link>
-        </p>
       </main>
     </div>
   );
