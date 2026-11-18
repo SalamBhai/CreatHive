@@ -7,6 +7,12 @@ import type {
   PerformanceInquiry,
   CreativeDiscipline,
   InquiryStatus,
+  Campaign,
+  CampaignStatus,
+  Submission,
+  SubmissionStatus,
+  ContentFlag,
+  FlagStatus,
 } from './types';
 import type { JoinRequest } from './store-types';
 import { repository } from './repository';
@@ -109,6 +115,28 @@ export function useCreativePieces(
   });
 }
 
+/* ---------- Admin ---------- */
+
+export function useAdminPieces() {
+  return useQuery({ queryKey: ['admin-pieces'], queryFn: () => repository.listAllPieces() });
+}
+
+export function useAdminInquiries() {
+  return useQuery({ queryKey: ['admin-inquiries'], queryFn: () => repository.listAllInquiries() });
+}
+
+export function useCampaigns() {
+  return useQuery({ queryKey: ['campaigns'], queryFn: () => repository.listCampaigns() });
+}
+
+export function useSubmissions() {
+  return useQuery({ queryKey: ['submissions'], queryFn: () => repository.listSubmissions() });
+}
+
+export function useFlags() {
+  return useQuery({ queryKey: ['flags'], queryFn: () => repository.listFlags() });
+}
+
 /* ---------- Mutations ---------- */
 
 export function useCreateProfile() {
@@ -208,5 +236,65 @@ export function useSubmitJoinRequest() {
     mutationFn: (request: Omit<JoinRequest, 'id' | 'status' | 'createdAt'>) =>
       repository.submitJoinRequest(request),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['join-requests'] }),
+  });
+}
+
+export function useUpdateJoinRequestStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'PENDING' | 'APPROVED' }) =>
+      repository.updateJoinRequestStatus(id, status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['join-requests'] }),
+  });
+}
+
+export function useCreateCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (campaign: Omit<Campaign, 'id' | 'createdAt'>) => repository.createCampaign(campaign),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['campaigns'] }),
+  });
+}
+
+export function useUpdateCampaignStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: CampaignStatus }) =>
+      repository.updateCampaignStatus(id, status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['campaigns'] }),
+  });
+}
+
+export function useCreateSubmission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (submission: Omit<Submission, 'id' | 'createdAt' | 'status'>) =>
+      repository.createSubmission(submission),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['submissions'] }),
+  });
+}
+
+export function useUpdateSubmissionStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: SubmissionStatus }) =>
+      repository.updateSubmissionStatus(id, status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['submissions'] }),
+  });
+}
+
+export function useCreateFlag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (flag: Omit<ContentFlag, 'id' | 'createdAt' | 'status'>) => repository.createFlag(flag),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['flags'] }),
+  });
+}
+
+export function useUpdateFlagStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: FlagStatus }) => repository.updateFlagStatus(id, status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['flags'] }),
   });
 }

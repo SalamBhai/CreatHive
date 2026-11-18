@@ -4,6 +4,12 @@ import type {
   CreativePiece,
   PerformanceInquiry,
   InquiryStatus,
+  Campaign,
+  CampaignStatus,
+  Submission,
+  SubmissionStatus,
+  ContentFlag,
+  FlagStatus,
 } from '@/lib/types';
 import type { JoinRequest } from '@/lib/store-types';
 import { INITIAL_PROFILES, INITIAL_PIECES } from '@/lib/sample-data';
@@ -13,6 +19,9 @@ const KEYS = {
   pieces: 'creathive_pieces_v1',
   inquiries: 'creathive_inquiries_v1',
   joinRequests: 'creathive_join_requests_v1',
+  campaigns: 'creathive_campaigns_v1',
+  submissions: 'creathive_submissions_v1',
+  flags: 'creathive_flags_v1',
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -35,6 +44,9 @@ const profiles = () => read<Record<string, CreativeProfile>>(KEYS.profiles, INIT
 const pieces = () => read<CreativePiece[]>(KEYS.pieces, INITIAL_PIECES);
 const inquiries = () => read<PerformanceInquiry[]>(KEYS.inquiries, []);
 const joinRequests = () => read<JoinRequest[]>(KEYS.joinRequests, []);
+const campaigns = () => read<Campaign[]>(KEYS.campaigns, []);
+const submissions = () => read<Submission[]>(KEYS.submissions, []);
+const flags = () => read<ContentFlag[]>(KEYS.flags, []);
 
 export const localRepository: DataRepository = {
   async listProfiles() {
@@ -157,5 +169,68 @@ export const localRepository: DataRepository = {
     };
     write(KEYS.joinRequests, [created, ...joinRequests()]);
     return created;
+  },
+
+  async updateJoinRequestStatus(id, status) {
+    write(KEYS.joinRequests, joinRequests().map((r) => (r.id === id ? { ...r, status } : r)));
+    return id;
+  },
+
+  async listAllPieces() {
+    return pieces();
+  },
+
+  async listAllInquiries() {
+    return inquiries();
+  },
+
+  async listCampaigns() {
+    return campaigns();
+  },
+
+  async createCampaign(campaign) {
+    const created: Campaign = { ...campaign, id: `campaign-${Date.now()}`, createdAt: new Date().toISOString() };
+    write(KEYS.campaigns, [created, ...campaigns()]);
+    return created;
+  },
+
+  async updateCampaignStatus(id, status: CampaignStatus) {
+    write(KEYS.campaigns, campaigns().map((c) => (c.id === id ? { ...c, status } : c)));
+    return id;
+  },
+
+  async listSubmissions() {
+    return submissions();
+  },
+
+  async createSubmission(submission) {
+    const created: Submission = {
+      ...submission,
+      id: `sub-${Date.now()}`,
+      status: 'OPEN',
+      createdAt: new Date().toISOString(),
+    };
+    write(KEYS.submissions, [created, ...submissions()]);
+    return created;
+  },
+
+  async updateSubmissionStatus(id, status: SubmissionStatus) {
+    write(KEYS.submissions, submissions().map((s) => (s.id === id ? { ...s, status, reviewedAt: new Date().toISOString() } : s)));
+    return id;
+  },
+
+  async listFlags() {
+    return flags();
+  },
+
+  async createFlag(flag) {
+    const created: ContentFlag = { ...flag, id: `flag-${Date.now()}`, status: 'OPEN', createdAt: new Date().toISOString() };
+    write(KEYS.flags, [created, ...flags()]);
+    return created;
+  },
+
+  async updateFlagStatus(id, status: FlagStatus) {
+    write(KEYS.flags, flags().map((f) => (f.id === id ? { ...f, status } : f)));
+    return id;
   },
 };

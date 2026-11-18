@@ -4,6 +4,12 @@ import type {
   PerformanceInquiry,
   InquiryStatus,
   CreativeDiscipline,
+  Campaign,
+  CampaignStatus,
+  Submission,
+  SubmissionStatus,
+  ContentFlag,
+  FlagStatus,
 } from '@/lib/types';
 import type { JoinRequest } from '@/lib/store-types';
 
@@ -37,4 +43,22 @@ export interface DataRepository {
   // Admin: join requests
   listJoinRequests(): Promise<JoinRequest[]>;
   submitJoinRequest(request: NewJoinRequest): Promise<JoinRequest>;
+  updateJoinRequestStatus(id: string, status: JoinRequest['status']): Promise<string>;
+
+  // Admin: cross-creator views
+  listAllPieces(): Promise<CreativePiece[]>;
+  listAllInquiries(): Promise<PerformanceInquiry[]>;
+
+  // Campaigns and submissions
+  listCampaigns(): Promise<Campaign[]>;
+  createCampaign(campaign: Omit<Campaign, 'id' | 'createdAt'>): Promise<Campaign>;
+  updateCampaignStatus(id: string, status: CampaignStatus): Promise<string>;
+  listSubmissions(): Promise<Submission[]>;
+  createSubmission(submission: Omit<Submission, 'id' | 'createdAt' | 'status'>): Promise<Submission>;
+  updateSubmissionStatus(id: string, status: SubmissionStatus): Promise<string>;
+
+  // Moderation
+  listFlags(): Promise<ContentFlag[]>;
+  createFlag(flag: Omit<ContentFlag, 'id' | 'createdAt' | 'status'>): Promise<ContentFlag>;
+  updateFlagStatus(id: string, status: FlagStatus): Promise<string>;
 }

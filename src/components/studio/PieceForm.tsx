@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { NeoButton } from '@/components/ui/NeoButton';
-import { useAddPiece, useAllPieces, useUpdatePiece } from '@/lib/store';
+import { useAddPiece, useAllPieces, useCampaigns, useCreateSubmission, useUpdatePiece } from '@/lib/store';
 import { ALLOWED_EMBED_HOSTS } from '@/lib/media';
 import { MEDIA_LABELS, mediaTypeForNiche } from '@/lib/media-format';
 import { MAX_TAGS, normalizeTags } from '@/lib/tags';
@@ -38,12 +38,15 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [bodyHtml, setBodyHtml] = useState(piece?.bodyHtml || '');
   const [pdfUrl, setPdfUrl] = useState(piece?.pdfUrl || '');
   const [status, setStatus] = useState<PieceStatus>(piece?.status || 'PUBLIC');
+  const [campaignId, setCampaignId] = useState('');
   const [uploadError, setUploadError] = useState('');
   const mediaType = mediaTypeForNiche(discipline);
   const addPieceMutation = useAddPiece();
   const updatePieceMutation = useUpdatePiece();
   const { data: allPieces } = useAllPieces();
-  const isPending = addPieceMutation.isPending || updatePieceMutation.isPending;
+  const { data: campaigns } = useCampaigns();
+  const submitToCampaign = useCreateSubmission();
+  const isPending = addPieceMutation.isPending || updatePieceMutation.isPending || submitToCampaign.isPending;
 
   const currentTags = normalizeTags(tagsInput);
 
@@ -94,6 +97,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setTagsInput('');
     setGalleryImages([]);
     setGalleryPublicIds([]);
+    setCampaignId('');
     setBodyHtml('');
     setPdfUrl('');
   };
@@ -126,15 +130,23 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       tags: currentTags.length ? currentTags : ['creative', discipline.toLowerCase()],
     };
 
-    const onDone = () => {
+    const onDone = (savedId?: string) => {
+      if (campaignId && savedId) {
+        submitToCampaign.mutate({
+          campaignId,
+          creativeId: profile.id,
+          pieceId: savedId,
+          note: subtitle || undefined,
+        });
+      }
       reset();
       onSuccess?.();
     };
 
     if (piece) {
-      updatePieceMutation.mutate({ id: piece.id, patch: payload }, { onSuccess: onDone });
+      updatePieceMutation.mutate({ id: piece.id, patch: payload }, { onSuccess: () => onDone(piece.id) });
     } else {
-      addPieceMutation.mutate(payload, { onSuccess: onDone });
+      addPieceMutation.mutate(payload, { onSuccess: (created) => onDone(created.id) });
     }
   };
 
@@ -223,6 +235,18 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             <option value="DRAFT">Draft — private to you</option>
           </select>
         </div>
+
+        {(campaigns || []).filter((c) => c.status === 'OPEN').length ? (
+          <div>
+            <label className={labelClass}>Submit to campaign (optional)</label>
+            <select value={campaignId} onChange={(e) => setCampaignId(e.target.value)} className={inputClass}>
+              <option value="">No campaign</option>
+              {(campaigns || []).filter((c) => c.status === 'OPEN').map((c) => (
+                <option key={c.id} value={c.id}>{c.title}</option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
         <div>
           <div className="mb-1 flex items-center justify-between">

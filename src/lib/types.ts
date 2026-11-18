@@ -57,6 +57,7 @@ export interface CreativeProfile {
   };
   /** true for real verified YPAT members; false for seed/mock records. */
   isYPATData?: boolean;
+  isAdmin?: boolean;
   source?: 'mock' | 'live' | 'campaign';
   createdAt: string;
 }
@@ -98,6 +99,45 @@ export type InquiryEventType =
   | 'OTHER';
 
 export type InquiryStatus = 'PENDING' | 'REVIEWED' | 'RESPONDED';
+
+export type CampaignStatus = 'OPEN' | 'CLOSED';
+
+export interface Campaign {
+  id: string;
+  title: string;
+  description: string;
+  discipline: CreativeDiscipline | 'ALL';
+  reward?: string;
+  deadline?: string;
+  status: CampaignStatus;
+  createdBy?: string;
+  createdAt: string;
+}
+
+export type SubmissionStatus = 'OPEN' | 'REVIEWING' | 'ACCEPTED' | 'REJECTED';
+
+export interface Submission {
+  id: string;
+  campaignId: string;
+  creativeId: string;
+  pieceId?: string;
+  note?: string;
+  status: SubmissionStatus;
+  createdAt: string;
+  reviewedAt?: string;
+}
+
+export type FlagStatus = 'OPEN' | 'RESOLVED';
+
+export interface ContentFlag {
+  id: string;
+  targetType: 'piece' | 'profile' | 'inquiry';
+  targetId: string;
+  reason: string;
+  reporterId?: string;
+  status: FlagStatus;
+  createdAt: string;
+}
 
 export interface PerformanceInquiry {
   id: string;

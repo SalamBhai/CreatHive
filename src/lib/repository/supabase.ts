@@ -8,6 +8,12 @@ import type {
   PerformanceInquiry,
   InquiryStatus,
   CreativeDiscipline,
+  Campaign,
+  CampaignStatus,
+  Submission,
+  SubmissionStatus,
+  ContentFlag,
+  FlagStatus,
 } from '@/lib/types';
 import type { JoinRequest } from '@/lib/store-types';
 
@@ -24,6 +30,9 @@ type ProfileRow = Record<string, unknown> & { id: string; username: string };
 type PieceRow = Record<string, unknown> & { id: string; creative_id: string; created_at: string };
 type InquiryRow = Record<string, unknown> & { id: string; creative_id: string; created_at: string };
 type JoinRow = Record<string, unknown> & { id: string; created_at: string };
+type CampaignRow = Record<string, unknown> & { id: string; created_at: string };
+type SubmissionRow = Record<string, unknown> & { id: string; created_at: string };
+type FlagRow = Record<string, unknown> & { id: string; created_at: string };
 
 const toProfile = (r: ProfileRow): CreativeProfile => ({
   id: r.id,
@@ -46,6 +55,7 @@ const toProfile = (r: ProfileRow): CreativeProfile => ({
   // Anything in Supabase is real YPAT data by definition. Older rows were
   // inserted with a hardcoded false flag, so don't trust the stored value here.
   isYPATData: true,
+  isAdmin: r.is_admin === true,
   source: 'live' as const,
   createdAt: String(r.created_at ?? ''),
 });
@@ -140,6 +150,39 @@ const toJoin = (r: JoinRow): JoinRequest => ({
   createdAt: r.created_at,
 });
 
+const toCampaign = (r: CampaignRow): Campaign => ({
+  id: r.id,
+  title: String(r.title ?? ''),
+  description: String(r.description ?? ''),
+  discipline: (r.discipline as Campaign['discipline']) || 'ALL',
+  reward: r.reward ? String(r.reward) : undefined,
+  deadline: r.deadline ? String(r.deadline) : undefined,
+  status: (r.status as CampaignStatus) || 'OPEN',
+  createdBy: r.created_by ? String(r.created_by) : undefined,
+  createdAt: r.created_at,
+});
+
+const toSubmission = (r: SubmissionRow): Submission => ({
+  id: r.id,
+  campaignId: String(r.campaign_id ?? ''),
+  creativeId: String(r.creative_id ?? ''),
+  pieceId: r.piece_id ? String(r.piece_id) : undefined,
+  note: r.note ? String(r.note) : undefined,
+  status: (r.status as SubmissionStatus) || 'OPEN',
+  createdAt: r.created_at,
+  reviewedAt: r.reviewed_at ? String(r.reviewed_at) : undefined,
+});
+
+const toFlag = (r: FlagRow): ContentFlag => ({
+  id: r.id,
+  targetType: (r.target_type as ContentFlag['targetType']) || 'piece',
+  targetId: String(r.target_id ?? ''),
+  reason: String(r.reason ?? ''),
+  reporterId: r.reporter_id ? String(r.reporter_id) : undefined,
+  status: (r.status as FlagStatus) || 'OPEN',
+  createdAt: r.created_at,
+});
+
 /** Seed/mock records remain visible until real YPAT users replace them. */
 const mockProfiles = (): CreativeProfile[] =>
   Object.values(INITIAL_PROFILES).map((p) => ({ ...p, isYPATData: false, source: 'mock' as const }));
@@ -208,6 +251,7 @@ export const supabaseRepository: DataRepository = {
         location: patch.location,
         social_links: patch.socialLinks,
         is_available_for_gigs: patch.isAvailableForGigs,
+        is_admin: patch.isAdmin,
       })
       .eq('username', clean)
       .select()
@@ -379,5 +423,108 @@ export const supabaseRepository: DataRepository = {
       .single();
     if (error) throw error;
     return toJoin(data as JoinRow);
+  },
+
+  async updateJoinRequestStatus(id, status) {
+    const { error } = await getDb().from('join_requests').update({ status }).eq('id', id);
+    if (error) throw error;
+    return id;
+  },
+
+  async listAllPieces() {
+    const { data, error } = await getDb().from('pieces').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data as PieceRow[]).map(toPiece).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
+  },
+
+  async listAllInquiries() {
+    const { data, error } = await getDb().from('inquiries').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data as InquiryRow[]).map(toInquiry);
+  },
+
+  async listCampaigns() {
+    const { data, error } = await getDb().from('campaigns').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data as CampaignRow[]).map(toCampaign);
+  },
+
+  async createCampaign(campaign) {
+    const { data, error } = await getDb()
+      .from('campaigns')
+      .insert({
+        title: campaign.title,
+        description: campaign.description,
+        discipline: campaign.discipline,
+        reward: campaign.reward ?? null,
+        deadline: campaign.deadline ?? null,
+        status: campaign.status,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return toCampaign(data as CampaignRow);
+  },
+
+  async updateCampaignStatus(id, status) {
+    const { error } = await getDb().from('campaigns').update({ status }).eq('id', id);
+    if (error) throw error;
+    return id;
+  },
+
+  async listSubmissions() {
+    const { data, error } = await getDb().from('submissions').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data as SubmissionRow[]).map(toSubmission);
+  },
+
+  async createSubmission(submission) {
+    const { data, error } = await getDb()
+      .from('submissions')
+      .insert({
+        campaign_id: submission.campaignId,
+        creative_id: submission.creativeId,
+        piece_id: submission.pieceId ?? null,
+        note: submission.note ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return toSubmission(data as SubmissionRow);
+  },
+
+  async updateSubmissionStatus(id, status) {
+    const { error } = await getDb()
+      .from('submissions')
+      .update({ status, reviewed_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+    return id;
+  },
+
+  async listFlags() {
+    const { data, error } = await getDb().from('flags').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data as FlagRow[]).map(toFlag);
+  },
+
+  async createFlag(flag) {
+    const { data, error } = await getDb()
+      .from('flags')
+      .insert({
+        target_type: flag.targetType,
+        target_id: flag.targetId,
+        reason: flag.reason,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return toFlag(data as FlagRow);
+  },
+
+  async updateFlagStatus(id, status) {
+    const { error } = await getDb().from('flags').update({ status }).eq('id', id);
+    if (error) throw error;
+    return id;
   },
 };

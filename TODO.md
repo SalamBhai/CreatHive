@@ -89,17 +89,17 @@ These were either falsified as "done" in the previous version of this file, or w
 ### Medium — Studio / UX
 - [x] Banner upload UI — URL field + upload in `ProfileEditor`, image shown in `ProfileHero` with the gradient as fallback. Needs migration `003_banner_upload.sql` on the live DB.
 - [x] Full-post composer — `+` image/grid can upload files (URLs still accepted), captions, left/centre/right alignment, and optional video poster URL.
-- [ ] Finish `/admin` — currently a 12-line "coming soon" stub (see Large).
+- [x] `/admin` built: overview metrics, creators, pieces, inquiries, join requests, campaigns, submissions and flags behind an admin gate. Needs migration `004` and `is_admin = true` on your profile.
 
 ### Large — data & platform (see `docs/MIGRATION.md`)
-- [ ] Supabase project: `campaigns`, `submissions`, `applause_events` tables + RLS. Current schema has `profiles`, `pieces`, `inquiries`, `join_requests` (+ `increment_applause()`), plus migration 001 for upload public ids.
+- [~] Supabase project: `profiles`, `pieces`, `inquiries`, `join_requests`, `campaigns`, `submissions`, `flags`, `audit_log` + RLS and `is_admin()` helper (schema.sql / migration 004). `applause_events` still not modelled.
 - [ ] Sup Auth + onboarding: YPAT verification, username claim UX, email verification polish. (Signup, session, profile provisioning and check-email state are done.)
 - [ ] Cloudinary: transformations, replace/delete using stored `public_id`, cleanup jobs. (Signed uploads, folders, validation and public_id storage are done.)
-- [ ] Apply migrations `001_upload_public_ids.sql` and `002_backfill_is_ypat_data.sql` to the live Supabase project.
+- [~] Applied: `001` + `002`. Still to apply: `003_banner_upload.sql` and `004_admin_campaigns.sql`.
 - [ ] Migrate mocks as seed data; keep them visible alongside real YPAT users.
-- [ ] Admin page (clean, like Explore): creators, pieces, campaigns, submissions, inquiries, flags, metrics. Gate it behind an admin role.
-- [ ] Admin creates campaigns; creators submit through **Add New Piece** with campaign assignment.
-- [ ] Submission workflow: `open → reviewing → accepted / rejected`; notifications (in-app + email).
+- [x] Admin page (clean, like Explore): creators, pieces, campaigns, submissions, inquiries, flags, metrics, gated by `is_admin`.
+- [x] Admin creates campaigns; creators submit through **Add New Piece** with campaign assignment.
+- [~] Submission workflow `OPEN → REVIEWING → ACCEPTED / REJECTED` in admin UI; notifications (in-app + email) still pending.
 - [ ] Analytics: profile views, applause, campaign conversion; audit log for admin actions.
 - [ ] PWA completeness: service worker / offline shell (manifest exists, SW missing).
 - [ ] Moderation, reporting, rate limits, backups, observability.
