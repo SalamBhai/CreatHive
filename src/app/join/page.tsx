@@ -59,7 +59,7 @@ export default function JoinPage() {
         </Link>
       </div>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-12">
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-12">
         {checkEmail ? (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
             <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
@@ -90,53 +90,65 @@ export default function JoinPage() {
 
             <Surface className="mt-8 space-y-4 p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="mb-1 block text-xs font-bold">Display name *</label>
-                  <input required value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. Adaeze Okafor" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-bold">Display name *</label>
+                    <input required value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. Adaeze Okafor" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold">Handle *</label>
+                    <input required value={username} onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase())} placeholder="adaeze" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
+                    <p className="mt-1 text-[11px] text-stone-500">creathive.app/@{username || 'yourname'}</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold">Handle *</label>
-                  <input required value={username} onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase())} placeholder="adaeze" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
-                  <p className="mt-1 text-[11px] text-stone-500">creathive.app/@{username || 'yourname'}</p>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold">Email *</label>
-                  <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold">Password *</label>
-                  <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-bold">Email *</label>
+                    <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold">Password *</label>
+                    <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A36]" />
+                  </div>
                 </div>
                 <div>
                   <label className="mb-2 block text-xs font-bold">What do you do?</label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {(Object.keys(DISCIPLINE_CONFIG) as Array<CreativeDiscipline | 'ALL'>)
                       .filter((key): key is CreativeDiscipline => key !== 'ALL')
                       .map((key) => {
-                      const config = DISCIPLINE_CONFIG[key];
-                      const Icon = config.icon;
-                      const active = disciplines.includes(key);
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() =>
-                            setDisciplines((prev) =>
-                              active ? prev.filter((d) => d !== key) : [...prev, key]
-                            )
-                          }
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors ${
-                            active
-                              ? 'border-[#FF5A36] bg-[#FFF2EE] text-[#FF5A36]'
-                              : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
-                          }`}
-                        >
-                          <Icon size={13} weight="duotone" />
-                          {config.label}
-                        </button>
-                      );
-                    })}
+                        const config = DISCIPLINE_CONFIG[key];
+                        const Icon = config.icon;
+                        const active = disciplines.includes(key);
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() =>
+                              setDisciplines((prev) =>
+                                active ? prev.filter((d) => d !== key) : [...prev, key]
+                              )
+                            }
+                            className={`relative flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all ${
+                              active
+                                ? 'border-[#FF5A36] bg-[#FFF2EE] shadow-[0_2px_0_0_#FF5A36]'
+                                : 'border-stone-200 bg-white hover:border-stone-400'
+                            }`}
+                          >
+                            <span
+                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                active ? 'bg-white text-[#FF5A36]' : 'bg-stone-100 text-stone-600'
+                              }`}
+                            >
+                              <Icon size={17} weight="duotone" />
+                            </span>
+                            <span className={`text-xs font-bold leading-tight ${active ? 'text-[#FF5A36]' : 'text-[#18181B]'}`}>
+                              {config.label}
+                            </span>
+                          </button>
+                        );
+                      })}
                   </div>
                   <p className="mt-1.5 text-[11px] text-stone-500">
                     Pick all that fit — {disciplines.length || 'none'} selected.

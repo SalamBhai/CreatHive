@@ -35,7 +35,7 @@ export function SupabaseAuthGate() {
         </Link>
       </div>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-12">
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-12">
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#FF5A36]">Creator Studio</p>
         <h1 className="mt-3 font-editorial text-4xl font-semibold leading-tight">Welcome back.</h1>
         <p className="mt-3 text-sm leading-relaxed text-stone-600">Sign in to manage your work and opportunities.</p>
