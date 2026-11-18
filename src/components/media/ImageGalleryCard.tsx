@@ -57,6 +57,7 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
             src={images[currentIndex]}
             alt={`${piece.title} - ${currentIndex + 1}`}
             fill
+            priority
             sizes="(max-width: 768px) 100vw, 640px"
             className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />

@@ -15,9 +15,13 @@ export type { JoinRequest } from './store-types';
 
 /* ---------- Queries ---------- */
 
-export function useCreativeProfile(username: string = 'sheriff') {
+export function useCreativeProfile(
+  username: string = 'sheriff',
+  initialData?: CreativeProfile
+) {
   return useQuery({
     queryKey: ['profile', username.toLowerCase()],
+    ...(initialData ? { initialData } : {}),
     queryFn: async (): Promise<CreativeProfile> => {
       const profile = await repository.getProfile(username);
       if (profile) return profile;
@@ -75,13 +79,18 @@ export function useAllPieces() {
 
 export function useCreativePieces(
   username: string = 'sheriff',
-  filterDiscipline?: CreativeDiscipline | 'ALL'
+  filterDiscipline?: CreativeDiscipline | 'ALL',
+  initialData?: CreativePiece[]
 ) {
   const { data: profile } = useCreativeProfile(username);
+  const initial = initialData?.filter(
+    (p) => !filterDiscipline || filterDiscipline === 'ALL' || p.discipline === filterDiscipline
+  );
 
   return useQuery({
     queryKey: ['pieces', profile?.id, filterDiscipline],
     enabled: !!profile?.id,
+    ...(initial?.length ? { initialData: initial } : {}),
     queryFn: () =>
       repository.listPieces({
         creativeId: profile!.id,

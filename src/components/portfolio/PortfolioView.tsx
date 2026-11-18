@@ -11,19 +11,25 @@ import { ConversionBar } from '@/components/portfolio/ConversionBar';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { useCreativeProfile, useCreativePieces } from '@/lib/store';
-import { CreativeDiscipline } from '@/lib/types';
+import { CreativeDiscipline, CreativePiece, CreativeProfile } from '@/lib/types';
 
 interface PortfolioViewProps {
   username: string;
+  initialProfile?: CreativeProfile;
+  initialPieces?: CreativePiece[];
 }
 
-export function PortfolioView({ username }: PortfolioViewProps) {
+export function PortfolioView({ username, initialProfile, initialPieces }: PortfolioViewProps) {
   const [selectedDiscipline, setSelectedDiscipline] = useState<CreativeDiscipline | 'ALL'>('ALL');
 
-  const { data: profile, isLoading: isProfileLoading } = useCreativeProfile(username);
-  const { data: pieces, isLoading: isPiecesLoading } = useCreativePieces(username, selectedDiscipline);
+  const { data: profile } = useCreativeProfile(username, initialProfile);
+  const { data: pieces, isLoading: isPiecesLoading } = useCreativePieces(
+    username,
+    selectedDiscipline,
+    initialPieces
+  );
 
-  if (isProfileLoading || !profile) {
+  if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="flex flex-col items-center gap-3">
