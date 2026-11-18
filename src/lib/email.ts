@@ -15,6 +15,9 @@ import type { Transporter } from 'nodemailer';
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://creathive.app';
+/** Public, stable HTTPS URL — email clients won't render relative or data URLs. */
+const LOGO_URL =
+  process.env.EMAIL_LOGO_URL || `${SITE_URL}/images/creathive-wordmark.png`;
 const FROM_EMAIL = process.env.SMTP_FROM || 'creathivee@gmail.com';
 const FROM_NAME = process.env.SMTP_FROM_NAME || 'Hiver of CreatHive';
 
@@ -191,7 +194,7 @@ export function getEmailTemplate(content: string): string {
         <tr><td style="padding:24px 32px;border-bottom:1px solid ${BRAND.line};">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
             <td align="left" valign="middle">
-              <img src="${SITE_URL}/images/creathive-wordmark.png" width="220" height="47" alt="CreatHive" style="display:block;border:0;max-width:100%;height:auto;" />
+              <img src="${LOGO_URL}" width="220" height="47" alt="CreatHive" style="display:block;border:0;max-width:100%;height:auto;" />
             </td>
             <td align="right" valign="middle" style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.muted};">Built for the limitless creatives</td>
           </tr></table>
