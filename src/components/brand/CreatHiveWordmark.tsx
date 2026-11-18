@@ -59,7 +59,7 @@ export function CreatHiveWordmark({
 
         {/* "Hive" in Warm Coral-Amber Gradient - smoothly joined */}
         <span
-          className={`${currentSize.text} leading-[1.3] text-transparent bg-clip-text bg-gradient-to-r from-[#FF5A36] via-[#FF8438] to-[#FFAE19]`}
+          className={`${currentSize.text} leading-[1.3] pr-[0.14em] -mr-[0.14em] text-transparent bg-clip-text bg-gradient-to-r from-[#FF5A36] via-[#FF8438] to-[#FFC247]`}
         >
           Hive
         </span>
