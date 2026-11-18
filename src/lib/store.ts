@@ -18,7 +18,27 @@ export type { JoinRequest } from './store-types';
 export function useCreativeProfile(username: string = 'sheriff') {
   return useQuery({
     queryKey: ['profile', username.toLowerCase()],
-    queryFn: () => repository.getProfile(username),
+    queryFn: async (): Promise<CreativeProfile> => {
+      const profile = await repository.getProfile(username);
+      if (profile) return profile;
+      // No row yet (fresh live DB): return a neutral placeholder, never undefined.
+      return {
+        id: '',
+        username: username.toLowerCase().replace('@', ''),
+        displayName: username,
+        tagline: '',
+        bio: '',
+        avatarUrl: '',
+        bannerGradient: 'from-amber-500/20 via-orange-500/20 to-red-500/20',
+        disciplines: [],
+        location: '',
+        isAvailableForGigs: false,
+        socialLinks: {},
+        themeStyle: 'soft-brutal',
+        stats: { viewsCount: 0, applauseCount: 0, piecesCount: 0 },
+        createdAt: new Date().toISOString(),
+      };
+    },
   });
 }
 

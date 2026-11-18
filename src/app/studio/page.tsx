@@ -18,8 +18,10 @@ import {
   useInquiries,
   useUpdateInquiryStatus,
 } from '@/lib/store';
-import { signIn, signOut, useSession } from '@/lib/auth';
+import { signInLocal, signOut, useSession } from '@/lib/auth';
+import { usingSupabase } from '@/lib/supabase';
 import { StudioGate } from '@/components/studio/StudioGate';
+import { SupabaseAuthGate } from '@/components/studio/SupabaseAuthGate';
 import { LivePreview } from '@/components/studio/LivePreview';
 import { PieceManager } from '@/components/studio/PieceManager';
 
@@ -128,16 +130,20 @@ export default function StudioPage() {
           createdAt: new Date().toISOString(),
         },
         {
-          onSuccess: () => signIn({ username: handle, displayName: handle, email: '' }),
+          onSuccess: () => signInLocal({ username: handle, displayName: handle, email: '' }),
         }
       );
     } else {
-      signIn({ username: handle, displayName: existing.displayName, email: '' });
+      signInLocal({ username: handle, displayName: existing.displayName, email: '' });
     }
   };
 
   if (!session) {
-    return <StudioGate onEnter={handleEnter} isPending={createProfile.isPending} />;
+    return usingSupabase ? (
+      <SupabaseAuthGate />
+    ) : (
+      <StudioGate onEnter={handleEnter} isPending={createProfile.isPending} />
+    );
   }
 
   const recentRows = (limit: number) =>

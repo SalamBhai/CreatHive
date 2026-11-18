@@ -1,25 +1,30 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
+import { supabase, usingSupabase } from './supabase';
+import { repository } from './repository';
 
-export interface Session {
+export interface AppSession {
   username: string;
   displayName: string;
   email: string;
+  /** Supabase auth user id, used by RLS as auth.uid(). */
+  userId?: string;
 }
 
+/* ---------- Local session (mock mode) ---------- */
 const STORAGE_KEY = 'creathive_session_v1';
-
-let current: Session | null = null;
+let current: AppSession | null = null;
 let loaded = false;
 const listeners = new Set<() => void>();
 
-function read(): Session | null {
+function readLocal(): AppSession | null {
   if (typeof window === 'undefined') return null;
   if (loaded) return current;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    current = raw ? (JSON.parse(raw) as Session) : null;
+    current = raw ? (JSON.parse(raw) as AppSession) : null;
   } catch {
     current = null;
   }
@@ -38,11 +43,7 @@ function emit() {
   listeners.forEach((listener) => listener());
 }
 
-export function getSession(): Session | null {
-  return read();
-}
-
-export function signIn(session: Session) {
+export function signInLocal(session: AppSession) {
   current = session;
   loaded = true;
   if (typeof window !== 'undefined') {
@@ -51,7 +52,7 @@ export function signIn(session: Session) {
   emit();
 }
 
-export function signOut() {
+export function signOutLocal() {
   current = null;
   loaded = true;
   if (typeof window !== 'undefined') {
@@ -60,7 +61,88 @@ export function signOut() {
   emit();
 }
 
+/* ---------- Supabase session ---------- */
+function toAppSession(session: Session | null): AppSession | null {
+  if (!session?.user) return null;
+  const meta = session.user.user_metadata || {};
+  return {
+    username: String(meta.username || meta.display_name || session.user.email?.split('@')[0] || 'creative'),
+    displayName: String(meta.display_name || meta.name || meta.username || 'Creative'),
+    email: session.user.email || '',
+    userId: session.user.id,
+  };
+}
+
 /** Auth state shared by the Studio gate and auth-aware links. */
-export function useSession() {
-  return useSyncExternalStore(subscribe, read, () => null);
+export function useSession(): AppSession | null {
+  const [remote, setRemote] = useState<AppSession | null>(null);
+
+  useEffect(() => {
+    if (!usingSupabase || !supabase) return;
+    supabase.auth.getSession().then(({ data }) => setRemote(toAppSession(data.session)));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => setRemote(toAppSession(session))
+    );
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const local = useSyncExternalStore(subscribe, readLocal, () => null);
+  return usingSupabase ? remote : local;
+}
+
+export async function signOut() {
+  if (usingSupabase && supabase) {
+    await supabase.auth.signOut();
+  } else {
+    signOutLocal();
+  }
+}
+
+/** Ensure a profile row exists for the signed-in user, keyed by auth.uid(). */
+async function ensureProfile(app: AppSession) {
+  if (!app.userId) return;
+  const existing = await repository.getProfile(app.username);
+  if (existing) return;
+  await repository.createProfile({
+    id: app.userId,
+    username: app.username,
+    displayName: app.displayName,
+    tagline: 'Creative on CreatHive',
+    bio: 'Making things and sharing them with the hive.',
+    avatarUrl: '',
+    bannerGradient: 'from-amber-500/20 via-orange-500/20 to-red-500/20',
+    disciplines: ['OTHER'],
+    location: '',
+    isAvailableForGigs: true,
+    socialLinks: { email: app.email || undefined },
+    themeStyle: 'soft-brutal',
+    stats: { viewsCount: 0, applauseCount: 0, piecesCount: 0 },
+    createdAt: new Date().toISOString(),
+  });
+}
+
+export async function signInWithPassword(email: string, password: string) {
+  if (!supabase) throw new Error('Supabase is not configured');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  const app = toAppSession(data.session);
+  if (app) await ensureProfile(app);
+  return app;
+}
+
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+  meta: { username: string; displayName: string }
+) {
+  if (!supabase) throw new Error('Supabase is not configured');
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { username: meta.username, display_name: meta.displayName } },
+  });
+  if (error) throw error;
+  const app = toAppSession(data.session);
+  if (app) await ensureProfile(app);
+  return app;
 }

@@ -10,7 +10,7 @@ import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
 import { useCreateProfile, useSubmitJoinRequest } from '@/lib/store';
-import { signIn, useSession } from '@/lib/auth';
+import { signInLocal, useSession } from '@/lib/auth';
 
 export default function JoinPage() {
   const router = useRouter();
@@ -58,7 +58,7 @@ export default function JoinPage() {
             },
             {
               onSuccess: () => {
-                signIn({ username: handle, displayName: displayName.trim(), email: email.trim() });
+                signInLocal({ username: handle, displayName: displayName.trim(), email: email.trim() });
                 setIsDone(true);
               },
             }
