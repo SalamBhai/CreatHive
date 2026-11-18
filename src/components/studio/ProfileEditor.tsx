@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import Image from 'next/image';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { useUpdateProfile } from '@/lib/store';
+import { resolveAvatarUrl } from '@/lib/avatar';
+import { uploadFile } from '@/lib/upload';
 import type { CreativeProfile, SocialLinks } from '@/lib/types';
 
 const SOCIAL_FIELDS: Array<{ key: keyof SocialLinks; label: string; placeholder: string }> = [
@@ -33,7 +36,12 @@ export function ProfileEditor({
   const [location, setLocation] = useState(profile.location);
   const [socials, setSocials] = useState<SocialLinks>(profile.socialLinks || {});
   const [available, setAvailable] = useState(profile.isAvailableForGigs);
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || '');
+  const [avatarPublicId, setAvatarPublicId] = useState(profile.avatarPublicId || '');
+  const [uploadError, setUploadError] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
+  const fileInput = useRef<HTMLInputElement>(null);
   const mutation = useUpdateProfile();
 
   const save = () => {
@@ -47,6 +55,8 @@ export function ProfileEditor({
           location,
           socialLinks: socials,
           isAvailableForGigs: available,
+          avatarUrl,
+          avatarPublicId: avatarPublicId || undefined,
         },
       },
       { onSuccess: onSaved }
@@ -59,7 +69,23 @@ export function ProfileEditor({
     bio !== profile.bio ||
     location !== profile.location ||
     available !== profile.isAvailableForGigs ||
+    avatarUrl !== (profile.avatarUrl || '') ||
+    avatarPublicId !== (profile.avatarPublicId || '') ||
     JSON.stringify(socials) !== JSON.stringify(profile.socialLinks || {});
+
+  const handleAvatar = async (file: File) => {
+    setUploadError('');
+    setUploading(true);
+    try {
+      const result = await uploadFile(file, 'avatar');
+      setAvatarUrl(result.url);
+      setAvatarPublicId(result.publicId);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div>
@@ -116,6 +142,45 @@ export function ProfileEditor({
           />
         </label>
 
+        <div className="rounded-xl border border-stone-200 p-3.5">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-bold">Avatar</span>
+            <span className="text-[10px] text-stone-500">Square image, up to 10 MB</span>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              className={inputClass}
+              value={avatarUrl}
+              onChange={(e) => {
+                setAvatarUrl(e.target.value);
+                if (!e.target.value) setAvatarPublicId('');
+              }}
+              placeholder="https://... or leave blank for initials"
+              aria-label="Avatar URL"
+            />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileInput.current?.click()}
+              className="shrink-0 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-600 hover:border-[#FF5A36] disabled:opacity-50"
+            >
+              {uploading ? 'Uploading…' : 'Upload'}
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleAvatar(file);
+                e.target.value = '';
+              }}
+            />
+          </div>
+          {uploadError ? <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{uploadError}</p> : null}
+        </div>
+
         <div className="border-t border-stone-200 pt-4">
           <h3 className="mb-3 font-editorial text-lg font-semibold">Social links</h3>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -146,10 +211,11 @@ export function ProfileEditor({
           <h3 className="font-editorial text-lg font-semibold">Live preview</h3>
           <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Public card</span>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={profile.avatarUrl}
+        <Image
+          src={resolveAvatarUrl(avatarUrl, displayName || profile.displayName || profile.username || 'CreatHive')}
           alt=""
+          width={64}
+          height={64}
           className="h-16 w-16 rounded-2xl border border-stone-200 object-cover"
         />
         <h2 className="mt-4 font-editorial text-2xl font-semibold">{displayName}</h2>

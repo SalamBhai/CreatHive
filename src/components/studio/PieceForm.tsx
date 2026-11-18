@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { useAddPiece, useAllPieces, useUpdatePiece } from '@/lib/store';
 import { ALLOWED_EMBED_HOSTS } from '@/lib/media';
 import { MEDIA_LABELS, mediaTypeForNiche } from '@/lib/media-format';
 import { MAX_TAGS, normalizeTags } from '@/lib/tags';
+import { uploadFile } from '@/lib/upload';
 import { StoryComposer } from '@/components/studio/StoryComposer';
 import type { CreativeDiscipline, CreativePiece, CreativeProfile, PieceStatus } from '@/lib/types';
 
@@ -27,22 +28,26 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [subtitle, setSubtitle] = useState(piece?.subtitle || '');
   const [discipline, setDiscipline] = useState<CreativeDiscipline>(piece?.discipline || 'SPOKEN_WORD');
   const [mediaUrl, setMediaUrl] = useState(piece?.mediaUrl || '');
+  const [mediaPublicId, setMediaPublicId] = useState(piece?.mediaPublicId || '');
   const [textContent, setTextContent] = useState(piece?.textContent || '');
   const [coverImageUrl, setCoverImageUrl] = useState(piece?.coverImageUrl || '');
+  const [coverPublicId, setCoverPublicId] = useState(piece?.coverPublicId || '');
   const [tagsInput, setTagsInput] = useState((piece?.tags || []).join(', '));
   const [galleryImages, setGalleryImages] = useState<string[]>(piece?.galleryImages || []);
+  const [galleryPublicIds, setGalleryPublicIds] = useState<string[]>(piece?.galleryPublicIds || []);
   const [bodyHtml, setBodyHtml] = useState(piece?.bodyHtml || '');
   const [pdfUrl, setPdfUrl] = useState(piece?.pdfUrl || '');
   const [status, setStatus] = useState<PieceStatus>(piece?.status || 'PUBLIC');
+  const [uploadError, setUploadError] = useState('');
   const mediaType = mediaTypeForNiche(discipline);
   const addPieceMutation = useAddPiece();
   const updatePieceMutation = useUpdatePiece();
   const { data: allPieces } = useAllPieces();
   const isPending = addPieceMutation.isPending || updatePieceMutation.isPending;
 
-  const currentTags = useMemo(() => normalizeTags(tagsInput), [tagsInput]);
+  const currentTags = normalizeTags(tagsInput);
 
-  const suggestedTags = useMemo(() => {
+  const suggestedTags = (() => {
     const counts = new Map<string, number>();
     (allPieces || []).forEach((piece) => {
       (piece.tags || []).forEach((tag) => {
@@ -55,7 +60,22 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       .map(([tag]) => tag)
       .filter((tag) => !currentTags.includes(tag))
       .slice(0, 8);
-  }, [allPieces, currentTags]);
+  })();
+
+  /** Shared upload handler — surfaces failures instead of storing `undefined`. */
+  const handleUpload = async (
+    file: File,
+    kind: 'media' | 'gallery' | 'cover',
+    apply: (url: string, publicId: string) => void
+  ) => {
+    setUploadError('');
+    try {
+      const result = await uploadFile(file, kind);
+      apply(result.url, result.publicId);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed.');
+    }
+  };
 
   const addTag = (tag: string) => {
     setTagsInput(normalizeTags([...currentTags, tag], MAX_TAGS).join(', '));
@@ -67,10 +87,13 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setTitle('');
     setSubtitle('');
     setMediaUrl('');
+    setMediaPublicId('');
     setTextContent('');
     setCoverImageUrl('');
+    setCoverPublicId('');
     setTagsInput('');
     setGalleryImages([]);
+    setGalleryPublicIds([]);
     setBodyHtml('');
     setPdfUrl('');
   };
@@ -90,10 +113,13 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       discipline,
       mediaType,
       mediaUrl: mediaUrl || undefined,
+      mediaPublicId: mediaPublicId || undefined,
       textContent: textContent || undefined,
       bodyHtml: bodyHtml || undefined,
       pdfUrl: pdfUrl || undefined,
       galleryImages: galleryImages.filter(Boolean).length ? galleryImages.filter(Boolean) : undefined,
+      galleryPublicIds: galleryPublicIds.filter(Boolean).length ? galleryPublicIds : undefined,
+      coverPublicId: coverPublicId || undefined,
       coverImageUrl:
         coverImageUrl ||
         'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
@@ -238,13 +264,37 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         {(mediaType === 'AUDIO' || mediaType === 'VIDEO') && (
           <div>
             <label className={labelClass}>Work link</label>
-            <input
-              type="url"
-              value={mediaUrl}
-              onChange={(e) => setMediaUrl(e.target.value)}
-              placeholder="Paste a direct .mp3/.mp4 link, or a share URL"
-              className={inputClass}
-            />
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={mediaUrl}
+                onChange={(e) => setMediaUrl(e.target.value)}
+                placeholder="Paste a direct .mp3/.mp4 link, or a share URL"
+                className={inputClass}
+              />
+              <button
+                type="button"
+                className="rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-600 hover:border-[#FF5A36]"
+                onClick={() => document.getElementById('media-file')?.click()}
+              >
+                Upload
+              </button>
+              <input
+                type="file"
+                id="media-file"
+                accept="video/*,audio/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    void handleUpload(file, 'media', (url, id) => {
+                      setMediaUrl(url);
+                      setMediaPublicId(id);
+                    });
+                  }
+                }}
+              />
+            </div>
             <p className="mt-1.5 text-[11px] leading-relaxed text-stone-500">
               Direct media files play natively. Video embeds are supported from {ALLOWED_EMBED_HOSTS} only.
             </p>
@@ -272,7 +322,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               <label className="block text-xs font-bold text-[#18181B]">Gallery images</label>
               <button
                 type="button"
-                onClick={() => setGalleryImages([...galleryImages, ''])}
+                onClick={() => {
+                  setGalleryImages([...galleryImages, '']);
+                  setGalleryPublicIds([...galleryPublicIds, '']);
+                }}
                 className="text-[11px] font-bold text-[#FF5A36] hover:underline"
               >
                 + Add image
@@ -299,7 +352,35 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
                   />
                   <button
                     type="button"
-                    onClick={() => setGalleryImages(galleryImages.filter((_, i) => i !== index))}
+                    className="ml-2 rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-600 hover:border-[#FF5A36]"
+                    onClick={() => document.getElementById(`gallery-file-${index}`)?.click()}
+                  >
+                    Upload
+                  </button>
+                  <input
+                    type="file"
+                    id={`gallery-file-${index}`}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      void handleUpload(file, 'gallery', (url, id) => {
+                        const images = [...galleryImages];
+                        const ids = [...galleryPublicIds];
+                        images[index] = url;
+                        ids[index] = id;
+                        setGalleryImages(images);
+                        setGalleryPublicIds(ids);
+                      });
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGalleryImages(galleryImages.filter((_, i) => i !== index));
+                      setGalleryPublicIds(galleryPublicIds.filter((_, i) => i !== index));
+                    }}
                     aria-label={`Remove image ${index + 1}`}
                     className="rounded-lg border border-stone-200 p-2 text-stone-500 hover:border-[#FF5A36] hover:text-[#FF5A36]"
                   >
@@ -333,6 +414,28 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             placeholder="https://..."
             className={inputClass}
           />
+          <button
+            type="button"
+            className="ml-2 rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-600 hover:border-[#FF5A36]"
+            onClick={() => document.getElementById('cover-file')?.click()}
+          >
+            Upload
+          </button>
+          <input
+            type="file"
+            id="cover-file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                void handleUpload(file, 'cover', (url, id) => {
+                  setCoverImageUrl(url);
+                  setCoverPublicId(id);
+                });
+              }
+            }}
+          />
         </div>
       </div>
 
@@ -352,6 +455,11 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       </div>
 
       <div className="sticky bottom-0 mt-5 space-y-2 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
+        {uploadError ? (
+          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
+            {uploadError}
+          </p>
+        ) : null}
         <NeoButton type="submit" variant="primary" size="lg" className="w-full">
           {isPending ? 'Saving…' : piece ? 'Save changes' : 'Publish to Portfolio'}
         </NeoButton>

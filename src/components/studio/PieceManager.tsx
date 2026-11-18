@@ -108,7 +108,7 @@ export function PieceManager({ pieces, onEdit, onRefreshPreview }: PieceManagerP
               >
                 <Star size={15} weight={piece.isFeatured ? 'fill' : 'regular'} />
               </button>
-              <div className="hidden flex-col md:flex">
+              <div className="flex flex-col">
                 <button type="button" onClick={() => move(index, -1)} aria-label="Move up" className="rounded p-0.5 text-stone-400 hover:text-[#18181B]">
                   <ArrowUp size={13} weight="bold" />
                 </button>

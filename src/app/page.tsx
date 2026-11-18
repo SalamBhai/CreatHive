@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { ArrowDown, ArrowRight, ArrowUpRight } from '@phosphor-icons/react';
@@ -8,6 +9,7 @@ import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { StudioLink } from '@/components/ui/StudioLink';
 import { VisualScene } from '@/components/landing/VisualScene';
 import { useAllProfiles } from '@/lib/store';
+import { resolveAvatarUrl } from '@/lib/avatar';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -233,10 +235,12 @@ export default function HomePage() {
                 href={`/${profile.username}`}
                 className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 py-1.5 pl-1.5 pr-3 text-[11px] font-semibold text-white/80 backdrop-blur-sm transition-colors hover:border-white/60 hover:text-white"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={profile.avatarUrl}
+                <Image
+                  src={resolveAvatarUrl(profile.avatarUrl, profile.displayName || 'CreatHive')}
                   alt=""
+                  width={24}
+                  height={24}
+                  unoptimized
                   className="h-6 w-6 rounded-full object-cover"
                 />
                 @{profile.username}

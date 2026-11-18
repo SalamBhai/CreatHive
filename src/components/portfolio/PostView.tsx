@@ -1,23 +1,28 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { ArrowLeft, ArrowRight, ArrowUpRight, ShareNetwork, Check } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { Surface } from '@/components/ui/Surface';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
-import { useAllPieces, useAllProfiles } from '@/lib/store';
+import { useAllPieces, useAllProfiles, usePiece } from '@/lib/store';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { toEmbedUrl } from '@/lib/media';
 
 export function PostView({ id }: { id: string }) {
-  const { data: pieces, isLoading } = useAllPieces();
+  const { data: pieces } = useAllPieces();
   const { data: profiles } = useAllProfiles();
+  const { data: singlePiece, isLoading: isPieceLoading } = usePiece(id);
   const [copied, setCopied] = useState(false);
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30 });
 
-  const piece = (pieces || []).find((p) => p.id === id);
+  // Direct links must work for UNLISTED and DRAFT pieces too — the public feed
+  // only contains PUBLIC pieces, so fetch the requested one explicitly.
+  const piece = singlePiece ?? (pieces || []).find((p) => p.id === id);
   const author = piece ? (profiles || []).find((p) => p.id === piece.creativeId) : undefined;
 
   const sorted = [...(pieces || [])].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
@@ -44,7 +49,7 @@ export function PostView({ id }: { id: string }) {
     }
   };
 
-  if (isLoading) {
+  if (isPieceLoading && !piece) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#FDFBF7]">
         <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF5A36] border-t-transparent" />
@@ -119,8 +124,14 @@ export function PostView({ id }: { id: string }) {
 
         {author ? (
           <Link href={`/${author.username}`} className="mt-6 flex items-center gap-3 border-y border-stone-200 py-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={author.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+            <Image
+              src={resolveAvatarUrl(author.avatarUrl, author.displayName)}
+              alt=""
+              width={40}
+              height={40}
+              unoptimized
+              className="h-10 w-10 rounded-full object-cover"
+            />
             <span>
               <span className="block text-sm font-bold">{author.displayName}</span>
               <span className="block text-xs text-stone-500">{author.tagline}</span>
@@ -149,8 +160,15 @@ export function PostView({ id }: { id: string }) {
         {gallery.length > 0 && piece.mediaType === 'IMAGE_GALLERY' ? (
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
             {gallery.map((src, index) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={index} src={src} alt={`${piece.title} ${index + 1}`} className="w-full rounded-xl border border-stone-200 object-cover" />
+              <Image
+                key={index}
+                src={src}
+                alt={`${piece.title} ${index + 1}`}
+                width={900}
+                height={600}
+                unoptimized
+                className="h-auto w-full rounded-xl border border-stone-200 object-cover"
+              />
             ))}
           </div>
         ) : null}

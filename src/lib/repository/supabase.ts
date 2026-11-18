@@ -32,6 +32,7 @@ const toProfile = (r: ProfileRow): CreativeProfile => ({
   tagline: String(r.tagline ?? ''),
   bio: String(r.bio ?? ''),
   avatarUrl: String(r.avatar_url ?? ''),
+  avatarPublicId: r.avatar_public_id ? String(r.avatar_public_id) : undefined,
   bannerGradient: String(r.banner_gradient ?? 'from-amber-500/20 via-orange-500/20 to-red-500/20'),
   disciplines: (r.disciplines as CreativeDiscipline[]) || [],
   location: String(r.location ?? ''),
@@ -40,6 +41,10 @@ const toProfile = (r: ProfileRow): CreativeProfile => ({
   socialLinks: (r.social_links as CreativeProfile['socialLinks']) || {},
   themeStyle: (r.theme_style as CreativeProfile['themeStyle']) || 'soft-brutal',
   stats: (r.stats as CreativeProfile['stats']) || { viewsCount: 0, applauseCount: 0, piecesCount: 0 },
+  // Anything in Supabase is real YPAT data by definition. Older rows were
+  // inserted with a hardcoded false flag, so don't trust the stored value here.
+  isYPATData: true,
+  source: 'live' as const,
   createdAt: String(r.created_at ?? ''),
 });
 
@@ -50,6 +55,7 @@ const fromProfile = (p: CreativeProfile) => ({
   tagline: p.tagline,
   bio: p.bio,
   avatar_url: p.avatarUrl,
+  avatar_public_id: p.avatarPublicId ?? null,
   banner_gradient: p.bannerGradient,
   disciplines: p.disciplines,
   location: p.location,
@@ -58,7 +64,8 @@ const fromProfile = (p: CreativeProfile) => ({
   social_links: p.socialLinks,
   theme_style: p.themeStyle,
   stats: p.stats,
-  is_ypat_data: false,
+  is_ypat_data: p.isYPATData === true,
+  source: p.source === 'mock' ? 'mock' : 'live',
 });
 
 const toPiece = (r: PieceRow): CreativePiece => ({
@@ -69,11 +76,14 @@ const toPiece = (r: PieceRow): CreativePiece => ({
   discipline: r.discipline as CreativeDiscipline,
   mediaType: r.media_type as CreativePiece['mediaType'],
   mediaUrl: r.media_url ? String(r.media_url) : undefined,
+  mediaPublicId: r.media_public_id ? String(r.media_public_id) : undefined,
   textContent: r.text_content ? String(r.text_content) : undefined,
   bodyHtml: r.body_html ? String(r.body_html) : undefined,
   pdfUrl: r.pdf_url ? String(r.pdf_url) : undefined,
   coverImageUrl: r.cover_image_url ? String(r.cover_image_url) : undefined,
+  coverPublicId: r.cover_public_id ? String(r.cover_public_id) : undefined,
   galleryImages: (r.gallery_images as string[]) || [],
+  galleryPublicIds: (r.gallery_public_ids as string[]) || [],
   isFeatured: Boolean(r.is_featured),
   status: (r.status as CreativePiece['status']) || 'PUBLIC',
   sortOrder: Number(r.sort_order ?? 0),
@@ -89,11 +99,14 @@ const fromPiece = (p: NewPiece | CreativePiece) => ({
   discipline: p.discipline,
   media_type: p.mediaType,
   media_url: p.mediaUrl ?? null,
+  media_public_id: p.mediaPublicId ?? null,
   text_content: p.textContent ?? null,
   body_html: p.bodyHtml ?? null,
   pdf_url: p.pdfUrl ?? null,
   cover_image_url: p.coverImageUrl ?? null,
+  cover_public_id: p.coverPublicId ?? null,
   gallery_images: p.galleryImages ?? [],
+  gallery_public_ids: p.galleryPublicIds ?? [],
   is_featured: p.isFeatured ?? false,
   status: p.status ?? 'PUBLIC',
   sort_order: p.sortOrder ?? 0,
@@ -130,6 +143,11 @@ const mockProfiles = (): CreativeProfile[] =>
 const mockPieces = (): CreativePiece[] =>
   INITIAL_PIECES.map((p) => ({ ...p, isYPATData: false, source: 'mock' as const }));
 
+/** Mock owner id (e.g. c-sheriff-01) → handle, for retiring mocks per creator. */
+const MOCK_HANDLE_BY_OWNER_ID = new Map(
+  Object.values(INITIAL_PROFILES).map((p) => [p.id, p.username] as const)
+);
+
 /** Mock ids like "c-sheriff-01" are not UUIDs — never send them to a uuid column. */
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -146,7 +164,7 @@ export const supabaseRepository: DataRepository = {
   async listProfiles() {
     const { data, error } = await getDb().from('profiles').select('*');
     if (error) throw error;
-    const real = (data as ProfileRow[]).map(toProfile).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
+    const real = (data as ProfileRow[]).map(toProfile);
     const byHandle = new Map<string, CreativeProfile>();
     mockProfiles().forEach((p) => byHandle.set(p.username, p));
     real.forEach((p) => byHandle.set(p.username, p));
@@ -157,7 +175,7 @@ export const supabaseRepository: DataRepository = {
     const clean = username.toLowerCase().replace('@', '');
     const { data, error } = await getDb().from('profiles').select('*').eq('username', clean).maybeSingle();
     if (error) throw error;
-    if (data) return { ...toProfile(data as ProfileRow), isYPATData: true, source: 'live' as const };
+    if (data) return toProfile(data as ProfileRow);
     return mockProfiles().find((p) => p.username === clean);
   },
 
@@ -179,6 +197,8 @@ export const supabaseRepository: DataRepository = {
         display_name: patch.displayName,
         tagline: patch.tagline,
         bio: patch.bio,
+        avatar_url: patch.avatarUrl,
+        avatar_public_id: patch.avatarPublicId,
         location: patch.location,
         social_links: patch.socialLinks,
         is_available_for_gigs: patch.isAvailableForGigs,
@@ -206,8 +226,25 @@ export const supabaseRepository: DataRepository = {
       real = (data as PieceRow[]).map(toPiece).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
     }
 
+    // A creator with real work retires ALL of their mock pieces. Mocks for
+    // other creators stay in the catalog until they publish real work too.
+    let retiredHandles = new Set<string>();
+    if (real.length) {
+      const ownerIds = [...new Set(real.map((p) => p.creativeId))];
+      const { data: owners, error: ownersError } = await getDb()
+        .from('profiles')
+        .select('id, username')
+        .in('id', ownerIds);
+      if (ownersError) throw ownersError;
+      retiredHandles = new Set((owners || []).map((o) => String(o.username)));
+    }
+
     // Apply the same filters to mock pieces, then merge (real wins on collisions).
     let mocks = mockPieces();
+    mocks = mocks.filter((p) => {
+      const handle = MOCK_HANDLE_BY_OWNER_ID.get(p.creativeId);
+      return !handle || !retiredHandles.has(handle);
+    });
     if (options?.creativeId) mocks = mocks.filter((p) => p.creativeId === options.creativeId);
     if (!options?.includeDrafts) mocks = mocks.filter((p) => (p.status || 'PUBLIC') === 'PUBLIC');
     if (options?.discipline && options.discipline !== 'ALL') {
@@ -219,6 +256,21 @@ export const supabaseRepository: DataRepository = {
         ? (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
         : +new Date(b.createdAt) - +new Date(a.createdAt)
     );
+  },
+
+  async getPiece(id) {
+    if (isUuid(id)) {
+      const { data, error } = await getDb()
+        .from('pieces')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        return { ...toPiece(data as PieceRow), isYPATData: true, source: 'live' as const };
+      }
+    }
+    return mockPieces().find((p) => p.id === id);
   },
 
   async addPiece(piece) {
@@ -247,9 +299,17 @@ export const supabaseRepository: DataRepository = {
   },
 
   async reorderPieces(ids) {
-    await Promise.all(
-      ids.map((id, index) => getDb().from('pieces').update({ sort_order: index }).eq('id', id))
-    );
+    // Mock ids are not UUIDs — route them to localStorage instead of Postgres.
+    const live = ids.map((id, index) => ({ id, index })).filter(({ id }) => isUuid(id));
+    const local = ids.filter((id) => !isUuid(id));
+    if (live.length) {
+      await Promise.all(
+        live.map(({ id, index }) =>
+          getDb().from('pieces').update({ sort_order: index }).eq('id', id)
+        )
+      );
+    }
+    if (local.length) await localRepository.reorderPieces(local);
     return ids;
   },
 

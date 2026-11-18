@@ -18,8 +18,9 @@ import {
   useInquiries,
   useUpdateInquiryStatus,
 } from '@/lib/store';
-import { signInLocal, signOut, useSession } from '@/lib/auth';
+import { signInLocal, signOut } from '@/lib/auth';
 import { usingSupabase } from '@/lib/supabase';
+import { useDataSource } from '@/lib/data-source';
 import { StudioGate } from '@/components/studio/StudioGate';
 import { SupabaseAuthGate } from '@/components/studio/SupabaseAuthGate';
 import { LivePreview } from '@/components/studio/LivePreview';
@@ -80,7 +81,7 @@ function SectionHeading({
 }
 
 export default function StudioPage() {
-  const session = useSession();
+  const { session } = useDataSource();
   const currentUsername = session?.username || DEMO_USERNAME;
 
   const [view, setView] = useState<StudioView>('overview');
@@ -88,8 +89,14 @@ export default function StudioPage() {
   const [editingPiece, setEditingPiece] = useState<CreativePiece | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
   const refreshPreview = () => setPreviewKey((k) => k + 1);
-  const { data: profile } = useCreativeProfile(currentUsername);
-  const { data: pieces } = useCreativePieces(currentUsername);
+  const { data: rawProfile } = useCreativeProfile(currentUsername);
+  const { data: rawPieces } = useCreativePieces(currentUsername);
+  // The signed-in creative always sees their own profile, even if it is a seed
+  // record — filtering it here used to hide the editor and the Add Piece form.
+  const profile = rawProfile ?? null;
+  // Scoped to this user's id by useCreativePieces; the repository already
+  // handles mock/real replacement, so no second filter is needed here.
+  const pieces = rawPieces ?? [];
   const { data: inquiries } = useInquiries(profile?.id);
   const createProfile = useCreateProfile();
   const updateInquiry = useUpdateInquiryStatus();
@@ -113,7 +120,7 @@ export default function StudioPage() {
     if (!existing) {
       createProfile.mutate(
         {
-          id: `c-${handle}-${Date.now()}`,
+          id: `c-${handle}-temp`,
           username: handle,
           displayName: handle,
           tagline: 'Creative on CreatHive',

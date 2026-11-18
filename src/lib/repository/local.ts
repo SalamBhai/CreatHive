@@ -75,6 +75,10 @@ export const localRepository: DataRepository = {
       : result.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   },
 
+  async getPiece(id) {
+    return pieces().find((p) => p.id === id);
+  },
+
   async addPiece(piece: NewPiece) {
     const created: CreativePiece = {
       ...piece,

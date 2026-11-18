@@ -39,6 +39,8 @@ export interface CreativeProfile {
   tagline: string;
   bio: string;
   avatarUrl: string;
+  /** Cloudinary public_id, kept so uploads can be replaced or removed later. */
+  avatarPublicId?: string;
   bannerGradient: string;
   disciplines: CreativeDiscipline[];
   location: string;
@@ -65,12 +67,15 @@ export interface CreativePiece {
   discipline: CreativeDiscipline;
   mediaType: MediaType;
   mediaUrl?: string; // Streamable audio URL or Video embed
+  mediaPublicId?: string; // Cloudinary public_id for the uploaded media
   textContent?: string; // Lyrics, spoken word script, or poem verses
   contentBlocks?: ContentBlock[]; // Long-form editorial post / article
   bodyHtml?: string; // WYSIWYG full-post body
   pdfUrl?: string; // Attached case-study PDF
   coverImageUrl?: string;
+  coverPublicId?: string; // Cloudinary public_id for the uploaded cover
   galleryImages?: string[]; // For UI/UX designs, tech imagery & graphics
+  galleryPublicIds?: string[]; // Parallel to galleryImages
   isFeatured?: boolean;
   status?: PieceStatus;
   sortOrder?: number;

@@ -69,6 +69,15 @@ export function useJoinRequests() {
   });
 }
 
+/** A single piece by id — includes UNLISTED/DRAFT pieces for direct-link viewing. */
+export function usePiece(id: string) {
+  return useQuery({
+    queryKey: ['piece', id],
+    queryFn: () => repository.getPiece(id),
+    enabled: !!id,
+  });
+}
+
 /** Public feed: only published pieces, newest first. */
 export function useAllPieces() {
   return useQuery({

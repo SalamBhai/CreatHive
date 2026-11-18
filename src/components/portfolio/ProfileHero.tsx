@@ -13,6 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import { CreativeProfile } from '@/lib/types';
 import { DisciplineChip } from '../ui/DisciplineChip';
+import { resolveAvatarUrl } from '@/lib/avatar';
 
 interface ProfileHeroProps {
   profile: CreativeProfile;
@@ -42,7 +43,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         <div className="-mt-12 md:-mt-16 mb-4 flex items-end justify-between">
           <div className="relative">
             <Image
-              src={profile.avatarUrl}
+              src={resolveAvatarUrl(profile.avatarUrl, profile.displayName)}
               alt={profile.displayName}
               width={112}
               height={112}

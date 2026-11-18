@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import type { ContentBlock, CreativePiece } from '@/lib/types';
 
@@ -10,8 +11,14 @@ function Block({ block }: { block: ContentBlock }) {
     if (!block.url) return null;
     return (
       <figure className="my-7">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={block.url} alt={block.caption || ''} className="w-full rounded-xl border border-stone-200" />
+        <Image
+          src={block.url}
+          alt={block.caption || ''}
+          width={900}
+          height={600}
+          unoptimized
+          className="h-auto w-full rounded-xl border border-stone-200"
+        />
         {block.caption ? (
           <figcaption className="mt-2 text-center text-xs italic text-stone-500">
             {block.caption}

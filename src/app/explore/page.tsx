@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from '@phosphor-icons/react';
@@ -8,6 +9,7 @@ import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { StudioLink } from '@/components/ui/StudioLink';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { Surface } from '@/components/ui/Surface';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { useAllPieces, useAllProfiles } from '@/lib/store';
 import type { CreativeDiscipline } from '@/lib/types';
@@ -40,17 +42,11 @@ export default function ExplorePage() {
   const { data: profiles } = useAllProfiles();
   const { data: pieces, isLoading } = useAllPieces();
 
-  const profileById = useMemo(
-    () => Object.fromEntries((profiles || []).map((p) => [p.id, p])),
-    [profiles]
-  );
+  const profileById = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
 
-  const visiblePieces = useMemo(() => {
-    const all = pieces || [];
-    return all
-      .filter((piece) => niche === 'ALL' || piece.discipline === niche)
-      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  }, [pieces, niche]);
+  const visiblePieces = (pieces || [])
+    .filter((piece) => niche === 'ALL' || piece.discipline === niche)
+    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#18181B]">
@@ -87,10 +83,12 @@ export default function ExplorePage() {
                   href={`/${profile.username}`}
                   className="group flex items-center gap-2 rounded-full border border-stone-200 bg-white py-1 pl-1 pr-3 transition-colors hover:border-[#FF5A36]"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={profile.avatarUrl}
+                  <Image
+                    src={resolveAvatarUrl(profile.avatarUrl, profile.displayName || 'CreatHive')}
                     alt=""
+                    width={28}
+                    height={28}
+                    unoptimized
                     className="h-7 w-7 rounded-full object-cover"
                   />
                   <span className="text-xs font-semibold text-stone-700 group-hover:text-[#18181B]">
@@ -141,12 +139,13 @@ export default function ExplorePage() {
                   >
                     <Surface interactive className="flex h-full flex-col overflow-hidden">
                       <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={piece.coverImageUrl || '/images/scenes/hero.jpg'}
                           alt=""
-                          loading="lazy"
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          unoptimized
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#18181B] backdrop-blur">
                           {config.label}
@@ -164,10 +163,12 @@ export default function ExplorePage() {
                         <div className="mt-auto flex items-center gap-2.5 pt-6">
                           {author ? (
                             <>
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={author.avatarUrl}
+                              <Image
+                                src={resolveAvatarUrl(author.avatarUrl, author.displayName || 'CreatHive')}
                                 alt=""
+                                width={32}
+                                height={32}
+                                unoptimized
                                 className="h-8 w-8 rounded-full object-cover"
                               />
                               <div className="min-w-0">

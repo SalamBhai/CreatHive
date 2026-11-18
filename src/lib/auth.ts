@@ -117,6 +117,7 @@ async function ensureProfile(app: AppSession) {
     disciplines: app.disciplines?.length ? app.disciplines : ['OTHER'],
     location: '',
     isAvailableForGigs: true,
+    isYPATData: true,
     socialLinks: { email: app.email || undefined },
     themeStyle: 'soft-brutal',
     stats: { viewsCount: 0, applauseCount: 0, piecesCount: 0 },

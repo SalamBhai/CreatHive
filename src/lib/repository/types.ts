@@ -21,6 +21,8 @@ export interface DataRepository {
 
   // Pieces
   listPieces(options?: { creativeId?: string; discipline?: CreativeDiscipline | 'ALL'; includeDrafts?: boolean }): Promise<CreativePiece[]>;
+  /** Fetch one piece regardless of visibility (RLS still hides others' drafts). */
+  getPiece(id: string): Promise<CreativePiece | undefined>;
   addPiece(piece: NewPiece): Promise<CreativePiece>;
   updatePiece(id: string, patch: Partial<CreativePiece>): Promise<CreativePiece>;
   deletePiece(id: string): Promise<string>;
