@@ -16,8 +16,15 @@ import {
   TextItalic,
   LinkSimple,
   ListBullets,
+  TextAlignLeft,
+  TextAlignCenter,
+  TextAlignRight,
 } from '@phosphor-icons/react';
 import { toEmbedUrl } from '@/lib/media';
+import { uploadFile } from '@/lib/upload';
+
+const escapeHtml = (value: string) =>
+  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 interface StoryComposerProps {
   value: string;
@@ -43,6 +50,11 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
   const ref = useRef<HTMLDivElement>(null);
   const savedRange = useRef<Range | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const imageInput = useRef<HTMLInputElement>(null);
+  const gridInput = useRef<HTMLInputElement>(null);
+  const caption = useRef('');
 
   useEffect(() => {
     const el = ref.current;
@@ -80,17 +92,24 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
     if (kind === 'divider') return exec('insertHTML', '<hr />');
 
     if (kind === 'image') {
-      const url = window.prompt('Image URL');
-      if (!url) return;
-      const caption = window.prompt('Caption (optional)') || '';
-      return exec('insertHTML', `<figure><img src="${url}" alt="" />${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`);
+      const url = window.prompt('Image URL â€” leave blank to upload a file');
+      if (url) {
+        const cap = window.prompt('Caption (optional)') || '';
+        return exec('insertHTML', `<figure><img src="${url}" alt="" />${cap ? `<figcaption>${escapeHtml(cap)}</figcaption>` : ''}</figure>`);
+      }
+      caption.current = window.prompt('Caption (optional)') || '';
+      imageInput.current?.click();
+      return;
     }
 
     if (kind === 'grid') {
-      const raw = window.prompt('Image URLs â€” comma separated');
-      if (!raw) return;
-      const imgs = raw.split(',').map((s) => s.trim()).filter(Boolean);
-      return exec('insertHTML', `<div class="photo-grid">${imgs.map((u) => `<img src="${u}" alt="" />`).join('')}</div>`);
+      const raw = window.prompt('Image URLs â€” comma separated, or leave blank to upload files');
+      if (raw) {
+        const imgs = raw.split(',').map((s) => s.trim()).filter(Boolean);
+        return exec('insertHTML', `<div class="photo-grid">${imgs.map((u) => `<img src="${u}" alt="" />`).join('')}</div>`);
+      }
+      gridInput.current?.click();
+      return;
     }
 
     if (kind === 'video') {
@@ -100,7 +119,8 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
       if (embed) {
         return exec('insertHTML', `<figure><div class="video-frame"><iframe src="${embed}" allowfullscreen></iframe></div></figure>`);
       }
-      return exec('insertHTML', `<figure><video controls src="${url}"></video></figure>`);
+      const poster = window.prompt('Poster image URL (optional)') || '';
+      return exec('insertHTML', `<figure><video controls ${poster ? `poster="${poster}"` : ''} src="${url}"></video></figure>`);
     }
 
     if (kind === 'embed') {
@@ -118,6 +138,30 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
       const url = window.prompt('PDF URL');
       if (!url) return;
       return exec('insertHTML', `<p><a class="pdf-link" href="${url}" target="_blank" rel="noreferrer">View the case study PDF â†—</a></p>`);
+    }
+  };
+
+  const handleUploadedFiles = async (files: FileList | null, kind: 'image' | 'grid') => {
+    if (!files?.length) return;
+    setUploading(true);
+    setError('');
+    try {
+      const uploaded = await Promise.all(Array.from(files).map((file) => uploadFile(file, 'gallery')));
+      if (kind === 'image') {
+        const cap = caption.current;
+        exec(
+          'insertHTML',
+          `<figure><img src="${uploaded[0].url}" alt="" />${
+            cap ? `<figcaption>${escapeHtml(cap)}</figcaption>` : ''
+          }</figure>`
+        );
+      } else {
+        exec('insertHTML', `<div class="photo-grid">${uploaded.map((u) => `<img src="${u.url}" alt="" />`).join('')}</div>`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -145,6 +189,17 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
         <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec('insertUnorderedList')} title="List" className="rounded p-1.5 text-stone-600 hover:bg-stone-100">
           <ListBullets size={16} weight="bold" />
         </button>
+        <span className="mx-1 h-5 w-px bg-stone-200" />
+        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec('justifyLeft')} title="Align left" className="rounded p-1.5 text-stone-600 hover:bg-stone-100">
+          <TextAlignLeft size={16} weight="bold" />
+        </button>
+        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec('justifyCenter')} title="Align centre" className="rounded p-1.5 text-stone-600 hover:bg-stone-100">
+          <TextAlignCenter size={16} weight="bold" />
+        </button>
+        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec('justifyRight')} title="Align right" className="rounded p-1.5 text-stone-600 hover:bg-stone-100">
+          <TextAlignRight size={16} weight="bold" />
+        </button>
+        {uploading ? <span className="ml-1 text-[10px] font-bold text-[#FF5A36]">Uploadingâ€¦</span> : null}
       </div>
 
       <div className="flex">
@@ -191,6 +246,32 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
           className="story-body min-h-[280px] flex-1 px-4 py-4 text-sm leading-relaxed outline-none empty:before:text-stone-400 empty:before:content-[attr(data-placeholder)]"
         />
       </div>
+      <input
+        ref={imageInput}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          void handleUploadedFiles(e.target.files, 'image');
+          e.target.value = '';
+        }}
+      />
+      <input
+        ref={gridInput}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          void handleUploadedFiles(e.target.files, 'grid');
+          e.target.value = '';
+        }}
+      />
+      {error ? (
+        <p role="alert" className="border-t border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

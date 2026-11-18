@@ -22,10 +22,23 @@ interface ProfileHeroProps {
 export function ProfileHero({ profile }: ProfileHeroProps) {
   return (
     <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-[0_8px_30px_rgba(24,24,27,0.04)]">
-      {/* Banner Gradient Strip */}
+      {/* Banner — uploaded image, or the brand gradient fallback */}
       <div
-        className={`relative h-24 w-full border-b border-stone-200 bg-gradient-to-r md:h-32 ${profile.bannerGradient}`}
+        className={`relative h-24 w-full overflow-hidden border-b border-stone-200 md:h-32 ${
+          profile.bannerUrl ? '' : `bg-gradient-to-r ${profile.bannerGradient}`
+        }`}
       >
+        {profile.bannerUrl ? (
+          <Image
+            src={profile.bannerUrl}
+            alt=""
+            fill
+            sizes="100vw"
+            unoptimized
+            priority
+            className="object-cover"
+          />
+        ) : null}
         {/* Availability Badge */}
         {profile.isAvailableForGigs && (
           <div className="absolute top-3 right-3">

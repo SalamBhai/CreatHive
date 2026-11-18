@@ -38,10 +38,13 @@ export function ProfileEditor({
   const [available, setAvailable] = useState(profile.isAvailableForGigs);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || '');
   const [avatarPublicId, setAvatarPublicId] = useState(profile.avatarPublicId || '');
+  const [bannerUrl, setBannerUrl] = useState(profile.bannerUrl || '');
+  const [bannerPublicId, setBannerPublicId] = useState(profile.bannerPublicId || '');
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const fileInput = useRef<HTMLInputElement>(null);
+  const bannerInput = useRef<HTMLInputElement>(null);
   const mutation = useUpdateProfile();
 
   const save = () => {
@@ -57,6 +60,8 @@ export function ProfileEditor({
           isAvailableForGigs: available,
           avatarUrl,
           avatarPublicId: avatarPublicId || undefined,
+          bannerUrl,
+          bannerPublicId: bannerPublicId || undefined,
         },
       },
       { onSuccess: onSaved }
@@ -71,6 +76,8 @@ export function ProfileEditor({
     available !== profile.isAvailableForGigs ||
     avatarUrl !== (profile.avatarUrl || '') ||
     avatarPublicId !== (profile.avatarPublicId || '') ||
+    bannerUrl !== (profile.bannerUrl || '') ||
+    bannerPublicId !== (profile.bannerPublicId || '') ||
     JSON.stringify(socials) !== JSON.stringify(profile.socialLinks || {});
 
   const handleAvatar = async (file: File) => {
@@ -80,6 +87,20 @@ export function ProfileEditor({
       const result = await uploadFile(file, 'avatar');
       setAvatarUrl(result.url);
       setAvatarPublicId(result.publicId);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleBanner = async (file: File) => {
+    setUploadError('');
+    setUploading(true);
+    try {
+      const result = await uploadFile(file, 'cover');
+      setBannerUrl(result.url);
+      setBannerPublicId(result.publicId);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed.');
     } finally {
@@ -181,6 +202,44 @@ export function ProfileEditor({
           {uploadError ? <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{uploadError}</p> : null}
         </div>
 
+        <div className="rounded-xl border border-stone-200 p-3.5">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-bold">Cover banner</span>
+            <span className="text-[10px] text-stone-500">Wide image, up to 10 MB</span>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              className={inputClass}
+              value={bannerUrl}
+              onChange={(e) => {
+                setBannerUrl(e.target.value);
+                if (!e.target.value) setBannerPublicId('');
+              }}
+              placeholder="https://... or leave blank for the gradient"
+              aria-label="Banner URL"
+            />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => bannerInput.current?.click()}
+              className="shrink-0 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-600 hover:border-[#FF5A36] disabled:opacity-50"
+            >
+              Upload
+            </button>
+            <input
+              ref={bannerInput}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleBanner(file);
+                e.target.value = '';
+              }}
+            />
+          </div>
+        </div>
+
         <div className="border-t border-stone-200 pt-4">
           <h3 className="mb-3 font-editorial text-lg font-semibold">Social links</h3>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -207,6 +266,9 @@ export function ProfileEditor({
       </Surface>
 
         <Surface className={`h-fit p-5 md:p-6 ${mobileTab === 'preview' ? '' : 'hidden lg:block'}`}>
+        <div className={`relative mb-4 h-20 overflow-hidden rounded-xl ${bannerUrl ? '' : `bg-gradient-to-r ${profile.bannerGradient}`}`}>
+          {bannerUrl ? <Image src={bannerUrl} alt="" fill sizes="400px" unoptimized className="object-cover" /> : null}
+        </div>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-editorial text-lg font-semibold">Live preview</h3>
           <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Public card</span>

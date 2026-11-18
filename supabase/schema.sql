@@ -14,6 +14,8 @@ create table if not exists public.profiles (
   avatar_url text not null default '',
   avatar_public_id text,
   banner_gradient text not null default '',
+  banner_url text,
+  banner_public_id text,
   disciplines text[] not null default '{}',
   location text not null default '',
   cohort_badge text,

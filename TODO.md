@@ -87,8 +87,8 @@ These were either falsified as "done" in the previous version of this file, or w
 ## 🔲 Next picks
 
 ### Medium — Studio / UX
-- [ ] Banner upload UI (currently a CSS gradient string only).
-- [ ] Richer full-post composer: in-composer upload, alignment, captions, video poster (media/cover/gallery uploads in `PieceForm` are done; the `+` menu still uses URL prompts).
+- [x] Banner upload UI — URL field + upload in `ProfileEditor`, image shown in `ProfileHero` with the gradient as fallback. Needs migration `003_banner_upload.sql` on the live DB.
+- [x] Full-post composer — `+` image/grid can upload files (URLs still accepted), captions, left/centre/right alignment, and optional video poster URL.
 - [ ] Finish `/admin` — currently a 12-line "coming soon" stub (see Large).
 
 ### Large — data & platform (see `docs/MIGRATION.md`)

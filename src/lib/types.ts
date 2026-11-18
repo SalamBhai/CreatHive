@@ -42,6 +42,8 @@ export interface CreativeProfile {
   /** Cloudinary public_id, kept so uploads can be replaced or removed later. */
   avatarPublicId?: string;
   bannerGradient: string;
+  bannerUrl?: string;
+  bannerPublicId?: string;
   disciplines: CreativeDiscipline[];
   location: string;
   cohortBadge?: string; // e.g. "UNICEF / GenU 9JA YPAT 2026–27"
