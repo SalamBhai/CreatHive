@@ -183,21 +183,26 @@ export function getEmailTemplate(content: string): string {
 <html lang="en">
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
 <body style="margin:0;padding:0;background:${BRAND.paper};font-family:Arial,Helvetica,sans-serif;color:${BRAND.ink};">
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Your creative space is ready — add your first piece.</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.paper};padding:32px 12px;">
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${BRAND.line};border-radius:16px;overflow:hidden;">
         <tr><td style="height:4px;background:linear-gradient(90deg,${BRAND.coral},${BRAND.amber});font-size:0;line-height:0;">&nbsp;</td></tr>
         <tr><td style="padding:24px 32px;border-bottom:1px solid ${BRAND.line};">
-          <span style="font-size:22px;font-weight:800;letter-spacing:-0.04em;color:${BRAND.ink};">Creat<span style="color:${BRAND.coral};">Hive</span></span>
-          <span style="float:right;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.muted};">A commons for creatives</span>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td align="left" valign="middle">
+              <img src="${SITE_URL}/images/creathive-wordmark.png" width="220" height="47" alt="CreatHive" style="display:block;border:0;max-width:100%;height:auto;" />
+            </td>
+            <td align="right" valign="middle" style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.muted};">A commons for creatives</td>
+          </tr></table>
         </td></tr>
         <tr><td style="padding:36px 32px;line-height:1.65;font-size:15px;">
           ${content}
         </td></tr>
         <tr><td style="padding:22px 32px;border-top:1px solid ${BRAND.line};background:${BRAND.paper};font-size:11px;line-height:1.6;color:${BRAND.muted};">
-          <strong style="color:${BRAND.ink};">Hiver of CreatHive</strong><br />
+          <strong style="font-size:12px;color:${BRAND.ink};">Hiver of <span style="color:${BRAND.coral};">CreatHive</span></strong><br />
           A commons for the limitless creatives.<br />
-          &copy; ${year} CreatHive &middot; <a href="${SITE_URL}" style="color:${BRAND.coral};text-decoration:none;">creathive.app</a>
+          &copy; ${year} <strong>CreatHive</strong> &middot; <a href="${SITE_URL}" style="color:${BRAND.coral};text-decoration:none;font-weight:700;">creathive.app</a>
         </td></tr>
       </table>
     </td></tr>
@@ -223,7 +228,7 @@ export async function sendWelcomeEmail({
   const safeName = escapeHtml(name || 'creative');
   const content = `
     <h2 style="margin:0 0 18px;font-size:24px;line-height:1.25;">Welcome to the hive, ${safeName}!</h2>
-    <p style="margin:0 0 14px;">Your CreatHive space is ready. It&rsquo;s one quiet place for your work, your story, and the people who want to book you.</p>
+    <p style="margin:0 0 14px;">Your <strong style="color:${BRAND.coral};">CreatHive</strong> space is ready. It&rsquo;s one quiet place for your work, your story, and the people who want to book you.</p>
     <p style="margin:0 0 14px;">Add your first piece, shape your profile, and make the page yours.</p>
     ${button('Open your Studio →', `${SITE_URL}/studio`)}
     <p style="margin:0;font-size:13px;color:${BRAND.muted};">Or <a href="${SITE_URL}/explore" style="color:${BRAND.coral};text-decoration:none;">explore the hive</a> first.</p>`;
@@ -245,7 +250,7 @@ export async function sendPasswordResetEmail({
 }): Promise<boolean> {
   const content = `
     <h2 style="margin:0 0 18px;font-size:24px;line-height:1.25;">Reset your password</h2>
-    <p style="margin:0 0 14px;">We received a request to reset your CreatHive password.</p>
+    <p style="margin:0 0 14px;">We received a request to reset your <strong style="color:${BRAND.coral};">CreatHive</strong> password.</p>
     ${button('Choose a new password →', resetUrl)}
     <p style="margin:0;font-size:13px;color:${BRAND.muted};">If you didn&rsquo;t request this, you can safely ignore this email.</p>`;
   return sendEmail({
