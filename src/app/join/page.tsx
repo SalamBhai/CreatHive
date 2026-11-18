@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle } from '@phosphor-icons/react';
+import { ArrowRight, CheckCircle, CaretDown, Check } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { signUpWithPassword } from '@/lib/auth';
 import type { CreativeDiscipline } from '@/lib/types';
@@ -19,6 +20,15 @@ export default function JoinPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [disciplines, setDisciplines] = useState<CreativeDiscipline[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const nicheOptions = (Object.keys(DISCIPLINE_CONFIG) as Array<CreativeDiscipline | 'ALL'>)
+    .filter((key): key is CreativeDiscipline => key !== 'ALL');
+
+  const toggleNiche = (key: CreativeDiscipline) =>
+    setDisciplines((prev) =>
+      prev.includes(key) ? prev.filter((d) => d !== key) : [...prev, key]
+    );
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
@@ -113,42 +123,58 @@ export default function JoinPage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-xs font-bold">What do you do?</label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {(Object.keys(DISCIPLINE_CONFIG) as Array<CreativeDiscipline | 'ALL'>)
-                      .filter((key): key is CreativeDiscipline => key !== 'ALL')
-                      .map((key) => {
-                        const config = DISCIPLINE_CONFIG[key];
-                        const Icon = config.icon;
-                        const active = disciplines.includes(key);
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            aria-pressed={active}
-                            onClick={() =>
-                              setDisciplines((prev) =>
-                                active ? prev.filter((d) => d !== key) : [...prev, key]
-                              )
-                            }
-                            className={`relative flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all ${
-                              active
-                                ? 'border-[#FF5A36] bg-[#FFF2EE] shadow-[0_2px_0_0_#FF5A36]'
-                                : 'border-stone-200 bg-white hover:border-stone-400'
+                  {/* Mobile: a single field that opens a checkable sheet */}
+                  <button
+                    type="button"
+                    onClick={() => setPickerOpen(true)}
+                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white px-3.5 py-3 text-left sm:hidden"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#18181B]">
+                        {disciplines.length
+                          ? `${disciplines.length} selected`
+                          : 'Choose your niches'}
+                      </span>
+                      {disciplines.length ? (
+                        <span className="mt-0.5 block truncate text-[11px] text-stone-500">
+                          {disciplines.map((d) => DISCIPLINE_CONFIG[d].label).join(', ')}
+                        </span>
+                      ) : null}
+                    </span>
+                    <CaretDown size={16} weight="bold" className="shrink-0 text-stone-500" />
+                  </button>
+
+                  {/* Desktop: 3-per-row icon tiles */}
+                  <div className="hidden grid-cols-3 gap-2 sm:grid">
+                    {nicheOptions.map((key) => {
+                      const config = DISCIPLINE_CONFIG[key];
+                      const Icon = config.icon;
+                      const active = disciplines.includes(key);
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => toggleNiche(key)}
+                          className={`flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all ${
+                            active
+                              ? 'border-[#FF5A36] bg-[#FFF2EE] shadow-[0_2px_0_0_#FF5A36]'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
+                          }`}
+                        >
+                          <span
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                              active ? 'bg-white text-[#FF5A36]' : 'bg-stone-100 text-stone-600'
                             }`}
                           >
-                            <span
-                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                                active ? 'bg-white text-[#FF5A36]' : 'bg-stone-100 text-stone-600'
-                              }`}
-                            >
-                              <Icon size={17} weight="duotone" />
-                            </span>
-                            <span className={`text-xs font-bold leading-tight ${active ? 'text-[#FF5A36]' : 'text-[#18181B]'}`}>
-                              {config.label}
-                            </span>
-                          </button>
-                        );
-                      })}
+                            <Icon size={17} weight="duotone" />
+                          </span>
+                          <span className={`text-xs font-bold leading-tight ${active ? 'text-[#FF5A36]' : 'text-[#18181B]'}`}>
+                            {config.label}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                   <p className="mt-1.5 text-[11px] text-stone-500">
                     Pick all that fit — {disciplines.length || 'none'} selected.
@@ -169,6 +195,51 @@ export default function JoinPage() {
           </>
         )}
       </main>
+
+      <BottomSheet
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        title="What do you do?"
+        subtitle="Pick all the niches that fit you."
+      >
+        <div className="space-y-1.5 pb-4">
+          {nicheOptions.map((key) => {
+            const config = DISCIPLINE_CONFIG[key];
+            const Icon = config.icon;
+            const active = disciplines.includes(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggleNiche(key)}
+                className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+                  active ? 'border-[#FF5A36] bg-[#FFF2EE]' : 'border-stone-200 bg-white'
+                }`}
+              >
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                    active ? 'bg-white text-[#FF5A36]' : 'bg-stone-100 text-stone-600'
+                  }`}
+                >
+                  <Icon size={18} weight="duotone" />
+                </span>
+                <span className={`flex-1 text-sm font-bold ${active ? 'text-[#FF5A36]' : 'text-[#18181B]'}`}>
+                  {config.label}
+                </span>
+                {active ? (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF5A36] text-white">
+                    <Check size={14} weight="bold" />
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+        <NeoButton variant="primary" size="lg" className="w-full" onClick={() => setPickerOpen(false)}>
+          Done{disciplines.length ? ` · ${disciplines.length} selected` : ''}
+        </NeoButton>
+      </BottomSheet>
     </div>
   );
 }
