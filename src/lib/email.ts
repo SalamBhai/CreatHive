@@ -6,8 +6,9 @@
  *   2. one `getEmailTemplate()` layout wrapper (inline-CSS, table-based)
  *   3. small per-purpose `sendXEmail()` presets built on the wrapper
  *
- * Transport selection: Brevo REST API when BREVO_API_KEY is set (works with the
- * xkeysib-* key), otherwise nodemailer SMTP (Brevo relay or any SMTP provider).
+ * Transport selection: Brevo REST API by default (HTTPS works on Vercel;
+ * serverless functions block outbound SMTP). Set EMAIL_TRANSPORT=smtp only for
+ * non-Vercel runtimes — it needs SMTP_HOST/USER/PASS with an xsmtpsib-* key.
  */
 
 import type { Transporter } from 'nodemailer';
@@ -157,8 +158,10 @@ async function sendViaSmtp(options: SendEmailOptions): Promise<boolean> {
  */
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   try {
+    const transport = process.env.EMAIL_TRANSPORT || (process.env.BREVO_API_KEY ? 'brevo' : 'smtp');
+    if (transport === 'smtp') return await sendViaSmtp(options);
     if (process.env.BREVO_API_KEY) return await sendViaBrevo(options);
-    return await sendViaSmtp(options);
+    return await sendViaSmtp(options); // no API key — warns and returns false
   } catch (error) {
     console.error('[email] Send failed', {
       to: options.to,
