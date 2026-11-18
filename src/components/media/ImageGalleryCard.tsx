@@ -132,7 +132,7 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
       {/* Info & Footer Controls */}
       <div className="p-4 md:p-5 space-y-3">
         <div>
-          <h3 className="text-base md:text-lg font-bold font-sans-ui text-[#18181B] leading-snug">
+          <h3 className="font-editorial text-xl font-semibold leading-tight text-[#18181B] md:text-2xl">
             {piece.title}
           </h3>
           {piece.subtitle && (
