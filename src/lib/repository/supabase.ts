@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { localRepository } from './local';
 import { INITIAL_PROFILES, INITIAL_PIECES } from '@/lib/sample-data';
 import type { DataRepository, NewInquiry, NewPiece, NewJoinRequest } from './types';
 import type {
@@ -129,6 +130,10 @@ const mockProfiles = (): CreativeProfile[] =>
 const mockPieces = (): CreativePiece[] =>
   INITIAL_PIECES.map((p) => ({ ...p, isYPATData: false, source: 'mock' as const }));
 
+/** Mock ids like "c-sheriff-01" are not UUIDs — never send them to a uuid column. */
+const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
 /** Real records win on id/handle collisions with mocks. */
 function mergeById<T extends { id: string }>(real: T[], mocks: T[]): T[] {
   const byId = new Map<string, T>();
@@ -164,6 +169,10 @@ export const supabaseRepository: DataRepository = {
 
   async updateProfile(username, patch) {
     const clean = username.toLowerCase().replace('@', '');
+    const existing = await supabaseRepository.getProfile(clean);
+    if (existing && !isUuid(existing.id)) {
+      return localRepository.updateProfile(clean, patch); // editing a mock profile
+    }
     const { data, error } = await getDb()
       .from('profiles')
       .update({
@@ -182,15 +191,20 @@ export const supabaseRepository: DataRepository = {
   },
 
   async listPieces(options) {
-    let query = getDb().from('pieces').select('*');
-    if (options?.creativeId) query = query.eq('creative_id', options.creativeId);
-    if (!options?.includeDrafts) query = query.eq('status', 'PUBLIC');
-    if (options?.discipline && options.discipline !== 'ALL') {
-      query = query.eq('discipline', options.discipline);
+    // A mock owner id (non-UUID) can only have mock pieces — skip the DB query.
+    const skipDb = !!options?.creativeId && !isUuid(options.creativeId);
+    let real: CreativePiece[] = [];
+    if (!skipDb) {
+      let query = getDb().from('pieces').select('*');
+      if (options?.creativeId) query = query.eq('creative_id', options.creativeId);
+      if (!options?.includeDrafts) query = query.eq('status', 'PUBLIC');
+      if (options?.discipline && options.discipline !== 'ALL') {
+        query = query.eq('discipline', options.discipline);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      real = (data as PieceRow[]).map(toPiece).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
     }
-    const { data, error } = await query;
-    if (error) throw error;
-    const real = (data as PieceRow[]).map(toPiece).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
 
     // Apply the same filters to mock pieces, then merge (real wins on collisions).
     let mocks = mockPieces();
@@ -214,6 +228,7 @@ export const supabaseRepository: DataRepository = {
   },
 
   async updatePiece(id, patch) {
+    if (!isUuid(id)) return localRepository.updatePiece(id, patch);
     const { data, error } = await getDb()
       .from('pieces')
       .update(fromPiece(patch as NewPiece))
@@ -225,6 +240,7 @@ export const supabaseRepository: DataRepository = {
   },
 
   async deletePiece(id) {
+    if (!isUuid(id)) return localRepository.deletePiece(id);
     const { error } = await getDb().from('pieces').delete().eq('id', id);
     if (error) throw error;
     return id;
@@ -238,12 +254,15 @@ export const supabaseRepository: DataRepository = {
   },
 
   async applaudPiece(id) {
+    // Mock pieces live in localStorage; bump locally through the local adapter.
+    if (!isUuid(id)) return localRepository.applaudPiece(id);
     const { error } = await getDb().rpc('increment_applause', { piece_id: id });
     if (error) throw error;
     return id;
   },
 
   async listInquiries(creativeId) {
+    if (creativeId && !isUuid(creativeId)) return []; // mock creator has no live inquiries
     let query = getDb().from('inquiries').select('*');
     if (creativeId) query = query.eq('creative_id', creativeId);
     const { data, error } = await query;
