@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, CheckCircle } from '@phosphor-icons/react';
+import { ArrowRight, CheckCircle } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
@@ -49,19 +49,14 @@ export default function JoinPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#18181B]">
-      <header className="border-b border-stone-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-6">
-          <Link href="/explore" aria-label="CreatHive home">
-            <CreatHiveWordmark size="sm" href={null} />
-          </Link>
-          <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-[#FF5A36]">
-            <ArrowLeft size={14} weight="bold" /> Explore
-          </Link>
-        </div>
-      </header>
+    <div className="flex min-h-screen flex-col bg-[#FDFBF7] text-[#18181B]">
+      <div className="px-6 pt-8">
+        <Link href="/explore" aria-label="CreatHive home">
+          <CreatHiveWordmark size="sm" href={null} />
+        </Link>
+      </div>
 
-      <main className="mx-auto max-w-2xl px-6 py-12">
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-12">
         {checkEmail ? (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
             <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
@@ -83,7 +78,7 @@ export default function JoinPage() {
         ) : (
           <>
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#FF5A36]">Join the hive</p>
-            <h1 className="mt-3 font-editorial text-4xl font-semibold leading-tight md:text-5xl">
+            <h1 className="mt-3 font-editorial text-4xl font-semibold leading-tight">
               Your work deserves one link.
             </h1>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-stone-600">
@@ -127,6 +122,9 @@ export default function JoinPage() {
             </p>
           </>
         )}
+        <p className="mt-5 text-center text-xs text-stone-600">
+          Browse the work first — <Link href="/explore" className="font-bold text-[#FF5A36]">Explore the commons</Link>
+        </p>
       </main>
     </div>
   );
