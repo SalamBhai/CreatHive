@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { INITIAL_PROFILES, INITIAL_PIECES } from '@/lib/sample-data';
 import type { DataRepository, NewInquiry, NewPiece, NewJoinRequest } from './types';
 import type {
   CreativeProfile,
@@ -121,18 +122,38 @@ const toJoin = (r: JoinRow): JoinRequest => ({
   createdAt: r.created_at,
 });
 
+/** Seed/mock records remain visible until real YPAT users replace them. */
+const mockProfiles = (): CreativeProfile[] =>
+  Object.values(INITIAL_PROFILES).map((p) => ({ ...p, isYPATData: false, source: 'mock' as const }));
+
+const mockPieces = (): CreativePiece[] =>
+  INITIAL_PIECES.map((p) => ({ ...p, isYPATData: false, source: 'mock' as const }));
+
+/** Real records win on id/handle collisions with mocks. */
+function mergeById<T extends { id: string }>(real: T[], mocks: T[]): T[] {
+  const byId = new Map<string, T>();
+  mocks.forEach((m) => byId.set(m.id, m));
+  real.forEach((r) => byId.set(r.id, r));
+  return [...byId.values()];
+}
+
 export const supabaseRepository: DataRepository = {
   async listProfiles() {
     const { data, error } = await getDb().from('profiles').select('*');
     if (error) throw error;
-    return (data as ProfileRow[]).map(toProfile);
+    const real = (data as ProfileRow[]).map(toProfile).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
+    const byHandle = new Map<string, CreativeProfile>();
+    mockProfiles().forEach((p) => byHandle.set(p.username, p));
+    real.forEach((p) => byHandle.set(p.username, p));
+    return [...byHandle.values()];
   },
 
   async getProfile(username) {
     const clean = username.toLowerCase().replace('@', '');
     const { data, error } = await getDb().from('profiles').select('*').eq('username', clean).maybeSingle();
     if (error) throw error;
-    return data ? toProfile(data as ProfileRow) : undefined;
+    if (data) return { ...toProfile(data as ProfileRow), isYPATData: true, source: 'live' as const };
+    return mockProfiles().find((p) => p.username === clean);
   },
 
   async createProfile(profile) {
@@ -169,13 +190,21 @@ export const supabaseRepository: DataRepository = {
     }
     const { data, error } = await query;
     if (error) throw error;
-    return (data as PieceRow[])
-      .map(toPiece)
-      .sort((a, b) =>
-        options?.creativeId
-          ? (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-          : +new Date(b.createdAt) - +new Date(a.createdAt)
-      );
+    const real = (data as PieceRow[]).map(toPiece).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
+
+    // Apply the same filters to mock pieces, then merge (real wins on collisions).
+    let mocks = mockPieces();
+    if (options?.creativeId) mocks = mocks.filter((p) => p.creativeId === options.creativeId);
+    if (!options?.includeDrafts) mocks = mocks.filter((p) => (p.status || 'PUBLIC') === 'PUBLIC');
+    if (options?.discipline && options.discipline !== 'ALL') {
+      mocks = mocks.filter((p) => p.discipline === options.discipline);
+    }
+
+    return mergeById(real, mocks).sort((a, b) =>
+      options?.creativeId
+        ? (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+        : +new Date(b.createdAt) - +new Date(a.createdAt)
+    );
   },
 
   async addPiece(piece) {

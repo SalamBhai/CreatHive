@@ -51,6 +51,9 @@ export interface CreativeProfile {
     applauseCount: number;
     piecesCount: number;
   };
+  /** true for real verified YPAT members; false for seed/mock records. */
+  isYPATData?: boolean;
+  source?: 'mock' | 'live' | 'campaign';
   createdAt: string;
 }
 
@@ -71,6 +74,8 @@ export interface CreativePiece {
   isFeatured?: boolean;
   status?: PieceStatus;
   sortOrder?: number;
+  isYPATData?: boolean;
+  source?: 'mock' | 'live' | 'campaign';
   applauseCount: number;
   duration?: string; // e.g. "03:14"
   contextNote?: string; // e.g. "Live performance at YPAT Summit"

@@ -74,6 +74,7 @@ _As of 2026-11-16. Working tree clean; all work pushed to `main`._
 ### Large — data & platform (see `docs/MIGRATION.md`)
 - [x] Repository seam (`src/lib/repository/`) — UI now calls `repository`, with `local` and `supabase` adapters. `NEXT_PUBLIC_DATA_SOURCE` switches them (default `local`).
 - [x] Applied `supabase/schema.sql` (4 tables + RLS) and flipped `NEXT_PUBLIC_DATA_SOURCE=supabase`. App runs in live mode.
+- [x] Mocks remain visible alongside real data: live adapter merges `INITIAL_PROFILES`/`INITIAL_PIECES` (tagged `isYPATData:false`, `source:'mock'`), real records win on collisions. They'll be phased out as YPAT users upload.
 - [x] Supabase Auth email/password gate (sign in / sign up, check-email state); `ensureProfile` provisions a profile keyed by `auth.uid()` on sign-in.
 - [ ] Supabase project: `profiles`, `pieces`, `inquiries`, `campaigns`, `submissions`, `applause_events`; RLS policies.
 - [ ] Supabase Auth + onboarding: signup, username claim, YPAT verification, `isYPATData` flag.
