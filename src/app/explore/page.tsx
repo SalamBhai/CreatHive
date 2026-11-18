@@ -210,7 +210,7 @@ export default function ExplorePage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-8 text-center sm:flex-row sm:text-left">
           <CreatHiveWordmark size="sm" />
           <p className="text-[11px] font-medium text-stone-500">
-            A commons for the limitless creatives — YPAT 2026–27.
+            Built for the limitless creatives — YPAT 2026–27.
           </p>
         </div>
       </footer>

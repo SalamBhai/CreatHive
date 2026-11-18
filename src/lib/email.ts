@@ -193,7 +193,7 @@ export function getEmailTemplate(content: string): string {
             <td align="left" valign="middle">
               <img src="${SITE_URL}/images/creathive-wordmark.png" width="220" height="47" alt="CreatHive" style="display:block;border:0;max-width:100%;height:auto;" />
             </td>
-            <td align="right" valign="middle" style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.muted};">A commons for creatives</td>
+            <td align="right" valign="middle" style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.muted};">Built for the limitless creatives</td>
           </tr></table>
         </td></tr>
         <tr><td style="padding:36px 32px;line-height:1.65;font-size:15px;">
@@ -201,7 +201,7 @@ export function getEmailTemplate(content: string): string {
         </td></tr>
         <tr><td style="padding:22px 32px;border-top:1px solid ${BRAND.line};background:${BRAND.paper};font-size:11px;line-height:1.6;color:${BRAND.muted};">
           <strong style="font-size:12px;color:${BRAND.ink};">Hiver of <span style="color:${BRAND.coral};">CreatHive</span></strong><br />
-          A commons for the limitless creatives.<br />
+          Built for the limitless creatives.<br />
           &copy; ${year} <strong>CreatHive</strong> &middot; <a href="${SITE_URL}" style="color:${BRAND.coral};text-decoration:none;font-weight:700;">creathive.app</a>
         </td></tr>
       </table>

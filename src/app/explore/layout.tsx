@@ -7,7 +7,7 @@ export function generateMetadata(): Metadata {
       'Discover work from the YPAT 2026–27 cohort: spoken word, poetry, dance, music, tech imagery, UI/UX and more — filtered by niche.',
     openGraph: {
       title: 'Explore Arts — CreatHive',
-      description: 'A commons for the limitless creatives. Discover work by niche.',
+      description: 'Built for the limitless creatives. Discover work by niche.',
       type: 'website',
     },
   };
