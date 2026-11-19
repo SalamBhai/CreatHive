@@ -31,7 +31,7 @@ interface StoryComposerProps {
 }
 
 type InsertKind = 'text' | 'heading' | 'quote' | 'image' | 'grid' | 'video' | 'embed' | 'pdf' | 'divider';
-type DialogKind = 'link' | 'image' | 'grid' | 'video' | 'embed' | 'pdf';
+type DialogKind = 'link' | 'video' | 'embed' | 'pdf';
 
 const INSERT_OPTIONS: Array<{ kind: InsertKind; label: string; icon: React.ElementType }> = [
   { kind: 'text', label: 'Text', icon: TextT },
@@ -58,7 +58,7 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
   const [menuOpen, setMenuOpen] = useState(false);
   const [dialog, setDialog] = useState<DialogKind | null>(null);
   const [form, setForm] = useState({ url: '', caption: '', poster: '' });
-  const [uploads, setUploads] = useState<string[]>([]);
+  const [pendingUpload, setPendingUpload] = useState<'image' | 'grid' | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -93,7 +93,7 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
   const closeDialog = () => {
     setDialog(null);
     setForm({ url: '', caption: '', poster: '' });
-    setUploads([]);
+    setPendingUpload(null);
     setError('');
   };
 
@@ -102,8 +102,17 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
     setMenuOpen(false);
     setError('');
     setForm({ url: '', caption: '', poster: '' });
-    setUploads([]);
+    setPendingUpload(null);
     setDialog(kind);
+  };
+
+  /** Images/grids go straight to the OS file picker â€” no intermediate form. */
+  const pickFiles = (kind: 'image' | 'grid') => {
+    rememberSelection();
+    setMenuOpen(false);
+    setPendingUpload(kind);
+    setError('');
+    fileInput.current?.click();
   };
 
   const insert = (kind: InsertKind) => {
@@ -112,6 +121,7 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
     if (kind === 'heading') return exec('insertHTML', '<h2>A section heading</h2>');
     if (kind === 'quote') return exec('insertHTML', '<blockquote>A thought worth keeping.</blockquote>');
     if (kind === 'divider') return exec('insertHTML', '<hr />');
+    if (kind === 'image' || kind === 'grid') return pickFiles(kind);
     openDialog(kind as DialogKind);
   };
 
@@ -122,30 +132,6 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
     if (dialog === 'link') {
       if (!url) return setError('Enter a link URL.');
       exec('createLink', url);
-      return closeDialog();
-    }
-    if (dialog === 'image') {
-      if (!url) return setError('Add an image URL or upload a file.');
-      const cap = form.caption.trim();
-      exec(
-        'insertHTML',
-        `<figure data-story-image="true"><img src="${escapeHtml(url)}" alt="" />${
-          cap ? `<figcaption>${escapeHtml(cap)}</figcaption>` : ''
-        }</figure>`
-      );
-      return closeDialog();
-    }
-    if (dialog === 'grid') {
-      const urls = uploads.length
-        ? uploads
-        : url.split(',').map((s) => s.trim()).filter(Boolean);
-      if (!urls.length) return setError('Add image URLs or upload files.');
-      exec(
-        'insertHTML',
-        `<div class="photo-grid" data-story-image="true">${urls
-          .map((u) => `<img src="${escapeHtml(u)}" alt="" />`)
-          .join('')}</div>`
-      );
       return closeDialog();
     }
     if (dialog === 'video') {
@@ -184,11 +170,18 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
     setError('');
     try {
       const results = await Promise.all(Array.from(files).map((file) => uploadFile(file, 'gallery')));
-      if (dialog === 'grid') {
-        setUploads(results.map((r) => r.url));
+      const urls = results.map((r) => r.url);
+      if (pendingUpload === 'grid') {
+        exec(
+          'insertHTML',
+          `<div class="photo-grid" data-story-image="true">${urls
+            .map((u) => `<img src="${escapeHtml(u)}" alt="" />`)
+            .join('')}</div>`
+        );
       } else {
-        setForm((f) => ({ ...f, url: results[0].url }));
+        exec('insertHTML', `<figure data-story-image="true"><img src="${escapeHtml(urls[0])}" alt="" /></figure>`);
       }
+      setPendingUpload(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed.');
     } finally {
@@ -199,8 +192,6 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
 
   const dialogCopy: Record<DialogKind, { title: string; hint: string }> = {
     link: { title: 'Add a link', hint: 'Paste the URL you want this text to point to.' },
-    image: { title: 'Insert an image', hint: 'Upload a file, or paste a direct image URL. Add an optional caption.' },
-    grid: { title: 'Insert a photo grid', hint: 'Upload several images, or paste comma-separated URLs.' },
     video: { title: 'Insert video or audio', hint: 'Paste a direct media URL or a YouTube/Vimeo link. Poster is optional.' },
     embed: { title: 'Insert an embed', hint: 'Paste a YouTube or Vimeo share URL.' },
     pdf: { title: 'Insert a PDF link', hint: 'Paste a link to the case study PDF.' },
@@ -303,28 +294,9 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
               className={inputClass}
               value={form.url}
               onChange={(e) => setForm({ ...form, url: e.target.value })}
-              placeholder={dialog === 'grid' ? 'image1.jpg, image2.jpg' : dialog === 'pdf' ? 'https://â€¦/case-study.pdf' : 'https://â€¦'}
+              placeholder={dialog === 'pdf' ? 'https://â€¦/case-study.pdf' : 'https://â€¦'}
               aria-label="Media URL"
             />
-            {(dialog === 'image' || dialog === 'grid') ? (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => fileInput.current?.click()}
-                className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-bold text-stone-700 hover:border-[#FF5A36] hover:text-[#FF5A36] disabled:opacity-50"
-              >
-                {busy ? 'Uploadingâ€¦' : dialog === 'grid' ? 'Upload images' : 'Upload image'}
-              </button>
-            ) : null}
-            {dialog === 'image' ? (
-              <input
-                className={inputClass}
-                value={form.caption}
-                onChange={(e) => setForm({ ...form, caption: e.target.value })}
-                placeholder="Caption (optional)"
-                aria-label="Caption"
-              />
-            ) : null}
             {dialog === 'video' ? (
               <input
                 className={inputClass}
@@ -336,7 +308,6 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
             ) : null}
           </div>
 
-          {uploads.length ? <p className="mt-2 text-[11px] font-semibold text-emerald-600">{uploads.length} image(s) ready to insert</p> : null}
           {error ? <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{error}</p> : null}
 
           <div className="mt-3 flex gap-2">
@@ -357,8 +328,8 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
       <input
         ref={fileInput}
         type="file"
-        accept={dialog === 'grid' ? 'image/*' : dialog === 'video' ? 'video/*,audio/*' : 'image/*'}
-        multiple={dialog === 'grid'}
+        accept="image/*"
+        multiple={pendingUpload === 'grid'}
         className="hidden"
         onChange={(e) => void upload(e.target.files)}
       />
