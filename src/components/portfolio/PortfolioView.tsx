@@ -68,7 +68,7 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
       </header>
 
       {/* Main Content Feed */}
-      <main className="max-w-2xl mx-auto px-4 pt-5 space-y-6">
+      <main className="mx-auto max-w-2xl space-y-6 px-4 pb-2 pt-5">
         {/* Profile Hero Card */}
         <ProfileHero profile={profile} />
 
@@ -108,17 +108,18 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
           )}
         </div>
 
-        {/* The only onboarding nudge — a quiet floating pill. */}
-        <div className="flex justify-center pt-4 pb-6">
-          <Link
-            href="/join"
-            className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#18181B] shadow-[0_8px_30px_rgba(24,24,27,0.14)] border border-stone-200 transition-transform hover:scale-[1.03] active:scale-[0.98]"
-          >
-            Join the Hive
-            <ArrowUpRight size={15} weight="bold" />
-          </Link>
-        </div>
       </main>
+
+      {/* Onboarding nudge lives in the footer and clears the fixed booking bar. */}
+      <footer className="relative z-10 flex justify-center px-6 pb-36 pt-10 md:pb-40">
+        <Link
+          href="/join"
+          className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-[#18181B] shadow-[0_8px_30px_rgba(24,24,27,0.14)] transition-transform hover:scale-[1.03] active:scale-[0.98]"
+        >
+          Join the Hive
+          <ArrowUpRight size={15} weight="bold" />
+        </Link>
+      </footer>
 
       {/* Sticky Bottom Conversion Bar */}
       <ConversionBar profile={profile} />
