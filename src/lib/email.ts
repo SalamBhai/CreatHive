@@ -43,15 +43,6 @@ interface SendEmailOptions {
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 function htmlToText(html: string): string {
   return html
     .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -220,28 +211,6 @@ function button(label: string, href: string): string {
   </div>`;
 }
 
-/** Welcome email — sent after a successful signup (non-blocking). */
-export async function sendWelcomeEmail({
-  email,
-  name,
-}: {
-  email: string;
-  name: string;
-}): Promise<boolean> {
-  const safeName = escapeHtml(name || 'creative');
-  const content = `
-    <h2 style="margin:0 0 18px;font-size:24px;line-height:1.25;">Welcome to the hive, ${safeName}!</h2>
-    <p style="margin:0 0 14px;">Your <strong style="color:${BRAND.coral};">CreatHive</strong> space is ready. It&rsquo;s one quiet place for your work, your story, and the people who want to book you.</p>
-    <p style="margin:0 0 14px;">Add your first piece, shape your profile, and make the page yours.</p>
-    ${button('Open your Studio →', `${SITE_URL}/studio`)}
-    <p style="margin:0;font-size:13px;color:${BRAND.muted};">Or <a href="${SITE_URL}/explore" style="color:${BRAND.coral};text-decoration:none;">explore the hive</a> first.</p>`;
-  return sendEmail({
-    to: email,
-    subject: 'Welcome to CreatHive',
-    html: getEmailTemplate(content),
-    text: `Welcome to the hive, ${name}! Your CreatHive space is ready: ${SITE_URL}/studio`,
-  });
-}
 
 /** Password reset — kept ready for a custom reset flow; Supabase Auth sends its own by default. */
 export async function sendPasswordResetEmail({

@@ -28,6 +28,9 @@ interface HookEvent {
   email_data?: HookEmailData;
 }
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://creathivee.vercel.app';
+
 const SUPABASE_HOST = (() => {
   try {
     return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || '').host;
@@ -36,9 +39,10 @@ const SUPABASE_HOST = (() => {
   }
 })();
 
-function verifyUrl(tokenHash: string, action: string, redirectTo: string): string {
-  const params = new URLSearchParams({ token: tokenHash, type: action });
-  if (redirectTo) params.set('redirect_to', redirectTo);
+/** Always send verified users to the deployed app, never Supabase's localhost Site URL. */
+function verifyUrl(tokenHash: string, action: string): string {
+  const redirectTo = `${SITE_URL}/studio`;
+  const params = new URLSearchParams({ token: tokenHash, type: action, redirect_to: redirectTo });
   return `https://${SUPABASE_HOST}/auth/v1/verify?${params.toString()}`;
 }
 
@@ -95,8 +99,6 @@ export async function POST(request: Request) {
   const data = event.email_data || {};
   const action = data.email_action_type || 'signup';
   const displayName = String(user.user_metadata?.display_name || '');
-  const redirectTo = data.redirect_to || data.site_url || '';
-
   const send = async (to: string, tokenHash: string, token: string, extra?: { newEmail?: string }) => {
     if (!to) return true;
     return sendAuthEmail({
@@ -105,7 +107,7 @@ export async function POST(request: Request) {
       token,
       displayName,
       newEmail: extra?.newEmail,
-      url: tokenHash ? verifyUrl(tokenHash, action, redirectTo) : undefined,
+      url: tokenHash ? verifyUrl(tokenHash, action) : undefined,
     });
   };
 

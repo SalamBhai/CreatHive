@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { signUpUser, validateSignUpInput } from '@/lib/server-auth';
-import { sendWelcomeEmail } from '@/lib/email';
 import type { CreativeDiscipline } from '@/lib/types';
 
 export async function POST(request: Request) {
@@ -27,10 +26,9 @@ export async function POST(request: Request) {
   try {
     const result = await signUpUser(input as Parameters<typeof signUpUser>[0]);
 
-    // Welcome email is best-effort — it must never fail a successful signup.
-    sendWelcomeEmail({ email: input.email, name: input.displayName }).catch((err) =>
-      console.warn('[signup] welcome email failed:', err)
-    );
+    // The confirmation email is handled by Supabase's Send Email hook
+    // (/api/auth/send-email). Sending a separate welcome email too would
+    // double-send on signup and confuse recipients.
 
     if (result.status === 'confirmation_sent') {
       return NextResponse.json(
