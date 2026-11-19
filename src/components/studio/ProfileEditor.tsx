@@ -1,12 +1,10 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import Image from 'next/image';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { Surface } from '@/components/ui/Surface';
-import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
+import { ProfileHero } from '@/components/portfolio/ProfileHero';
 import { useUpdateProfile } from '@/lib/store';
-import { resolveAvatarUrl } from '@/lib/avatar';
 import { uploadFile } from '@/lib/upload';
 import type { CreativeProfile, SocialLinks } from '@/lib/types';
 
@@ -265,54 +263,29 @@ export function ProfileEditor({
         </div>
       </Surface>
 
-        <Surface className={`h-fit p-5 md:p-6 ${mobileTab === 'preview' ? '' : 'hidden lg:block'}`}>
-        <div className={`relative mb-4 h-20 overflow-hidden rounded-xl ${bannerUrl ? '' : `bg-gradient-to-r ${profile.bannerGradient}`}`}>
-          {bannerUrl ? <Image src={bannerUrl} alt="" fill sizes="400px" unoptimized className="object-cover" /> : null}
-        </div>
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-editorial text-lg font-semibold">Live preview</h3>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Public card</span>
-        </div>
-        <Image
-          src={resolveAvatarUrl(avatarUrl, displayName || profile.displayName || profile.username || 'CreatHive')}
-          alt=""
-          width={64}
-          height={64}
-          className="h-16 w-16 rounded-2xl border border-stone-200 object-cover"
-        />
-        <h2 className="mt-4 font-editorial text-2xl font-semibold">{displayName}</h2>
-        <p className="text-xs font-bold text-[#FF5A36]">@{profile.username}</p>
-        <p className="mt-2 text-sm text-stone-700">{tagline}</p>
-        {available ? (
-          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-stone-200 px-2.5 py-1 text-[11px] font-bold text-stone-600">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Open to gigs
-          </span>
-        ) : null}
-        <p className="mt-3 text-xs leading-relaxed text-stone-600">{bio}</p>
-        <p className="mt-2 text-[11px] text-stone-500">{location}</p>
-        <div className="mt-5 flex flex-wrap gap-2 border-t border-stone-200 pt-4">
-          {profile.disciplines.map((d) => {
-            const config = DISCIPLINE_CONFIG[d] || DISCIPLINE_CONFIG.OTHER;
-            return (
-              <span key={d} className="rounded-full border border-stone-200 px-2.5 py-1 text-[10px] font-bold text-stone-600">
-                {config.label}
-              </span>
-            );
-          })}
-        </div>
-        {Object.values(socials).some(Boolean) ? (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {Object.entries(socials)
-              .filter(([, value]) => !!value)
-              .map(([key]) => (
-                <span key={key} className="rounded-lg bg-stone-100 px-2 py-1 text-[10px] font-semibold capitalize text-stone-600">
-                  {key}
-                </span>
-              ))}
+        <Surface className={`h-fit p-4 md:p-5 ${mobileTab === 'preview' ? '' : 'hidden lg:block'}`}>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-editorial text-lg font-semibold">Live preview</h3>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Public card</span>
           </div>
-        ) : null}
-      </Surface>
+          {/* The real public hero, fed the unsaved form values — identical to
+              the iframe preview in the Studio shell, but updates as you type. */}
+          <div className="pointer-events-none overflow-hidden rounded-2xl">
+            <ProfileHero
+              profile={{
+                ...profile,
+                displayName,
+                tagline,
+                bio,
+                location,
+                avatarUrl,
+                socialLinks: socials,
+                bannerUrl,
+                isAvailableForGigs: available,
+              }}
+            />
+          </div>
+        </Surface>
       </div>
     </div>
   );
