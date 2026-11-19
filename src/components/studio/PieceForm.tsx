@@ -150,21 +150,21 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     }
   };
 
-  // On mobile only the active step shows; on desktop all steps stack.
+  // One step at a time on every screen — the story editor gets its own tab.
   const sectionClass = (id: Step) =>
-    `space-y-4 ${step === id ? '' : 'hidden lg:block'}`;
+    `space-y-4 ${step === id ? '' : 'hidden'}`;
 
   return (
     <form onSubmit={handleSubmit} className="pt-1">
-      {/* Mobile step switcher */}
-      <div className="mb-5 grid grid-cols-3 gap-1 rounded-xl border border-stone-200 bg-white p-1 lg:hidden">
+      {/* Step switcher — shared on mobile and desktop */}
+      <div className="mx-auto mb-5 grid max-w-xl grid-cols-3 gap-1 rounded-xl border border-stone-200 bg-white p-1">
         {(['details', 'media', 'story'] as const).map((id) => (
           <button
             key={id}
             type="button"
             onClick={() => setStep(id)}
-            className={`rounded-lg py-2 text-[11px] font-bold capitalize transition-colors ${
-              step === id ? 'bg-[#18181B] text-white' : 'text-stone-600'
+            className={`rounded-lg py-2.5 text-xs font-bold capitalize transition-colors ${
+              step === id ? 'bg-[#18181B] text-white' : 'text-stone-600 hover:text-[#18181B]'
             }`}
           >
             {id}
@@ -172,9 +172,6 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         ))}
       </div>
 
-      <div className="lg:grid lg:grid-cols-2 lg:gap-6">
-        {/* Left column: details + media */}
-        <div className="space-y-4">
       {/* DETAILS */}
       <div className={sectionClass('details')}>
         <div>
@@ -466,9 +463,6 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         </div>
       </div>
 
-        </div>
-
-        {/* Right column: full-post story */}
       {/* STORY */}
       <div className={`${sectionClass('story')} pt-4 lg:pt-2`}>
         <div>
@@ -483,27 +477,28 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
           />
         </div>
       </div>
-      </div>
 
-      <div className="sticky bottom-0 mt-5 space-y-2 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
+      <div className="sticky bottom-0 mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
         {uploadError ? (
-          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
+          <p role="alert" className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
             {uploadError}
           </p>
         ) : null}
-        <NeoButton type="submit" variant="primary" size="lg" className="w-full">
-          {isPending ? 'Saving…' : piece ? 'Save changes' : 'Publish to Portfolio'}
-        </NeoButton>
-        {!piece ? (
-          <button
-            type="button"
-            disabled={isPending || !title}
-            onClick={(e) => handleSubmit(e, 'DRAFT')}
-            className="w-full rounded-xl border border-stone-200 py-2.5 text-xs font-bold text-stone-600 transition-colors hover:border-stone-400 disabled:opacity-50"
-          >
-            Save as draft
-          </button>
-        ) : null}
+        <div className="ml-auto flex flex-wrap items-center gap-3">
+          {!piece ? (
+            <button
+              type="button"
+              disabled={isPending || !title}
+              onClick={(e) => handleSubmit(e, 'DRAFT')}
+              className="rounded-xl border border-stone-200 px-5 py-2.5 text-xs font-bold text-stone-600 transition-colors hover:border-stone-400 disabled:opacity-50"
+            >
+              Save as draft
+            </button>
+          ) : null}
+          <NeoButton type="submit" variant="primary" size="lg" className="px-6">
+            {isPending ? 'Saving…' : piece ? 'Save changes' : 'Publish to Portfolio'}
+          </NeoButton>
+        </div>
       </div>
     </form>
   );

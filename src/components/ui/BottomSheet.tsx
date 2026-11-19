@@ -69,7 +69,7 @@ export function BottomSheet({
             onDragEnd={handleDragEnd}
             className={`relative z-10 flex w-full flex-col overflow-hidden border-t-2 border-[#18181B] bg-[#FDFBF7] shadow-2xl md:border-x-2 ${
               wide
-                ? 'max-h-[92vh] max-w-6xl rounded-t-3xl md:rounded-3xl md:border-2'
+                ? 'max-h-[92vh] max-w-4xl rounded-t-3xl md:rounded-3xl md:border-2'
                 : 'max-h-[90vh] max-w-lg rounded-t-3xl'
             }`}
           >
