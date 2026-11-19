@@ -11,6 +11,7 @@ import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { useAllPieces, useAllProfiles, usePiece } from '@/lib/store';
 import { resolveAvatarUrl } from '@/lib/avatar';
 import { toEmbedUrl } from '@/lib/media';
+import { PostGallery } from '@/components/media/PostGallery';
 
 export function PostView({ id }: { id: string }) {
   const { data: pieces } = useAllPieces();
@@ -157,20 +158,10 @@ export function PostView({ id }: { id: string }) {
           </Surface>
         ) : null}
 
+        {/* Structured gallery fields become a carousel. Images inserted in the
+            WYSIWYG body stay inline in .story-body below, with their captions. */}
         {gallery.length > 0 && piece.mediaType === 'IMAGE_GALLERY' ? (
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {gallery.map((src, index) => (
-              <Image
-                key={index}
-                src={src}
-                alt={`${piece.title} ${index + 1}`}
-                width={900}
-                height={600}
-                unoptimized
-                className="h-auto w-full rounded-xl border border-stone-200 object-cover"
-              />
-            ))}
-          </div>
+          <PostGallery images={gallery} title={piece.title} />
         ) : null}
 
         {piece.bodyHtml ? (
