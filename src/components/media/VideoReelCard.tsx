@@ -66,6 +66,7 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
             ref={videoRef}
             src={piece.mediaUrl}
             poster={piece.coverImageUrl}
+            preload="metadata"
             playsInline
             loop
             onClick={togglePlay}

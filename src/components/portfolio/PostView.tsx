@@ -153,7 +153,7 @@ export function PostView({ id }: { id: string }) {
           </Surface>
         ) : piece.mediaType === 'VIDEO' && piece.mediaUrl ? (
           <Surface className="mt-8 overflow-hidden">
-            <video controls src={piece.mediaUrl} poster={piece.coverImageUrl} className="w-full" />
+            <video controls preload="metadata" src={piece.mediaUrl} poster={piece.coverImageUrl} className="w-full" />
           </Surface>
         ) : null}
 
