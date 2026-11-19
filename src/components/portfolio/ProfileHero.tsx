@@ -117,21 +117,21 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         {/* Name & Title */}
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl md:text-3xl font-extrabold font-sans-ui text-[#18181B]">
+            <h1 className="font-editorial text-3xl md:text-4xl font-semibold leading-tight text-[#18181B]">
               {profile.displayName}
             </h1>
-            <span className="text-sm font-bold text-stone-500 font-mono">
+            <span className="font-sans-ui text-sm font-semibold text-stone-500">
               @{profile.username}
             </span>
           </div>
 
-          <p className="text-sm md:text-base font-semibold text-[#FF5A36]">
+          <p className="font-sans-ui text-sm md:text-base font-semibold text-[#FF5A36]">
             {profile.tagline}
           </p>
         </div>
 
         {/* Cohort Badge / Location */}
-        <div className="flex items-center gap-3 flex-wrap mt-2.5 text-xs text-stone-600 font-medium">
+        <div className="font-sans-ui flex items-center gap-3 flex-wrap mt-2.5 text-xs text-stone-600 font-medium">
           {profile.cohortBadge && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#FFF7ED] border border-[#F97316]/30 text-[#C2410C] font-semibold">
               <CheckCircle size={13} weight="fill" className="text-[#F97316]" />

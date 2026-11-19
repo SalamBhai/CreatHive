@@ -60,7 +60,7 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
           <CreatHiveWordmark size="sm" />
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold font-mono px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300 text-stone-700">
+            <span className="font-sans-ui text-xs font-bold px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300 text-stone-700">
               @{profile.username}
             </span>
           </div>
@@ -108,13 +108,13 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
           )}
         </div>
 
-        {/* The only "get your own" moment — a quiet floating pill. */}
+        {/* The only onboarding nudge — a quiet floating pill. */}
         <div className="flex justify-center pt-4 pb-6">
           <Link
             href="/join"
             className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#18181B] shadow-[0_8px_30px_rgba(24,24,27,0.14)] border border-stone-200 transition-transform hover:scale-[1.03] active:scale-[0.98]"
           >
-            Get your own CreatHive
+            Join the Hive
             <ArrowUpRight size={15} weight="bold" />
           </Link>
         </div>

@@ -71,7 +71,7 @@ export function InquiryDrawer({
           <div className="w-16 h-16 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-600 flex items-center justify-center neo-shadow">
             <CheckCircle size={32} weight="fill" />
           </div>
-          <h4 className="text-xl font-bold font-sans-ui text-[#18181B]">
+          <h4 className="font-editorial text-xl font-semibold text-[#18181B]">
             Inquiry Sent Successfully!
           </h4>
           <p className="text-xs text-stone-600 max-w-xs font-sans-ui">
