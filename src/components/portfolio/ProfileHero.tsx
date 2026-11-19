@@ -4,16 +4,16 @@ import React from 'react';
 import Image from 'next/image';
 import {
   MapPin,
-  Sparkle,
   EnvelopeSimple,
   WhatsappLogo,
-  TwitterLogo,
+  XLogo,
   GithubLogo,
   CheckCircle,
 } from '@phosphor-icons/react';
 import { CreativeProfile } from '@/lib/types';
 import { DisciplineChip } from '../ui/DisciplineChip';
 import { resolveAvatarUrl } from '@/lib/avatar';
+import { VerifiedHiveBadge } from '@/components/brand/VerifiedHiveBadge';
 
 interface ProfileHeroProps {
   profile: CreativeProfile;
@@ -63,7 +63,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
               className="h-24 w-24 rounded-2xl border-[3px] border-white bg-white object-cover shadow-[0_6px_18px_rgba(24,24,27,0.12)] md:h-28 md:w-28"
             />
             <div className="absolute -bottom-1 -right-1 rounded-full border-2 border-white bg-[#FFAE19] p-1 text-[#18181B]">
-              <Sparkle size={14} weight="fill" />
+              <VerifiedHiveBadge size={14} />
             </div>
           </div>
 
@@ -97,7 +97,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
                 className="w-9 h-9 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-[#18181B] transition-colors"
                 title="Twitter / X"
               >
-                <TwitterLogo size={18} weight="bold" />
+                <XLogo size={18} weight="bold" />
               </a>
             )}
             {profile.socialLinks.github && (

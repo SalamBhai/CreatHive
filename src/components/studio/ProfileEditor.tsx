@@ -11,7 +11,7 @@ import type { CreativeProfile, SocialLinks } from '@/lib/types';
 const SOCIAL_FIELDS: Array<{ key: keyof SocialLinks; label: string; placeholder: string }> = [
   { key: 'email', label: 'Email', placeholder: 'you@example.com' },
   { key: 'whatsapp', label: 'WhatsApp', placeholder: '+234 800 000 0000' },
-  { key: 'twitter', label: 'X / Twitter', placeholder: 'https://x.com/...' },
+  { key: 'twitter', label: 'X', placeholder: 'https://x.com/...' },
   { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/...' },
   { key: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/...' },
   { key: 'github', label: 'GitHub', placeholder: 'https://github.com/...' },
