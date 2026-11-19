@@ -18,7 +18,7 @@ import {
   useInquiries,
   useUpdateInquiryStatus,
 } from '@/lib/store';
-import { signInLocal, signOut } from '@/lib/auth';
+import { signInLocal, signOut, useAuthReady } from '@/lib/auth';
 import { usingSupabase } from '@/lib/supabase';
 import { useDataSource } from '@/lib/data-source';
 import { StudioGate } from '@/components/studio/StudioGate';
@@ -144,6 +144,17 @@ export default function StudioPage() {
       signInLocal({ username: handle, displayName: existing.displayName, email: '' });
     }
   };
+
+  // Wait for the session to resolve before choosing a gate — otherwise a
+  // signed-in creator briefly sees the sign-in form on every refresh.
+  const authReady = useAuthReady();
+  if (!authReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#FDFBF7]">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF5A36] border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!session) {
     return usingSupabase ? (

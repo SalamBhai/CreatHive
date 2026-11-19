@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase, usingSupabase } from './supabase';
 import { repository } from './repository';
+import { queryClient } from './query-client';
 import type { CreativeDiscipline } from './types';
 
 export interface AppSession {
@@ -63,7 +64,55 @@ export function signOutLocal() {
   emit();
 }
 
-/* ---------- Supabase session ---------- */
+/* ---------- Supabase session — one shared external store ---------- */
+let remoteSession: AppSession | null = null;
+let remoteReady = false;
+let remoteStarted = false;
+const remoteListeners = new Set<() => void>();
+
+function readRemoteSession(): AppSession | null {
+  return remoteSession;
+}
+function readRemoteReady(): boolean {
+  return remoteReady;
+}
+function readLocalReady(): boolean {
+  return true; // local storage is read synchronously on the client
+}
+function subscribeRemote(listener: () => void) {
+  remoteListeners.add(listener);
+  return () => {
+    remoteListeners.delete(listener);
+  };
+}
+function emitRemote() {
+  remoteListeners.forEach((listener) => listener());
+}
+
+function setRemote(app: AppSession | null, event?: AuthChangeEvent) {
+  const wasReady = remoteReady;
+  remoteReady = true;
+  if (app === remoteSession) {
+    if (!wasReady) emitRemote();
+    return;
+  }
+  remoteSession = app;
+  emitRemote();
+  // Provision on session arrival only — not on TOKEN_REFRESHED etc.
+  if (app && (!event || event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED')) {
+    void ensureProfile(app).catch((err) => console.warn('[auth] profile check failed', err));
+  }
+}
+
+function startRemote() {
+  if (!usingSupabase || !supabase || remoteStarted) return;
+  remoteStarted = true;
+  supabase.auth.getSession().then(({ data }) => setRemote(toAppSession(data.session)));
+  supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) =>
+    setRemote(toAppSession(session), event)
+  );
+}
+
 function toAppSession(session: Session | null): AppSession | null {
   if (!session?.user) return null;
   const meta = session.user.user_metadata || {};
@@ -76,32 +125,19 @@ function toAppSession(session: Session | null): AppSession | null {
   };
 }
 
-/** Auth state shared by the Studio gate and auth-aware links. */
+/** Shared auth state — one store for every consumer, no per-component copies. */
 export function useSession(): AppSession | null {
-  const [remote, setRemote] = useState<AppSession | null>(null);
-
-  useEffect(() => {
-    if (!usingSupabase || !supabase) return;
-    supabase.auth.getSession().then(async ({ data }) => {
-      const app = toAppSession(data.session);
-      setRemote(app);
-      // A user who confirmed via email link has a session but no profile row —
-      // provisioning only in signInWithPassword misses that path.
-      if (app) {
-        try { await ensureProfile(app); } catch (err) { console.warn('[auth] profile check failed', err); }
-      }
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event: AuthChangeEvent, session: Session | null) => {
-        const app = toAppSession(session);
-        setRemote(app);
-        if (app) void ensureProfile(app).catch((err) => console.warn('[auth] profile check failed', err));
-      }
-    );
-    return () => subscription.unsubscribe();
-  }, []);
-
+  useEffect(startRemote, []);
+  const remote = useSyncExternalStore(subscribeRemote, readRemoteSession, () => null);
   const local = useSyncExternalStore(subscribe, readLocal, () => null);
+  return usingSupabase ? remote : local;
+}
+
+/** True until the session has been resolved — gates show a loader, not a login form. */
+export function useAuthReady(): boolean {
+  useEffect(startRemote, []);
+  const remote = useSyncExternalStore(subscribeRemote, readRemoteReady, () => false);
+  const local = useSyncExternalStore(subscribe, readLocalReady, () => true);
   return usingSupabase ? remote : local;
 }
 
@@ -111,6 +147,8 @@ export async function signOut() {
   } else {
     signOutLocal();
   }
+  // Never leave one user's cached data visible to the next account.
+  queryClient.clear();
 }
 
 /** Ensure a profile row exists for the signed-in user, keyed by auth.uid(). */

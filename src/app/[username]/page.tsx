@@ -72,14 +72,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 async function PortfolioLoader({ params }: PageProps) {
   const { username } = await params;
   const clean = username.toLowerCase().replace('@', '');
-  const initialProfile = INITIAL_PROFILES[clean] || neutralProfile(clean);
-  const initialPieces = Object.values(
-    (await import('@/lib/sample-data')).INITIAL_PIECES
-  ).filter((piece) => piece.creativeId === initialProfile.id);
+  // Only seed known mock handles. For a real username an empty placeholder
+  // would flash on first paint before the real row loads — let the loader show.
+  const mockProfile = INITIAL_PROFILES[clean];
+  const initialPieces = mockProfile
+    ? Object.values((await import('@/lib/sample-data')).INITIAL_PIECES).filter(
+        (piece) => piece.creativeId === mockProfile.id
+      )
+    : undefined;
   return (
     <PortfolioView
       username={username}
-      initialProfile={initialProfile}
+      initialProfile={mockProfile}
       initialPieces={initialPieces}
     />
   );

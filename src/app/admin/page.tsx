@@ -8,7 +8,7 @@ import { Surface } from '@/components/ui/Surface';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
-import { signOut, useSession } from '@/lib/auth';
+import { signOut, useSession, useAuthReady } from '@/lib/auth';
 import {
   useAdminInquiries,
   useAdminPieces,
@@ -94,6 +94,15 @@ export default function AdminPage() {
   const setAdmin = useSetProfileAdmin();
 
   const [draft, setDraft] = useState({ title: '', description: '', discipline: 'ALL' as CreativeDiscipline | 'ALL', reward: '', deadline: '' });
+
+  const authReady = useAuthReady();
+  if (!authReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#FDFBF7]">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF5A36] border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!session) {
     return (
