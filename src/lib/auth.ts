@@ -82,9 +82,21 @@ export function useSession(): AppSession | null {
 
   useEffect(() => {
     if (!usingSupabase || !supabase) return;
-    supabase.auth.getSession().then(({ data }) => setRemote(toAppSession(data.session)));
+    supabase.auth.getSession().then(async ({ data }) => {
+      const app = toAppSession(data.session);
+      setRemote(app);
+      // A user who confirmed via email link has a session but no profile row —
+      // provisioning only in signInWithPassword misses that path.
+      if (app) {
+        try { await ensureProfile(app); } catch (err) { console.warn('[auth] profile check failed', err); }
+      }
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event: AuthChangeEvent, session: Session | null) => setRemote(toAppSession(session))
+      (_event: AuthChangeEvent, session: Session | null) => {
+        const app = toAppSession(session);
+        setRemote(app);
+        if (app) void ensureProfile(app).catch((err) => console.warn('[auth] profile check failed', err));
+      }
     );
     return () => subscription.unsubscribe();
   }, []);
@@ -105,7 +117,8 @@ export async function signOut() {
 async function ensureProfile(app: AppSession) {
   if (!app.userId) return;
   const existing = await repository.getProfile(app.username);
-  if (existing) return;
+  // A mock profile with the same handle is not a real row — still provision.
+  if (existing && /^[0-9a-f]{8}-/i.test(existing.id)) return;
   await repository.createProfile({
     id: app.userId,
     username: app.username,
