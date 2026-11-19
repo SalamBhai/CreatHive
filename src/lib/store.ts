@@ -27,7 +27,9 @@ export function useCreativeProfile(
 ) {
   return useQuery({
     queryKey: ['profile', username.toLowerCase()],
-    ...(initialData ? { initialData } : {}),
+    // Server placeholder must be treated as stale so the real row is fetched
+    // on mount — the query client's global staleTime would otherwise hide it.
+    ...(initialData ? { initialData, initialDataUpdatedAt: 0 } : {}),
     queryFn: async (): Promise<CreativeProfile> => {
       const profile = await repository.getProfile(username);
       if (profile) return profile;
@@ -105,7 +107,7 @@ export function useCreativePieces(
   return useQuery({
     queryKey: ['pieces', profile?.id, filterDiscipline],
     enabled: !!profile?.id,
-    ...(initial?.length ? { initialData: initial } : {}),
+    ...(initial?.length ? { initialData: initial, initialDataUpdatedAt: 0 } : {}),
     queryFn: () =>
       repository.listPieces({
         creativeId: profile!.id,

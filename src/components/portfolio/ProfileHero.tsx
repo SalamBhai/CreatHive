@@ -138,10 +138,12 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
               {profile.cohortBadge}
             </span>
           )}
-          <span className="inline-flex items-center gap-1">
-            <MapPin size={14} weight="bold" />
-            {profile.location}
-          </span>
+          {profile.location?.trim() ? (
+            <span className="inline-flex items-center gap-1">
+              <MapPin size={14} weight="bold" />
+              {profile.location}
+            </span>
+          ) : null}
         </div>
 
         {/* Bio */}
