@@ -128,6 +128,30 @@ const fromPiece = (p: NewPiece | CreativePiece) => ({
   tags: p.tags,
 });
 
+/** Only send keys that are actually present — a partial patch (e.g. a
+ * featured toggle) must not null out the rest of the piece. */
+const fromPiecePatch = (p: Partial<CreativePiece>) => {
+  const patch: Record<string, unknown> = {};
+  if (p.title !== undefined) patch.title = p.title;
+  if (p.subtitle !== undefined) patch.subtitle = p.subtitle ?? null;
+  if (p.discipline !== undefined) patch.discipline = p.discipline;
+  if (p.mediaType !== undefined) patch.media_type = p.mediaType;
+  if (p.mediaUrl !== undefined) patch.media_url = p.mediaUrl ?? null;
+  if (p.mediaPublicId !== undefined) patch.media_public_id = p.mediaPublicId ?? null;
+  if (p.textContent !== undefined) patch.text_content = p.textContent ?? null;
+  if (p.bodyHtml !== undefined) patch.body_html = p.bodyHtml ?? null;
+  if (p.pdfUrl !== undefined) patch.pdf_url = p.pdfUrl ?? null;
+  if (p.coverImageUrl !== undefined) patch.cover_image_url = p.coverImageUrl ?? null;
+  if (p.coverPublicId !== undefined) patch.cover_public_id = p.coverPublicId ?? null;
+  if (p.galleryImages !== undefined) patch.gallery_images = p.galleryImages ?? [];
+  if (p.galleryPublicIds !== undefined) patch.gallery_public_ids = p.galleryPublicIds ?? [];
+  if (p.isFeatured !== undefined) patch.is_featured = p.isFeatured;
+  if (p.status !== undefined) patch.status = p.status;
+  if (p.sortOrder !== undefined) patch.sort_order = p.sortOrder;
+  if (p.tags !== undefined) patch.tags = p.tags;
+  return patch;
+};
+
 const toInquiry = (r: InquiryRow): PerformanceInquiry => ({
   id: r.id,
   creativeId: r.creative_id,
@@ -342,7 +366,7 @@ export const supabaseRepository: DataRepository = {
     if (!isUuid(id)) return localRepository.updatePiece(id, patch);
     const { data, error } = await getDb()
       .from('pieces')
-      .update(fromPiece(patch as NewPiece))
+      .update(fromPiecePatch(patch))
       .eq('id', id)
       .select()
       .single();

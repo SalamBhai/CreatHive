@@ -173,7 +173,7 @@ export function useReorderPieces() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) => repository.reorderPieces(ids),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
+    onSuccess: () => invalidatePieces(queryClient),
   });
 }
 
@@ -188,12 +188,19 @@ export function useApplaudPiece() {
   });
 }
 
+/** All piece views — editor, public feed, single post and admin — refresh together. */
+function invalidatePieces(queryClient: ReturnType<typeof useQueryClient>) {
+  ['pieces', 'pieces-all', 'piece', 'admin-pieces'].forEach((key) =>
+    queryClient.invalidateQueries({ queryKey: [key] })
+  );
+}
+
 export function useAddPiece() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (piece: Omit<CreativePiece, 'id' | 'createdAt' | 'applauseCount'>) =>
       repository.addPiece(piece),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
+    onSuccess: () => invalidatePieces(queryClient),
   });
 }
 
@@ -202,7 +209,7 @@ export function useUpdatePiece() {
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: Partial<CreativePiece> }) =>
       repository.updatePiece(id, patch),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
+    onSuccess: () => invalidatePieces(queryClient),
   });
 }
 
@@ -210,7 +217,7 @@ export function useDeletePiece() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => repository.deletePiece(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pieces'] }),
+    onSuccess: () => invalidatePieces(queryClient),
   });
 }
 

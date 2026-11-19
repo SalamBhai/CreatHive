@@ -109,7 +109,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   ) => {
     e.preventDefault();
     if (!title || isPending) return;
-    const forcedStatus: PieceStatus = mode === 'draft' ? 'DRAFT' : status;
+    // "Publish" must never inherit a DRAFT status from the visibility select —
+    // that was leaving published pieces marked as drafts.
+    const forcedStatus: PieceStatus =
+      mode === 'draft' ? 'DRAFT' : status === 'DRAFT' ? 'PUBLIC' : status;
     // Once a draft has been saved the form becomes an editor for that row —
     // further saves must UPDATE it, never insert another copy.
     const savedId = piece?.id || draftSavedId;
@@ -149,6 +152,9 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         setDraftSavedId(savedId || null);
         return;
       }
+      // Reflect the published status in the select before clearing the draft id.
+      setStatus(forcedStatus);
+      setDraftSavedId(null);
       reset();
       onSuccess?.();
     };

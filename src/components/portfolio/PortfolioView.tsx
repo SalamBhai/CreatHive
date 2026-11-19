@@ -8,6 +8,8 @@ import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { ProfileHero } from '@/components/portfolio/ProfileHero';
 import { PieceRenderer } from '@/components/portfolio/PieceRenderer';
 import { ConversionBar } from '@/components/portfolio/ConversionBar';
+import { StudioLink } from '@/components/ui/StudioLink';
+import { useSession } from '@/lib/auth';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { useCreativeProfile, useCreativePieces } from '@/lib/store';
@@ -21,6 +23,7 @@ interface PortfolioViewProps {
 
 export function PortfolioView({ username, initialProfile, initialPieces }: PortfolioViewProps) {
   const [selectedDiscipline, setSelectedDiscipline] = useState<CreativeDiscipline | 'ALL'>('ALL');
+  const session = useSession();
 
   const { data: profile } = useCreativeProfile(username, initialProfile);
   const { data: pieces, isLoading: isPiecesLoading } = useCreativePieces(
@@ -60,6 +63,11 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
           <CreatHiveWordmark size="sm" />
 
           <div className="flex items-center gap-2">
+            {session ? (
+              <StudioLink className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-sans-ui text-[11px] font-bold text-[#18181B] hover:border-[#FF5A36] hover:text-[#FF5A36]">
+                Studio ↗
+              </StudioLink>
+            ) : null}
             <span className="font-sans-ui text-xs font-bold px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300 text-stone-700">
               @{profile.username}
             </span>
@@ -110,16 +118,18 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
 
       </main>
 
-      {/* Onboarding nudge lives in the footer and clears the fixed booking bar. */}
-      <footer className="relative z-10 flex justify-center px-6 pb-36 pt-10 md:pb-40">
-        <Link
-          href="/join"
-          className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-[#18181B] shadow-[0_8px_30px_rgba(24,24,27,0.14)] transition-transform hover:scale-[1.03] active:scale-[0.98]"
-        >
-          Join the Hive
-          <ArrowUpRight size={15} weight="bold" />
-        </Link>
-      </footer>
+      {/* Onboarding nudge only for visitors — signed-in creators go to Studio. */}
+      {!session ? (
+        <footer className="relative z-10 flex justify-center px-6 pb-36 pt-10 md:pb-40">
+          <Link
+            href="/join"
+            className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-[#18181B] shadow-[0_8px_30px_rgba(24,24,27,0.14)] transition-transform hover:scale-[1.03] active:scale-[0.98]"
+          >
+            Join the Hive
+            <ArrowUpRight size={15} weight="bold" />
+          </Link>
+        </footer>
+      ) : null}
 
       {/* Sticky Bottom Conversion Bar */}
       <ConversionBar profile={profile} />
