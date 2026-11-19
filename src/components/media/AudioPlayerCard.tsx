@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
@@ -14,6 +15,7 @@ import { CreativePiece } from '@/lib/types';
 import { NeoButton } from '../ui/NeoButton';
 import { useApplaudPiece } from '@/lib/store';
 import { StoryReader } from './StoryReader';
+import { toEmbedUrl } from '@/lib/media';
 
 interface AudioPlayerCardProps {
   piece: CreativePiece;
@@ -28,6 +30,7 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const applaudMutation = useApplaudPiece();
+  const embedUrl = toEmbedUrl(piece.mediaUrl);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -95,10 +98,21 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_8px_30px_rgba(24,24,27,0.04)] transition-all">
-      {/* Audio element */}
-      {piece.mediaUrl && (
+      {/* Native audio, or an allowlisted YouTube/Vimeo embed for spoken-word videos */}
+      {embedUrl ? (
+        <div className="aspect-video w-full bg-black">
+          <iframe
+            src={embedUrl}
+            title={piece.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            className="h-full w-full border-0"
+          />
+        </div>
+      ) : piece.mediaUrl ? (
         <audio ref={audioRef} src={piece.mediaUrl} preload="metadata" />
-      )}
+      ) : null}
 
       {/* Header Info */}
       <div className="border-b border-stone-200 bg-[#FAF8F5] p-4 md:p-5">
@@ -120,6 +134,8 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
 
       {/* Player Core Bar */}
       <div className="p-4 md:p-5 space-y-4">
+        {!embedUrl ? (
+          <>
         {/* Animated Waveform Visualization */}
         <div className="h-12 flex items-center justify-center gap-1 bg-[#FDFBF7] border border-stone-200 rounded-xl px-4 py-2 overflow-hidden">
           {Array.from({ length: 28 }).map((_, i) => {
@@ -168,24 +184,32 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
             <span>{formatTime(duration)}</span>
           </div>
         </div>
+          </>
+        ) : (
+          <p className="rounded-xl border border-stone-200 bg-[#FDFBF7] p-3 text-xs font-semibold text-stone-500">
+            Video embedded above — use its controls to play.
+          </p>
+        )}
 
         {/* Action Controls */}
         <div className="flex items-center justify-between gap-3 pt-1">
-          {/* Play/Pause Button */}
-          <NeoButton
-            variant="primary"
-            size="md"
-            onClick={togglePlay}
-            icon={
-              isPlaying ? (
-                <Pause size={18} weight="bold" />
-              ) : (
-                <Play size={18} weight="bold" />
-              )
-            }
-          >
-            {isPlaying ? 'Pause' : 'Listen Now'}
-          </NeoButton>
+          {/* Play/Pause Button — hidden when the media is an embed */}
+          {!embedUrl ? (
+            <NeoButton
+              variant="primary"
+              size="md"
+              onClick={togglePlay}
+              icon={
+                isPlaying ? (
+                  <Pause size={18} weight="bold" />
+                ) : (
+                  <Play size={18} weight="bold" />
+                )
+              }
+            >
+              {isPlaying ? 'Pause' : 'Listen Now'}
+            </NeoButton>
+          ) : null}
 
           <div className="flex items-center gap-2">
             {piece.contentBlocks && piece.contentBlocks.length > 0 ? (
@@ -197,6 +221,14 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
               >
                 Read Story
               </NeoButton>
+            ) : piece.bodyHtml ? (
+              <Link
+                href={`/p/${piece.id}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-2 text-[11px] font-bold text-stone-700 hover:border-[#FF5A36] hover:text-[#FF5A36]"
+              >
+                <Article size={16} weight="duotone" />
+                Read full post
+              </Link>
             ) : null}
 
             {/* Read Transcript Toggle */}
