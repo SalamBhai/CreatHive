@@ -10,6 +10,8 @@ interface BottomSheetProps {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
+  /** Wider sheet for complex forms (e.g. the piece publisher) on large screens. */
+  wide?: boolean;
 }
 
 export function BottomSheet({
@@ -18,6 +20,7 @@ export function BottomSheet({
   title,
   subtitle,
   children,
+  wide = false,
 }: BottomSheetProps) {
   // Prevent background scroll when sheet is open
   useEffect(() => {
@@ -64,7 +67,11 @@ export function BottomSheet({
             dragConstraints={{ top: 0 }}
             dragElastic={0.2}
             onDragEnd={handleDragEnd}
-            className="relative z-10 w-full max-w-lg max-h-[90vh] bg-[#FDFBF7] border-t-2 md:border-x-2 border-[#18181B] rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
+            className={`relative z-10 flex w-full flex-col overflow-hidden border-t-2 border-[#18181B] bg-[#FDFBF7] shadow-2xl md:border-x-2 ${
+              wide
+                ? 'max-h-[92vh] max-w-6xl rounded-t-3xl md:rounded-3xl md:border-2'
+                : 'max-h-[90vh] max-w-lg rounded-t-3xl'
+            }`}
           >
             {/* Grab Bar Header */}
             <div className="pt-3 pb-2 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing border-b border-stone-200">

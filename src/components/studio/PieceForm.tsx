@@ -172,6 +172,9 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         ))}
       </div>
 
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+        {/* Left column: details + media */}
+        <div className="space-y-4">
       {/* DETAILS */}
       <div className={sectionClass('details')}>
         <div>
@@ -463,6 +466,9 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         </div>
       </div>
 
+        </div>
+
+        {/* Right column: full-post story */}
       {/* STORY */}
       <div className={`${sectionClass('story')} pt-4 lg:pt-2`}>
         <div>
@@ -476,6 +482,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             placeholder={mediaType === 'IMAGE_GALLERY' ? 'Tell the story behind this case study…' : 'Tell your story…'}
           />
         </div>
+      </div>
       </div>
 
       <div className="sticky bottom-0 mt-5 space-y-2 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">

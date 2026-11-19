@@ -378,6 +378,7 @@ export default function StudioPage() {
       <BottomSheet
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
+        wide
         title={editingPiece ? 'Edit Creative Work' : 'Publish New Creative Work'}
         subtitle={editingPiece ? 'Update the details below and save your changes.' : 'Add a spoken word piece, poem, dance reel, or UI tech imagery.'}
       >
