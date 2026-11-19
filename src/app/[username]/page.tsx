@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { PortfolioView } from '@/components/portfolio/PortfolioView';
 import { INITIAL_PROFILES } from '@/lib/sample-data';
+import { serverSupabase } from '@/lib/supabase-server';
 import type { CreativeProfile } from '@/lib/types';
 
 /** Unknown handles must not inherit the mock `sheriff` record. */
@@ -21,7 +22,7 @@ function neutralProfile(username: string): CreativeProfile {
     socialLinks: {},
     themeStyle: 'soft-brutal',
     stats: { viewsCount: 0, applauseCount: 0, piecesCount: 0 },
-    createdAt: new Date().toISOString(),
+    createdAt: '1970-01-01T00:00:00.000Z',
   };
 }
 
@@ -38,22 +39,32 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = await params;
   const clean = username.toLowerCase().replace('@', '');
-  const profile = INITIAL_PROFILES[clean] || neutralProfile(clean);
+  let profile: CreativeProfile = INITIAL_PROFILES[clean] || neutralProfile(clean);
+  if (serverSupabase) {
+    const { data } = await serverSupabase
+      .from('profiles')
+      .select('display_name, tagline, bio, avatar_url')
+      .eq('username', clean)
+      .maybeSingle();
+    if (data) {
+      profile = {
+        ...profile,
+        displayName: String(data.display_name || clean),
+        username: clean,
+        tagline: String(data.tagline || ''),
+        bio: String(data.bio || ''),
+        avatarUrl: String(data.avatar_url || ''),
+      };
+    }
+  }
 
   return {
     title: `${profile.displayName} (@${profile.username}) — CreatHive Portfolio`,
     description: `${profile.tagline}. ${profile.bio.slice(0, 150)}...`,
+    // og:image comes from the dynamic opengraph-image.tsx share card
     openGraph: {
       title: `${profile.displayName} on CreatHive`,
       description: profile.tagline,
-      images: [
-        {
-          url: profile.avatarUrl,
-          width: 800,
-          height: 800,
-          alt: profile.displayName,
-        },
-      ],
     },
   };
 }
