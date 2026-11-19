@@ -108,6 +108,7 @@ const toPiece = (r: PieceRow): CreativePiece => ({
 });
 
 const fromPiece = (p: NewPiece | CreativePiece) => ({
+  creative_id: p.creativeId,
   title: p.title,
   subtitle: p.subtitle ?? null,
   discipline: p.discipline,
@@ -324,7 +325,15 @@ export const supabaseRepository: DataRepository = {
   },
 
   async addPiece(piece) {
-    const { data, error } = await getDb().from('pieces').insert(fromPiece(piece)).select().single();
+    // creative_id must equal auth.uid() for the insert RLS policy. Send the
+    // signed-in user's id, not one from the form (a stale/mock id would 403).
+    const { data: authData } = await getDb().auth.getUser();
+    const ownerId = authData.user?.id || piece.creativeId;
+    const { data, error } = await getDb()
+      .from('pieces')
+      .insert({ ...fromPiece(piece), creative_id: ownerId })
+      .select()
+      .single();
     if (error) throw error;
     return toPiece(data as PieceRow);
   },
