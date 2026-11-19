@@ -22,8 +22,8 @@ import {
   useUpdateCampaignStatus,
   useUpdateFlagStatus,
   useUpdateJoinRequestStatus,
-  useUpdateProfile,
   useUpdateSubmissionStatus,
+  useSetProfileAdmin,
 } from '@/lib/store';
 import type { CampaignStatus, CreativeDiscipline, SubmissionStatus } from '@/lib/types';
 
@@ -91,7 +91,7 @@ export default function AdminPage() {
   const updateCampaign = useUpdateCampaignStatus();
   const updateSubmission = useUpdateSubmissionStatus();
   const updateFlag = useUpdateFlagStatus();
-  const updateProfile = useUpdateProfile();
+  const setAdmin = useSetProfileAdmin();
 
   const [draft, setDraft] = useState({ title: '', description: '', discipline: 'ALL' as CreativeDiscipline | 'ALL', reward: '', deadline: '' });
 
@@ -176,7 +176,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     disabled={!p.isYPATData}
-                    onClick={() => updateProfile.mutate({ username: p.username, patch: { isAdmin: !p.isAdmin } })}
+                    onClick={() => setAdmin.mutate({ id: p.id, makeAdmin: !p.isAdmin })}
                     className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-bold text-stone-600 hover:border-[#FF5A36] hover:text-[#FF5A36] disabled:opacity-40"
                   >
                     {p.isAdmin ? 'Revoke' : 'Make admin'}

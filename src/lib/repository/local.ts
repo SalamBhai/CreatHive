@@ -71,6 +71,12 @@ export const localRepository: DataRepository = {
     return updated;
   },
 
+  async setProfileAdmin(id, makeAdmin) {
+    const all = profiles();
+    const match = Object.entries(all).find(([, p]) => p.id === id);
+    if (match) write(KEYS.profiles, { ...all, [match[0]]: { ...match[1], isAdmin: makeAdmin } });
+  },
+
   async listPieces(options) {
     let result = pieces();
     if (options?.creativeId) {

@@ -24,6 +24,8 @@ export interface DataRepository {
   getProfile(username: string): Promise<CreativeProfile | undefined>;
   createProfile(profile: CreativeProfile): Promise<CreativeProfile>;
   updateProfile(username: string, patch: Partial<CreativeProfile>): Promise<CreativeProfile>;
+  /** Admin-only: grant/revoke another user's admin status via a server RPC. */
+  setProfileAdmin(id: string, makeAdmin: boolean): Promise<void>;
 
   // Pieces
   listPieces(options?: { creativeId?: string; discipline?: CreativeDiscipline | 'ALL'; includeDrafts?: boolean }): Promise<CreativePiece[]>;

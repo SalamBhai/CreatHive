@@ -252,6 +252,9 @@ export const supabaseRepository: DataRepository = {
   },
 
   async createProfile(profile) {
+    // Mock/local ids like c-sheriff-01 are not UUIDs — never insert them into
+    // the uuid primary key. Route them to localStorage instead.
+    if (!isUuid(profile.id)) return localRepository.createProfile(profile);
     const { data, error } = await getDb().from('profiles').insert(fromProfile(profile)).select().single();
     if (error) throw error;
     return toProfile(data as ProfileRow);
@@ -276,13 +279,20 @@ export const supabaseRepository: DataRepository = {
         location: patch.location,
         social_links: patch.socialLinks,
         is_available_for_gigs: patch.isAvailableForGigs,
-        is_admin: patch.isAdmin,
+        // is_admin is intentionally never written from the client — doing so
+        // lets any user grant themselves admin. Use an RPC with a security
+        // definer + is_admin() check for privileged changes.
       })
-      .eq('username', clean)
+      .eq('id', existing!.id)
       .select()
       .single();
     if (error) throw error;
     return toProfile(data as ProfileRow);
+  },
+
+  async setProfileAdmin(id, makeAdmin) {
+    const { error } = await getDb().rpc('set_profile_admin', { target_id: id, make_admin: makeAdmin });
+    if (error) throw error;
   },
 
   async listPieces(options) {

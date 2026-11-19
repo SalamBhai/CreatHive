@@ -166,6 +166,7 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
           <NeoButton
             variant="amber"
             size="sm"
+            disabled={applaudMutation.isPending}
             onClick={handleApplaud}
             icon={<HandsClapping size={16} weight="duotone" />}
           >

@@ -82,6 +82,7 @@ export function PoetryCard({ piece }: PoetryCardProps) {
           <NeoButton
             variant="amber"
             size="sm"
+            disabled={applaudMutation.isPending}
             onClick={handleApplaud}
             icon={<HandsClapping size={16} weight="duotone" />}
           >
@@ -109,6 +110,7 @@ export function PoetryCard({ piece }: PoetryCardProps) {
             <NeoButton
               variant="amber"
               size="sm"
+              disabled={applaudMutation.isPending}
               onClick={handleApplaud}
               icon={<HandsClapping size={16} weight="duotone" />}
             >

@@ -9,10 +9,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60 * 5, // 5 minutes
-            refetchOnWindowFocus: false,
-            // Keep the last good data on screen while a background refresh runs.
-            placeholderData: (previous: unknown) => previous,
+            staleTime: 1000 * 60 * 2,
+            // Re-check on focus so data changed elsewhere (or by another user) updates.
+            refetchOnWindowFocus: true,
+            // No global keepPreviousData — on key changes (profile/filter/user) it
+            // showed the previous user's or filter's data as if it were current.
             retry: 1,
           },
         },

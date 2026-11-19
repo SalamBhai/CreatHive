@@ -65,6 +65,8 @@ export function useAllProfiles() {
 export function useInquiries(creativeId?: string) {
   return useQuery({
     queryKey: ['inquiries', creativeId],
+    // Without an id both adapters return ALL inquiries — never run unscoped.
+    enabled: !!creativeId,
     queryFn: () => repository.listInquiries(creativeId),
   });
 }
@@ -169,6 +171,15 @@ export function useUpdateProfile() {
   });
 }
 
+export function useSetProfileAdmin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, makeAdmin }: { id: string; makeAdmin: boolean }) =>
+      repository.setProfileAdmin(id, makeAdmin),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profiles-all'] }),
+  });
+}
+
 export function useReorderPieces() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -177,22 +188,21 @@ export function useReorderPieces() {
   });
 }
 
-export function useApplaudPiece() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (pieceId: string) => repository.applaudPiece(pieceId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pieces'] });
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-    },
-  });
-}
-
 /** All piece views — editor, public feed, single post and admin — refresh together. */
 function invalidatePieces(queryClient: ReturnType<typeof useQueryClient>) {
   ['pieces', 'pieces-all', 'piece', 'admin-pieces'].forEach((key) =>
     queryClient.invalidateQueries({ queryKey: [key] })
   );
+}
+
+export function useApplaudPiece() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (pieceId: string) => repository.applaudPiece(pieceId),
+    // Applause is shown in the feed, the single post and admin — not in the
+    // editor or profile stats, so refresh every piece view, not ['pieces'].
+    onSuccess: () => invalidatePieces(queryClient),
+  });
 }
 
 export function useAddPiece() {
@@ -226,7 +236,10 @@ export function useUpdateInquiryStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: InquiryStatus }) =>
       repository.updateInquiryStatus(id, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inquiries'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inquiries'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-inquiries'] });
+    },
   });
 }
 
