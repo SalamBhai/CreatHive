@@ -41,8 +41,12 @@ export default async function Image({ params }: { params: Promise<{ username: st
   const displayName = profile?.display_name || clean;
   const tagline = profile?.tagline || 'Creative on CreatHive';
   const avatarUrl = profile?.avatar_url || '';
+  const LOGO_URL =
+    process.env.EMAIL_LOGO_URL ||
+    'https://res.cloudinary.com/qjedlk80/image/upload/v1795033044/creathive/brand/creathive-wordmark.png';
+
   // ImageResponse's internal <img> fetch has no timeout — fetch with a bound
-  // ourselves and pass a data URI, falling back to initials on failure.
+  // ourselves and pass a data URI, falling back to initials / text on failure.
   let avatarData = '';
   if (/^https?:\/\//i.test(avatarUrl)) {
     try {
@@ -55,6 +59,18 @@ export default async function Image({ params }: { params: Promise<{ username: st
     } catch {
       // keep initials fallback
     }
+  }
+
+  let logoData = '';
+  try {
+    const res = await fetch(LOGO_URL, { signal: AbortSignal.timeout(10000) });
+    if (res.ok) {
+      const bytes = Buffer.from(await res.arrayBuffer());
+      const type = res.headers.get('content-type') || 'image/png';
+      logoData = `data:${type};base64,${bytes.toString('base64')}`;
+    }
+  } catch {
+    // keep text wordmark fallback
   }
 
   return new ImageResponse(
@@ -101,9 +117,9 @@ export default async function Image({ params }: { params: Promise<{ username: st
 
         <div
           style={{
-            width: 150,
-            height: 150,
-            borderRadius: 75,
+            width: 190,
+            height: 190,
+            borderRadius: 95,
             overflow: 'hidden',
             border: '4px solid #FFFFFF22',
             background: '#3F3F46',
@@ -115,7 +131,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
           }}
         >
           {avatarData ? (
-            <img src={avatarData} alt="" width={150} height={150} style={{ objectFit: 'cover' }} />
+            <img src={avatarData} alt="" width={190} height={190} style={{ objectFit: 'cover' }} />
           ) : (
             initialsOf(displayName)
           )}
@@ -165,10 +181,24 @@ export default async function Image({ params }: { params: Promise<{ username: st
             padding: '0 56px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: 30 }}>
-            <span>Creat</span>
-            <span style={{ color: '#FF5A36' }}>Hive</span>
-          </div>
+          {logoData ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: '#FFFFFF',
+                borderRadius: 12,
+                padding: '8px 14px',
+              }}
+            >
+              <img src={logoData} alt="" width={150} height={32} style={{ objectFit: 'contain' }} />
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: 30 }}>
+              <span>Creat</span>
+              <span style={{ color: '#FF5A36' }}>Hive</span>
+            </div>
+          )}
           <div style={{ fontSize: 24, color: '#C7D5CC' }}>Built for the limitless creatives</div>
         </div>
       </div>
