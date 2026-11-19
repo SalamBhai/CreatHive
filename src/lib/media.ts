@@ -18,6 +18,15 @@ export function getMediaProvider(url?: string): MediaProvider {
   }
 }
 
+/** YouTube share timestamps: 45, 1m30s, 1h2m3s → seconds. */
+function parseStart(value: string | null): number | null {
+  if (!value) return null;
+  if (/^\d+$/.test(value)) return Number(value);
+  const match = value.match(/^(?:(\d+)h)?(?:(\d+)m)?(\d+)s?$/);
+  if (!match) return null;
+  return Number(match[1] || 0) * 3600 + Number(match[2] || 0) * 60 + Number(match[3] || 0);
+}
+
 /** Convert an allowlisted share URL into an embeddable URL, or null. */
 export function toEmbedUrl(url?: string): string | null {
   if (!url) return null;
@@ -34,7 +43,8 @@ export function toEmbedUrl(url?: string): string | null {
         id = maybeId || (parts[1] === 'embed' || parts[1] === 'shorts' ? parts[2] : '') || '';
       }
       if (!id || !/^[\w-]{6,}$/.test(id)) return null;
-      return `https://www.youtube-nocookie.com/embed/${id}`;
+      const start = parseStart(parsed.searchParams.get('t'));
+      return `https://www.youtube-nocookie.com/embed/${id}${start ? `?start=${start}` : ''}`;
     }
 
     if (VIMEO_HOSTS.has(host)) {
