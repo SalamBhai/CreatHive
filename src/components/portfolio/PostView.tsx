@@ -154,7 +154,9 @@ export function PostView({ id }: { id: string }) {
           </Surface>
         ) : piece.mediaType === 'VIDEO' && piece.mediaUrl ? (
           <Surface className="mt-8 overflow-hidden">
-            <video controls preload="metadata" src={piece.mediaUrl} poster={piece.coverImageUrl} className="w-full" />
+            <div className="video-frame">
+              <video controls preload="metadata" src={piece.mediaUrl} poster={piece.coverImageUrl} />
+            </div>
           </Surface>
         ) : null}
 
@@ -173,12 +175,18 @@ export function PostView({ id }: { id: string }) {
         ) : null}
 
         {piece.pdfUrl ? (
-          <Surface className="mt-10 p-5">
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-stone-500">Case study PDF</p>
-            <iframe src={piece.pdfUrl} title="Case study PDF" className="h-[70vh] w-full rounded-lg border border-stone-200" />
-            <a href={piece.pdfUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5A36]">
-              Open PDF <ArrowUpRight size={14} weight="bold" />
-            </a>
+          <Surface className="mt-10 p-4 md:p-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-stone-500">Case study PDF</p>
+              <a href={piece.pdfUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5A36]">
+                Open PDF <ArrowUpRight size={14} weight="bold" />
+              </a>
+            </div>
+            {/* Aspect-ratio box keeps the frame compact without shrinking the
+                document — the browser renders the PDF at its own scale inside. */}
+            <div className="w-full overflow-hidden rounded-lg border border-stone-200 bg-stone-50" style={{ aspectRatio: '1 / 1.2' }}>
+              <iframe src={piece.pdfUrl} title="Case study PDF" className="h-full w-full border-0" />
+            </div>
           </Surface>
         ) : null}
 

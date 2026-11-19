@@ -179,7 +179,12 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your story�
             .join('')}</div>`
         );
       } else {
-        exec('insertHTML', `<figure data-story-image="true"><img src="${escapeHtml(urls[0])}" alt="" /></figure>`);
+        // An editable caption placeholder — the creator types straight into
+        // the figure; no extra panel or prompt needed.
+        exec(
+          'insertHTML',
+          `<figure data-story-image="true"><img src="${escapeHtml(urls[0])}" alt="" /><figcaption>Type a caption…</figcaption></figure>`
+        );
       }
       setPendingUpload(null);
     } catch (err) {
