@@ -108,8 +108,11 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     mode: 'publish' | 'draft' = 'publish'
   ) => {
     e.preventDefault();
-    if (!title) return;
+    if (!title || isPending) return;
     const forcedStatus: PieceStatus = mode === 'draft' ? 'DRAFT' : status;
+    // Once a draft has been saved the form becomes an editor for that row —
+    // further saves must UPDATE it, never insert another copy.
+    const savedId = piece?.id || draftSavedId;
 
     const payload = {
       status: forcedStatus || status,
@@ -150,9 +153,8 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       onSuccess?.();
     };
 
-    setDraftSavedId(null);
-    if (piece) {
-      updatePieceMutation.mutate({ id: piece.id, patch: payload }, { onSuccess: () => onDone(piece.id) });
+    if (savedId) {
+      updatePieceMutation.mutate({ id: savedId, patch: payload }, { onSuccess: () => onDone(savedId) });
     } else {
       addPieceMutation.mutate(payload, { onSuccess: (created) => onDone(created.id) });
     }
@@ -494,7 +496,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         ) : null}
         {draftSavedId ? (
           <p className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-700">
-            Draft saved — your entries are still here. Find it under Pieces → draft.
+            Draft saved — your entries are still here. Publish to finalize, or find it under Pieces → draft.
           </p>
         ) : null}
         <div className="ml-auto flex flex-wrap items-center gap-3">
@@ -509,7 +511,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             </button>
           ) : null}
           <NeoButton type="submit" variant="primary" size="lg" className="px-6">
-            {isPending ? 'Saving…' : piece ? 'Save changes' : 'Publish to Portfolio'}
+            {isPending ? 'Saving…' : 'Publish to Portfolio'}
           </NeoButton>
         </div>
       </div>
