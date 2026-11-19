@@ -123,6 +123,8 @@ body {
   margin: 1.4rem 0;
   color: #57534e;
 }
+/* Composer-inserted images carry data-story-image="true" so they can be
+   targeted or counted separately from the structured gallery carousel. */
 .story-body figure { margin: 1.6rem 0; }
 .story-body figure img { width: 100%; border-radius: 0.75rem; border: 1px solid #e7e5e4; }
 .story-body figcaption { margin-top: 0.5rem; text-align: center; font-size: 0.75rem; color: #78716c; font-style: italic; }

@@ -95,7 +95,7 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
       const url = window.prompt('Image URL â€” leave blank to upload a file');
       if (url) {
         const cap = window.prompt('Caption (optional)') || '';
-        return exec('insertHTML', `<figure><img src="${url}" alt="" />${cap ? `<figcaption>${escapeHtml(cap)}</figcaption>` : ''}</figure>`);
+        return exec('insertHTML', `<figure data-story-image="true"><img src="${url}" alt="" />${cap ? `<figcaption>${escapeHtml(cap)}</figcaption>` : ''}</figure>`);
       }
       caption.current = window.prompt('Caption (optional)') || '';
       imageInput.current?.click();
@@ -106,7 +106,7 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
       const raw = window.prompt('Image URLs â€” comma separated, or leave blank to upload files');
       if (raw) {
         const imgs = raw.split(',').map((s) => s.trim()).filter(Boolean);
-        return exec('insertHTML', `<div class="photo-grid">${imgs.map((u) => `<img src="${u}" alt="" />`).join('')}</div>`);
+        return exec('insertHTML', `<div class="photo-grid" data-story-image="true">${imgs.map((u) => `<img src="${u}" alt="" />`).join('')}</div>`);
       }
       gridInput.current?.click();
       return;
@@ -151,12 +151,12 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
         const cap = caption.current;
         exec(
           'insertHTML',
-          `<figure><img src="${uploaded[0].url}" alt="" />${
+          `<figure data-story-image="true"><img src="${uploaded[0].url}" alt="" />${
             cap ? `<figcaption>${escapeHtml(cap)}</figcaption>` : ''
           }</figure>`
         );
       } else {
-        exec('insertHTML', `<div class="photo-grid">${uploaded.map((u) => `<img src="${u.url}" alt="" />`).join('')}</div>`);
+        exec('insertHTML', `<div class="photo-grid" data-story-image="true">${uploaded.map((u) => `<img src="${u.url}" alt="" />`).join('')}</div>`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed.');
