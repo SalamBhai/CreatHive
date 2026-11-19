@@ -40,6 +40,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [status, setStatus] = useState<PieceStatus>(piece?.status || 'PUBLIC');
   const [campaignId, setCampaignId] = useState('');
   const [uploadError, setUploadError] = useState('');
+  const [draftSavedId, setDraftSavedId] = useState<string | null>(null);
   const mediaType = mediaTypeForNiche(discipline);
   const addPieceMutation = useAddPiece();
   const updatePieceMutation = useUpdatePiece();
@@ -104,10 +105,11 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
 
   const handleSubmit = (
     e: React.FormEvent | React.MouseEvent<HTMLButtonElement>,
-    forcedStatus?: PieceStatus
+    mode: 'publish' | 'draft' = 'publish'
   ) => {
     e.preventDefault();
     if (!title) return;
+    const forcedStatus: PieceStatus = mode === 'draft' ? 'DRAFT' : status;
 
     const payload = {
       status: forcedStatus || status,
@@ -139,10 +141,16 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
           note: subtitle || undefined,
         });
       }
+      if (mode === 'draft') {
+        // Keep everything on screen — a draft is a checkpoint, not a finish.
+        setDraftSavedId(savedId || null);
+        return;
+      }
       reset();
       onSuccess?.();
     };
 
+    setDraftSavedId(null);
     if (piece) {
       updatePieceMutation.mutate({ id: piece.id, patch: payload }, { onSuccess: () => onDone(piece.id) });
     } else {
@@ -479,9 +487,14 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       </div>
 
       <div className="sticky bottom-0 mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
-        {uploadError ? (
+        {uploadError || addPieceMutation.isError || updatePieceMutation.isError ? (
           <p role="alert" className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
-            {uploadError}
+            {uploadError || 'Could not save. Check your connection and try again.'}
+          </p>
+        ) : null}
+        {draftSavedId ? (
+          <p className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-700">
+            Draft saved — your entries are still here. Find it under Pieces → draft.
           </p>
         ) : null}
         <div className="ml-auto flex flex-wrap items-center gap-3">
@@ -489,7 +502,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             <button
               type="button"
               disabled={isPending || !title}
-              onClick={(e) => handleSubmit(e, 'DRAFT')}
+              onClick={(e) => handleSubmit(e, 'draft')}
               className="rounded-xl border border-stone-200 px-5 py-2.5 text-xs font-bold text-stone-600 transition-colors hover:border-stone-400 disabled:opacity-50"
             >
               Save as draft
