@@ -321,7 +321,7 @@ create policy "users insert own applause" on public.applause_events for insert
 -- Atomic + idempotent. The unique constraint guarantees one event per
 -- (piece, user); GET DIAGNOSTICS tells us whether this call created it, so
 -- the counter increments exactly once no matter how many times they click.
-create or replace function public.applaud_piece(piece_id uuid)
+create or replace function public.applaud_piece(p_piece_id uuid)
 returns integer
 language plpgsql
 security definer
@@ -336,17 +336,17 @@ begin
   end if;
 
   insert into public.applause_events (piece_id, user_id)
-  values (piece_id, auth.uid())
+  values (p_piece_id, auth.uid())
   on conflict (piece_id, user_id) do nothing;
   get diagnostics v_inserted = row_count;
 
   if v_inserted > 0 then
     update public.pieces
     set applause_count = applause_count + 1
-    where id = piece_id;
+    where id = p_piece_id;
   end if;
 
-  select applause_count into v_count from public.pieces where id = piece_id;
+  select applause_count into v_count from public.pieces where id = p_piece_id;
   return v_count;
 end;
 $$;

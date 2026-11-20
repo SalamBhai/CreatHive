@@ -77,7 +77,7 @@ export default function ExplorePage() {
 
           {profiles && profiles.length > 0 ? (
             <div className="mt-9 flex flex-wrap items-center gap-2.5">
-              {profiles.map((profile) => (
+              {profiles.filter((profile) => !profile.isAdmin).map((profile) => (
                 <Link
                   key={profile.id}
                   href={`/${profile.username}`}

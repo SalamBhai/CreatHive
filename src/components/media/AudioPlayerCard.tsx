@@ -183,11 +183,7 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
           </div>
         </div>
           </>
-        ) : (
-          <p className="rounded-xl border border-stone-200 bg-[#FDFBF7] p-3 text-xs font-semibold text-stone-500">
-            Video embedded above — use its controls to play.
-          </p>
-        )}
+        ) : null}
 
         {/* Action Controls */}
         <div className="flex items-center justify-between gap-3 pt-1">

@@ -55,6 +55,13 @@ export function useCreativeProfile(
   });
 }
 
+/** True once the signed-in user's profile is known to be an admin. */
+export function useIsAdmin(): boolean {
+  const session = useSession();
+  const { data: profile } = useCreativeProfile(session?.username || '');
+  return !!session && !!profile?.isAdmin;
+}
+
 export function useAllProfiles() {
   return useQuery({
     queryKey: ['profiles-all'],
