@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { sanitizeHtml } from '@/lib/sanitize';
 import type { ContentBlock, CreativePiece } from '@/lib/types';
 
 function Block({ block }: { block: ContentBlock }) {
@@ -34,7 +35,7 @@ function Block({ block }: { block: ContentBlock }) {
       : block.type === 'quote'
         ? 'my-7 border-l-2 border-[#FF5A36] pl-4 font-editorial text-lg italic leading-relaxed text-stone-700'
         : 'my-4 text-[15px] leading-[1.85] text-stone-800';
-  return <div className={className} dangerouslySetInnerHTML={{ __html: block.html }} />;
+  return <div className={className} dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.html || '') }} />;
 }
 
 interface StoryReaderProps {

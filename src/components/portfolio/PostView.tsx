@@ -12,6 +12,7 @@ import { useAllPieces, useAllProfiles, usePiece } from '@/lib/store';
 import { resolveAvatarUrl } from '@/lib/avatar';
 import { toEmbedUrl } from '@/lib/media';
 import { PostGallery } from '@/components/media/PostGallery';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 export function PostView({ id }: { id: string }) {
   const { data: pieces } = useAllPieces();
@@ -167,7 +168,7 @@ export function PostView({ id }: { id: string }) {
         ) : null}
 
         {piece.bodyHtml ? (
-          <article className="story-body mt-10" dangerouslySetInnerHTML={{ __html: piece.bodyHtml }} />
+          <article className="story-body mt-10" dangerouslySetInnerHTML={{ __html: sanitizeHtml(piece.bodyHtml) }} />
         ) : piece.textContent ? (
           <article className="story-body mt-10 whitespace-pre-line font-editorial text-lg italic leading-[1.8] text-stone-800">
             {piece.textContent}
