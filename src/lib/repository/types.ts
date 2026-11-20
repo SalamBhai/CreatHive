@@ -37,6 +37,8 @@ export interface DataRepository {
   reorderPieces(ids: string[]): Promise<string[]>;
   /** Returns the authoritative new applause count. */
   applaudPiece(id: string): Promise<number>;
+  /** Record a profile view; returns the authoritative new view count. */
+  recordProfileView(profileId: string, viewerKey: string): Promise<number>;
 
   // Inquiries (creator-scoped)
   listInquiries(creativeId?: string): Promise<PerformanceInquiry[]>;

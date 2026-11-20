@@ -10,6 +10,7 @@ import { PieceRenderer } from '@/components/portfolio/PieceRenderer';
 import { ConversionBar } from '@/components/portfolio/ConversionBar';
 import { StudioLink } from '@/components/ui/StudioLink';
 import { useSession } from '@/lib/auth';
+import { ProfileViewTracker } from '@/components/portfolio/ProfileViewTracker';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { useCreativeProfile, useCreativePieces } from '@/lib/store';
@@ -74,6 +75,8 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
           </div>
         </div>
       </header>
+
+      <ProfileViewTracker profile={profile} />
 
       {/* Main Content Feed */}
       <main className="mx-auto max-w-2xl space-y-6 px-4 pb-2 pt-5">

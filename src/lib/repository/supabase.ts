@@ -416,6 +416,17 @@ export const supabaseRepository: DataRepository = {
     return Number(data);
   },
 
+  async recordProfileView(profileId, viewerKey) {
+    // Mock ids are not UUIDs — don't send them to Postgres.
+    if (!isUuid(profileId)) return 0;
+    const { data, error } = await getDb().rpc('record_profile_view', {
+      p_profile_id: profileId,
+      p_viewer_key: viewerKey,
+    });
+    if (error) throw error;
+    return Number(data);
+  },
+
   async listInquiries(creativeId) {
     if (creativeId && !isUuid(creativeId)) return []; // mock creator has no live inquiries
     let query = getDb().from('inquiries').select('*');

@@ -16,25 +16,42 @@ interface PieceManagerProps {
 
 export function PieceManager({ pieces, onEdit, onRefreshPreview }: PieceManagerProps) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  // Optimistic override: a pending reorder's id order, else the server order.
+  // Deriving avoids a state-sync effect; when the query refetches, `pieces`
+  // carries the new order and the override is cleared in onSettled.
+  const [pendingOrder, setPendingOrder] = useState<string[] | null>(null);
   const reorder = useReorderPieces();
   const update = useUpdatePiece();
   const remove = useDeletePiece();
 
+  const byId = new Map(pieces.map((p) => [p.id, p]));
+  const ordered = pendingOrder
+    ? pendingOrder.map((id) => byId.get(id)).filter(Boolean) as CreativePiece[]
+    : pieces;
+
   const persist = (next: CreativePiece[]) => {
-    reorder.mutate(next.map((p) => p.id), { onSuccess: onRefreshPreview });
+    if (reorder.isPending) return; // block rapid double-moves
+    setPendingOrder(next.map((p) => p.id)); // optimistic — instant reorder
+    reorder.mutate(next.map((p) => p.id), {
+      onSettled: () => {
+        setPendingOrder(null); // use the freshly fetched order from the parent
+        onRefreshPreview?.();
+      },
+      onError: () => setPendingOrder(null), // roll back to the server order
+    });
   };
 
   const move = (index: number, direction: -1 | 1) => {
     const target = index + direction;
-    if (target < 0 || target >= pieces.length) return;
-    const next = [...pieces];
+    if (target < 0 || target >= ordered.length) return;
+    const next = [...ordered];
     [next[index], next[target]] = [next[target], next[index]];
     persist(next);
   };
 
   const drop = (target: number) => {
     if (dragIndex === null || dragIndex === target) return;
-    const next = [...pieces];
+    const next = [...ordered];
     const [moved] = next.splice(dragIndex, 1);
     next.splice(target, 0, moved);
     setDragIndex(null);
@@ -43,7 +60,7 @@ export function PieceManager({ pieces, onEdit, onRefreshPreview }: PieceManagerP
 
   return (
     <div className="space-y-2.5">
-      {pieces.map((piece, index) => {
+      {ordered.map((piece, index) => {
         const config = DISCIPLINE_CONFIG[piece.discipline] || DISCIPLINE_CONFIG.OTHER;
         const Icon = config.icon;
         const status = piece.status || 'PUBLIC';
@@ -138,7 +155,7 @@ export function PieceManager({ pieces, onEdit, onRefreshPreview }: PieceManagerP
           </div>
         );
       })}
-      {pieces.length === 0 ? (
+      {ordered.length === 0 ? (
         <Surface className="py-12 text-center text-sm text-stone-500">No pieces yet — publish your first work.</Surface>
       ) : null}
     </div>

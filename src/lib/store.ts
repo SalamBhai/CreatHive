@@ -231,6 +231,30 @@ export function useApplaudPiece() {
   });
 }
 
+export function useRecordProfileView() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ profileId, viewerKey }: { profileId: string; viewerKey: string }) =>
+      repository.recordProfileView(profileId, viewerKey),
+    onSuccess: (newCount, { profileId }) => {
+      // Patch viewsCount into every cached profile object for this id.
+      queryClient.setQueriesData({ queryKey: ['profile'] }, (old: unknown) => {
+        if (!old || typeof old !== 'object' || !('id' in old) || old.id !== profileId) return old;
+        const p = old as CreativeProfile;
+        return { ...p, stats: { ...p.stats, viewsCount: newCount } };
+      });
+      queryClient.setQueriesData({ queryKey: ['profiles-all'] }, (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((p) =>
+          p && typeof p === 'object' && 'id' in p && p.id === profileId
+            ? { ...(p as CreativeProfile), stats: { ...(p as CreativeProfile).stats, viewsCount: newCount } }
+            : p
+        );
+      });
+    },
+  });
+}
+
 export function useAddPiece() {
   const queryClient = useQueryClient();
   return useMutation({

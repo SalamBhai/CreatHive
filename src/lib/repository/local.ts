@@ -143,6 +143,12 @@ export const localRepository: DataRepository = {
     return newCount;
   },
 
+  async recordProfileView(profileId) {
+    // Local/mock mode has no server — return the existing count unchanged.
+    const p = Object.values(profiles()).find((item) => item.id === profileId);
+    return p?.stats?.viewsCount || 0;
+  },
+
   async listInquiries(creativeId) {
     const all = inquiries();
     return creativeId ? all.filter((i) => i.creativeId === creativeId) : all;
