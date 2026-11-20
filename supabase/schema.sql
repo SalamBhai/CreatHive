@@ -321,6 +321,8 @@ create policy "users insert own applause" on public.applause_events for insert
 -- Atomic + idempotent. The unique constraint guarantees one event per
 -- (piece, user); GET DIAGNOSTICS tells us whether this call created it, so
 -- the counter increments exactly once no matter how many times they click.
+-- CREATE OR REPLACE cannot rename an existing parameter — drop it first.
+drop function if exists public.applaud_piece(uuid);
 create or replace function public.applaud_piece(p_piece_id uuid)
 returns integer
 language plpgsql

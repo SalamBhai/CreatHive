@@ -37,6 +37,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  'use cache';
   const { username } = await params;
   const clean = username.toLowerCase().replace('@', '');
   let profile: CreativeProfile = INITIAL_PROFILES[clean] || neutralProfile(clean);

@@ -41,6 +41,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  'use cache';
   const { id } = await params;
   const piece = await loadPiece(id);
   if (!piece) return { title: 'Post not found — CreatHive' };
