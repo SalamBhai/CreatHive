@@ -10,6 +10,7 @@ import { CreativePiece } from '@/lib/types';
 import { NeoButton } from '../ui/NeoButton';
 import { useApplaudPiece } from '@/lib/store';
 import { StoryReader } from './StoryReader';
+import { ApplauseNotice } from './ApplauseNotice';
 
 interface VideoReelCardProps {
   piece: CreativePiece;
@@ -162,6 +163,9 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
               <span>{piece.applauseCount}</span>
             </NeoButton>
           </div>
+          {applaudMutation.isError ? (
+            <ApplauseNotice message={String(applaudMutation.error?.message || '')} />
+          ) : null}
         </div>
       </div>
 

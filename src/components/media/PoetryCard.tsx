@@ -8,6 +8,7 @@ import { StoryReader } from './StoryReader';
 import { NeoButton } from '../ui/NeoButton';
 import { BottomSheet } from '../ui/BottomSheet';
 import { useApplaudPiece } from '@/lib/store';
+import { ApplauseNotice } from './ApplauseNotice';
 
 interface PoetryCardProps {
   piece: CreativePiece;
@@ -86,6 +87,9 @@ export function PoetryCard({ piece }: PoetryCardProps) {
             <span>{piece.applauseCount}</span>
           </NeoButton>
         </div>
+        {applaudMutation.isError ? (
+          <ApplauseNotice message={String(applaudMutation.error?.message || '')} />
+        ) : null}
       </div>
 
       {/* Full Substack-Style Reader Modal */}

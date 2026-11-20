@@ -8,6 +8,7 @@ import confetti from 'canvas-confetti';
 import { CreativePiece } from '@/lib/types';
 import { NeoButton } from '../ui/NeoButton';
 import { useApplaudPiece } from '@/lib/store';
+import { ApplauseNotice } from './ApplauseNotice';
 
 interface ImageGalleryCardProps {
   piece: CreativePiece;
@@ -170,6 +171,9 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
             <span>{piece.applauseCount}</span>
           </NeoButton>
         </div>
+        {applaudMutation.isError ? (
+          <ApplauseNotice message={String(applaudMutation.error?.message || '')} />
+        ) : null}
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import { CreativePiece } from '@/lib/types';
 import { NeoButton } from '../ui/NeoButton';
 import { useApplaudPiece } from '@/lib/store';
 import { StoryReader } from './StoryReader';
+import { ApplauseNotice } from './ApplauseNotice';
 import { toEmbedUrl } from '@/lib/media';
 
 interface AudioPlayerCardProps {
@@ -253,10 +254,7 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
           </div>
         </div>
         {applaudMutation.isError ? (
-          <p className="px-4 pb-3 text-[11px] font-semibold text-red-600 md:px-5">
-            {String(applaudMutation.error?.message || 'Could not applaud.')} —{' '}
-            <Link href="/join" className="underline">Join the hive</Link> to applaud.
-          </p>
+          <ApplauseNotice message={String(applaudMutation.error?.message || '')} />
         ) : null}
 
         {/* Expandable Substack-Style Transcript Drawer */}

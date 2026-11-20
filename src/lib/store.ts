@@ -16,6 +16,7 @@ import type {
 } from './types';
 import type { JoinRequest } from './store-types';
 import { repository } from './repository';
+import { useSession } from './auth';
 
 export type { JoinRequest } from './store-types';
 
@@ -197,8 +198,14 @@ function invalidatePieces(queryClient: ReturnType<typeof useQueryClient>) {
 
 export function useApplaudPiece() {
   const queryClient = useQueryClient();
+  const session = useSession();
   return useMutation({
-    mutationFn: (pieceId: string) => repository.applaudPiece(pieceId),
+    mutationFn: (pieceId: string) => {
+      // Friendly client-side guard — never send a doomed request. The RPC
+      // still checks auth.uid() as defense in depth.
+      if (!session) return Promise.reject(new Error('Sign in to applaud'));
+      return repository.applaudPiece(pieceId);
+    },
     onSuccess: (newCount, pieceId) => {
       // The RPC returns the authoritative count — write it straight into every
       // cached view so the number updates instantly and consistently.
