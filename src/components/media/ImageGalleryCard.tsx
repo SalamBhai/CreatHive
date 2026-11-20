@@ -33,17 +33,14 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
 
   const handleApplaud = (e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = (rect.left + rect.width / 2) / window.innerWidth;
-    const y = (rect.top + rect.height / 2) / window.innerHeight;
-
-    confetti({
-      particleCount: 25,
-      spread: 60,
-      origin: { x, y },
-      colors: ['#FF5A36', '#FFAE19', '#18181B'],
+    const origin = {
+      x: (rect.left + rect.width / 2) / window.innerWidth,
+      y: (rect.top + rect.height / 2) / window.innerHeight,
+    };
+    applaudMutation.mutate(piece.id, {
+      onSuccess: () =>
+        confetti({ particleCount: 25, spread: 60, origin, colors: ['#FF5A36', '#FFAE19', '#18181B'] }),
     });
-
-    applaudMutation.mutate(piece.id);
   };
 
   const isUIUX = piece.discipline === 'UIUX_DESIGN';

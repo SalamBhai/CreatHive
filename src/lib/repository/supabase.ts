@@ -409,9 +409,11 @@ export const supabaseRepository: DataRepository = {
   async applaudPiece(id) {
     // Mock pieces live in localStorage; bump locally through the local adapter.
     if (!isUuid(id)) return localRepository.applaudPiece(id);
-    const { error } = await getDb().rpc('increment_applause', { piece_id: id });
+    // Atomic + idempotent: one applause per signed-in user per piece.
+    // Returns the authoritative new count from the database.
+    const { data, error } = await getDb().rpc('applaud_piece', { piece_id: id });
     if (error) throw error;
-    return id;
+    return Number(data);
   },
 
   async listInquiries(creativeId) {

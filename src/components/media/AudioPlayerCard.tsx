@@ -75,19 +75,16 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
   };
 
   const handleApplaud = (e: React.MouseEvent) => {
-    // Fire confetti from button position
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = (rect.left + rect.width / 2) / window.innerWidth;
-    const y = (rect.top + rect.height / 2) / window.innerHeight;
-
-    confetti({
-      particleCount: 25,
-      spread: 60,
-      origin: { x, y },
-      colors: ['#FF5A36', '#FFAE19', '#18181B'],
+    const origin = {
+      x: (rect.left + rect.width / 2) / window.innerWidth,
+      y: (rect.top + rect.height / 2) / window.innerHeight,
+    };
+    // Celebrate only once the applause is actually recorded.
+    applaudMutation.mutate(piece.id, {
+      onSuccess: () =>
+        confetti({ particleCount: 25, spread: 60, origin, colors: ['#FF5A36', '#FFAE19', '#18181B'] }),
     });
-
-    applaudMutation.mutate(piece.id);
   };
 
   const formatTime = (secs: number) => {
@@ -255,6 +252,12 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
             </NeoButton>
           </div>
         </div>
+        {applaudMutation.isError ? (
+          <p className="px-4 pb-3 text-[11px] font-semibold text-red-600 md:px-5">
+            {String(applaudMutation.error?.message || 'Could not applaud.')} —{' '}
+            <Link href="/join" className="underline">Join the hive</Link> to applaud.
+          </p>
+        ) : null}
 
         {/* Expandable Substack-Style Transcript Drawer */}
         <AnimatePresence>

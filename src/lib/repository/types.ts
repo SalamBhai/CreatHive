@@ -35,7 +35,8 @@ export interface DataRepository {
   updatePiece(id: string, patch: Partial<CreativePiece>): Promise<CreativePiece>;
   deletePiece(id: string): Promise<string>;
   reorderPieces(ids: string[]): Promise<string[]>;
-  applaudPiece(id: string): Promise<string>;
+  /** Returns the authoritative new applause count. */
+  applaudPiece(id: string): Promise<number>;
 
   // Inquiries (creator-scoped)
   listInquiries(creativeId?: string): Promise<PerformanceInquiry[]>;

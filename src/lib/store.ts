@@ -48,7 +48,7 @@ export function useCreativeProfile(
         socialLinks: {},
         themeStyle: 'soft-brutal',
         stats: { viewsCount: 0, applauseCount: 0, piecesCount: 0 },
-        createdAt: new Date().toISOString(),
+        createdAt: '1970-01-01T00:00:00.000Z',
       };
     },
   });
@@ -199,9 +199,28 @@ export function useApplaudPiece() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (pieceId: string) => repository.applaudPiece(pieceId),
-    // Applause is shown in the feed, the single post and admin — not in the
-    // editor or profile stats, so refresh every piece view, not ['pieces'].
-    onSuccess: () => invalidatePieces(queryClient),
+    onSuccess: (newCount, pieceId) => {
+      // The RPC returns the authoritative count — write it straight into every
+      // cached view so the number updates instantly and consistently.
+      const patch = (old: unknown): unknown => {
+        if (Array.isArray(old)) {
+          return old.map((p) =>
+            p && typeof p === 'object' && 'id' in p && p.id === pieceId
+              ? { ...(p as CreativePiece), applauseCount: newCount }
+              : p
+          );
+        }
+        if (old && typeof old === 'object' && 'id' in old && (old as CreativePiece).id === pieceId) {
+          return { ...(old as CreativePiece), applauseCount: newCount };
+        }
+        return old;
+      };
+      queryClient.setQueriesData({ queryKey: ['pieces-all'] }, patch);
+      queryClient.setQueriesData({ queryKey: ['admin-pieces'] }, patch);
+      queryClient.setQueriesData({ queryKey: ['piece', pieceId] }, patch);
+      queryClient.setQueriesData({ queryKey: ['pieces'] }, patch);
+      invalidatePieces(queryClient);
+    },
   });
 }
 

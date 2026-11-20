@@ -131,11 +131,16 @@ export const localRepository: DataRepository = {
   },
 
   async applaudPiece(id) {
+    let newCount = 0;
     write(
       KEYS.pieces,
-      pieces().map((p) => (p.id === id ? { ...p, applauseCount: p.applauseCount + 1 } : p))
+      pieces().map((p) => {
+        if (p.id !== id) return p;
+        newCount = p.applauseCount + 1;
+        return { ...p, applauseCount: newCount };
+      })
     );
-    return id;
+    return newCount;
   },
 
   async listInquiries(creativeId) {

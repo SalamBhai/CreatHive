@@ -172,7 +172,7 @@ async function ensureProfile(app: AppSession) {
     socialLinks: { email: app.email || undefined },
     themeStyle: 'soft-brutal',
     stats: { viewsCount: 0, applauseCount: 0, piecesCount: 0 },
-    createdAt: new Date().toISOString(),
+    createdAt: '1970-01-01T00:00:00.000Z',
   });
 }
 
