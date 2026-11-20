@@ -17,9 +17,9 @@ import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 export type StudioView = 'overview' | 'pieces' | 'inquiries' | 'profile';
 
 /**
- * Individual Studio navigation only. Campaigns and the submissions review
- * queue are admin surfaces — creators submit through "Add New Piece" with a
- * campaign assignment instead. See docs/MIGRATION.md.
+ * Individual Studio navigation. Creators browse briefs on the Campaigns page
+ * (linked in the sidebar) and submit through "Add New Piece". Admin review of
+ * campaigns/submissions lives in /admin. See docs/MIGRATION.md.
  */
 export const STUDIO_NAV: Array<{
   id: StudioView;
@@ -144,6 +144,16 @@ export function StudioShell({
           <nav className="flex flex-1 flex-col gap-1" aria-label="Studio sections">
             {STUDIO_NAV.map((item) => renderNavItem(item))}
           </nav>
+          <Link
+            href="/campaigns"
+            className="group mb-3 flex items-center gap-3 rounded-xl border border-[#FF5A36]/30 bg-[#FFF7ED] px-3 py-2.5 text-sm font-semibold text-[#C2410C] transition-colors hover:border-[#FF5A36]"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#FF5A36]">
+              <SquaresFour size={16} weight="duotone" />
+            </span>
+            <span className="flex-1">Campaigns</span>
+            <ArrowUpRight size={15} weight="bold" className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
           <div className="rounded-2xl border border-stone-200 bg-white p-4">
             <p className="font-editorial text-sm font-semibold leading-snug">
               Your work, your way.

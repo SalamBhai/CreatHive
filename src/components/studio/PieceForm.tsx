@@ -8,6 +8,8 @@ import { MEDIA_LABELS, mediaTypeForNiche } from '@/lib/media-format';
 import { MAX_TAGS, normalizeTags } from '@/lib/tags';
 import { uploadFile } from '@/lib/upload';
 import { StoryComposer } from '@/components/studio/StoryComposer';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { Question } from '@phosphor-icons/react';
 import type { CreativeDiscipline, CreativePiece, CreativeProfile, PieceStatus } from '@/lib/types';
 
 interface PieceFormProps {
@@ -21,6 +23,12 @@ type Step = 'details' | 'media' | 'story';
 const inputClass =
   'w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]';
 const labelClass = 'mb-1 block text-xs font-bold text-[#18181B]';
+
+const info = (title: string, label: string) => (
+  <Tooltip title={title} label={label}>
+    <Question size={13} weight="bold" className="text-stone-400 transition-colors hover:text-[#FF5A36]" />
+  </Tooltip>
+);
 
 export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [step, setStep] = useState<Step>('details');
@@ -232,7 +240,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             </select>
           </div>
           <div>
-            <label className={labelClass}>Media Format</label>
+            <div className="mb-1 flex items-center gap-1.5">
+              <span className={labelClass}>Media Format</span>
+              {info('Chosen for you', 'Each niche has a natural format. Change the niche above and this updates automatically.')}
+            </div>
             <div className="rounded-xl border border-stone-200 bg-[#FCFAF6] px-3 py-2.5 text-xs font-semibold text-stone-600">
               {MEDIA_LABELS[mediaType]}
             </div>
@@ -240,7 +251,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         </div>
 
         <div>
-          <label className={labelClass}>Visibility</label>
+          <div className="mb-1 flex items-center gap-1.5">
+            <span className={labelClass}>Visibility</span>
+            {info('Who can see this', 'Public appears in Explore and on your page. Unlisted works only by direct link. Draft is private to you.')}
+          </div>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as PieceStatus)}
@@ -254,7 +268,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
 
         {(campaigns || []).filter((c) => c.status === 'OPEN').length ? (
           <div>
-            <label className={labelClass}>Submit to campaign (optional)</label>
+            <div className="mb-1 flex items-center gap-1.5">
+              <span className={labelClass}>Submit to campaign (optional)</span>
+              {info('Campaigns', 'Entering a brief links this piece to it so reviewers can find it. You can also do this from the Campaigns page.')}
+            </div>
             <select value={campaignId} onChange={(e) => setCampaignId(e.target.value)} className={inputClass}>
               <option value="">No campaign</option>
               {(campaigns || []).filter((c) => c.status === 'OPEN').map((c) => (
@@ -266,7 +283,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
 
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <label className="block text-xs font-bold text-[#18181B]">Tags</label>
+            <div className="flex items-center gap-1.5">
+              <label className="block text-xs font-bold text-[#18181B]">Tags</label>
+              {info('Help people find this', 'Lowercase words, max 8. Used for search and suggestions — not the niche filter.')}
+            </div>
             <span className={`text-[10px] font-bold ${currentTags.length >= MAX_TAGS ? 'text-[#FF5A36]' : 'text-stone-400'}`}>
               {currentTags.length}/{MAX_TAGS}
             </span>
