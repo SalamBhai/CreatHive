@@ -14,11 +14,10 @@ import type {
   ContentFlag,
   FlagStatus,
 } from './types';
-import type { JoinRequest } from './store-types';
 import { repository } from './repository';
+import { ADMIN_PAGE_SIZE, type PageOptions } from './repository/types';
 import { useSession } from './auth';
 
-export type { JoinRequest } from './store-types';
 
 /* ---------- Queries ---------- */
 
@@ -76,14 +75,6 @@ export function useInquiries(creativeId?: string) {
     // Without an id both adapters return ALL inquiries — never run unscoped.
     enabled: !!creativeId,
     queryFn: () => repository.listInquiries(creativeId),
-  });
-}
-
-/** Join requests are an admin concern — kept in their own store. */
-export function useJoinRequests() {
-  return useQuery({
-    queryKey: ['join-requests'],
-    queryFn: () => repository.listJoinRequests(),
   });
 }
 
@@ -149,6 +140,51 @@ export function useFlags() {
   return useQuery({ queryKey: ['flags'], queryFn: () => repository.listFlags() });
 }
 
+export function useAuditLog() {
+  return useQuery({ queryKey: ['audit-log'], queryFn: () => repository.listAuditLog() });
+}
+
+export function useAdminStats() {
+  return useQuery({ queryKey: ['admin-stats'], queryFn: () => repository.getAdminStats() });
+}
+
+/* ---------- Admin: server-paged lists ---------- */
+
+function useAdminPage<T>(
+  key: string,
+  page: number,
+  fetcher: (options: PageOptions) => Promise<{ items: T[]; total: number }>,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: [key, page, ADMIN_PAGE_SIZE],
+    queryFn: () => fetcher({ page, pageSize: ADMIN_PAGE_SIZE }),
+    enabled,
+  });
+}
+
+export function useAdminProfilesPage(page: number, enabled = true) {
+  return useAdminPage('admin-profiles-page', page, repository.listProfilesPage, enabled);
+}
+export function useAdminPiecesPage(page: number, enabled = true) {
+  return useAdminPage('admin-pieces-page', page, repository.listAllPiecesPage, enabled);
+}
+export function useAdminInquiriesPage(page: number, enabled = true) {
+  return useAdminPage('admin-inquiries-page', page, repository.listAllInquiriesPage, enabled);
+}
+export function useCampaignsPage(page: number, enabled = true) {
+  return useAdminPage('admin-campaigns-page', page, repository.listCampaignsPage, enabled);
+}
+export function useSubmissionsPage(page: number, enabled = true) {
+  return useAdminPage('admin-submissions-page', page, repository.listSubmissionsPage, enabled);
+}
+export function useFlagsPage(page: number, enabled = true) {
+  return useAdminPage('admin-flags-page', page, repository.listFlagsPage, enabled);
+}
+export function useAuditLogPage(page: number, enabled = true) {
+  return useAdminPage('admin-audit-page', page, repository.listAuditLogPage, enabled);
+}
+
 /* ---------- Mutations ---------- */
 
 export function useCreateProfile() {
@@ -184,7 +220,10 @@ export function useSetProfileAdmin() {
   return useMutation({
     mutationFn: ({ id, makeAdmin }: { id: string; makeAdmin: boolean }) =>
       repository.setProfileAdmin(id, makeAdmin),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profiles-all'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles-all'] });
+      invalidateAdminViews(queryClient);
+    },
   });
 }
 
@@ -208,6 +247,13 @@ function invalidatePieces(queryClient: ReturnType<typeof useQueryClient>) {
   ['pieces', 'pieces-all', 'piece', 'admin-pieces'].forEach((key) =>
     queryClient.invalidateQueries({ queryKey: [key] })
   );
+}
+
+/** Admin mutations must refresh both the aggregate counts and every paged list. */
+function invalidateAdminViews(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({
+    predicate: (query) => String(query.queryKey[0]).startsWith('admin-'),
+  });
 }
 
 export function useApplaudPiece() {
@@ -291,7 +337,10 @@ export function useDeletePiece() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => repository.deletePiece(id),
-    onSuccess: () => invalidatePieces(queryClient),
+    onSuccess: () => {
+      invalidatePieces(queryClient);
+      invalidateAdminViews(queryClient);
+    },
   });
 }
 
@@ -312,25 +361,10 @@ export function useSendInquiry() {
   return useMutation({
     mutationFn: (inquiry: Omit<PerformanceInquiry, 'id' | 'createdAt' | 'status'>) =>
       repository.sendInquiry(inquiry),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inquiries'] }),
-  });
-}
-
-export function useSubmitJoinRequest() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (request: Omit<JoinRequest, 'id' | 'status' | 'createdAt'>) =>
-      repository.submitJoinRequest(request),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['join-requests'] }),
-  });
-}
-
-export function useUpdateJoinRequestStatus() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'PENDING' | 'APPROVED' }) =>
-      repository.updateJoinRequestStatus(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['join-requests'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inquiries'] });
+      invalidateAdminViews(queryClient);
+    },
   });
 }
 
@@ -338,7 +372,10 @@ export function useCreateCampaign() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (campaign: Omit<Campaign, 'id' | 'createdAt'>) => repository.createCampaign(campaign),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['campaigns'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['campaigns'] });
+      invalidateAdminViews(qc);
+    },
   });
 }
 
@@ -347,7 +384,10 @@ export function useUpdateCampaignStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: CampaignStatus }) =>
       repository.updateCampaignStatus(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['campaigns'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['campaigns'] });
+      invalidateAdminViews(qc);
+    },
   });
 }
 
@@ -365,7 +405,10 @@ export function useUpdateSubmissionStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: SubmissionStatus }) =>
       repository.updateSubmissionStatus(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['submissions'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['submissions'] });
+      invalidateAdminViews(qc);
+    },
   });
 }
 
@@ -373,7 +416,10 @@ export function useCreateFlag() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (flag: Omit<ContentFlag, 'id' | 'createdAt' | 'status'>) => repository.createFlag(flag),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['flags'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['flags'] });
+      invalidateAdminViews(qc);
+    },
   });
 }
 
@@ -381,6 +427,9 @@ export function useUpdateFlagStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: FlagStatus }) => repository.updateFlagStatus(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['flags'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['flags'] });
+      invalidateAdminViews(qc);
+    },
   });
 }

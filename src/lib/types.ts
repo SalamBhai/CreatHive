@@ -22,6 +22,15 @@ export interface ContentBlock {
   caption?: string;
 }
 
+export interface AuditLogEntry {
+  id: string;
+  adminId?: string;
+  action: string;
+  target: string;
+  meta?: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface SocialLinks {
   email?: string;
   whatsapp?: string;

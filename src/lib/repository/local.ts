@@ -1,4 +1,4 @@
-import type { DataRepository, NewInquiry, NewPiece, NewJoinRequest } from './types';
+import type { DataRepository, NewInquiry, NewPiece, PageOptions, Paged } from './types';
 import type {
   CreativeProfile,
   CreativePiece,
@@ -11,14 +11,12 @@ import type {
   ContentFlag,
   FlagStatus,
 } from '@/lib/types';
-import type { JoinRequest } from '@/lib/store-types';
 import { INITIAL_PROFILES, INITIAL_PIECES } from '@/lib/sample-data';
 
 const KEYS = {
   profiles: 'creathive_profiles_v1',
   pieces: 'creathive_pieces_v1',
   inquiries: 'creathive_inquiries_v1',
-  joinRequests: 'creathive_join_requests_v1',
   campaigns: 'creathive_campaigns_v1',
   submissions: 'creathive_submissions_v1',
   flags: 'creathive_flags_v1',
@@ -43,10 +41,15 @@ function write<T>(key: string, value: T): void {
 const profiles = () => read<Record<string, CreativeProfile>>(KEYS.profiles, INITIAL_PROFILES);
 const pieces = () => read<CreativePiece[]>(KEYS.pieces, INITIAL_PIECES);
 const inquiries = () => read<PerformanceInquiry[]>(KEYS.inquiries, []);
-const joinRequests = () => read<JoinRequest[]>(KEYS.joinRequests, []);
 const campaigns = () => read<Campaign[]>(KEYS.campaigns, []);
 const submissions = () => read<Submission[]>(KEYS.submissions, []);
 const flags = () => read<ContentFlag[]>(KEYS.flags, []);
+
+/** Local mode has no server, but keeps the same paged contract. */
+function paginate<T>(items: T[], options: PageOptions): Paged<T> {
+  const start = options.page * options.pageSize;
+  return { items: items.slice(start, start + options.pageSize), total: items.length };
+}
 
 export const localRepository: DataRepository = {
   async listProfiles() {
@@ -79,6 +82,10 @@ export const localRepository: DataRepository = {
 
   async logAdminAction() {
     // Local/mock mode has no server audit log — no-op.
+  },
+
+  async listAuditLog() {
+    return []; // local/mock mode has nothing to audit
   },
 
   async listPieces(options) {
@@ -183,26 +190,6 @@ export const localRepository: DataRepository = {
     return id;
   },
 
-  async listJoinRequests() {
-    return joinRequests();
-  },
-
-  async submitJoinRequest(request: NewJoinRequest) {
-    const created: JoinRequest = {
-      ...request,
-      id: `join-${Date.now()}`,
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-    };
-    write(KEYS.joinRequests, [created, ...joinRequests()]);
-    return created;
-  },
-
-  async updateJoinRequestStatus(id, status) {
-    write(KEYS.joinRequests, joinRequests().map((r) => (r.id === id ? { ...r, status } : r)));
-    return id;
-  },
-
   async listAllPieces() {
     return pieces();
   },
@@ -259,5 +246,40 @@ export const localRepository: DataRepository = {
   async updateFlagStatus(id, status: FlagStatus) {
     write(KEYS.flags, flags().map((f) => (f.id === id ? { ...f, status } : f)));
     return id;
+  },
+
+  async getAdminStats() {
+    const allPieces = pieces();
+    return {
+      liveCreators: Object.values(profiles()).filter((p) => p.isYPATData).length,
+      pieces: allPieces.length,
+      pendingInquiries: inquiries().filter((i) => i.status === 'PENDING').length,
+      openCampaigns: campaigns().filter((c) => c.status === 'OPEN').length,
+      submissions: submissions().length,
+      openFlags: flags().filter((f) => f.status === 'OPEN').length,
+      applause: allPieces.reduce((sum, p) => sum + p.applauseCount, 0),
+    };
+  },
+
+  async listProfilesPage(options) {
+    return paginate(Object.values(profiles()), options);
+  },
+  async listAllPiecesPage(options) {
+    return paginate(pieces(), options);
+  },
+  async listAllInquiriesPage(options) {
+    return paginate(inquiries(), options);
+  },
+  async listCampaignsPage(options) {
+    return paginate(campaigns(), options);
+  },
+  async listSubmissionsPage(options) {
+    return paginate(submissions(), options);
+  },
+  async listFlagsPage(options) {
+    return paginate(flags(), options);
+  },
+  async listAuditLogPage() {
+    return { items: [], total: 0 };
   },
 };

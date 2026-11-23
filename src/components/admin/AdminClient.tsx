@@ -12,47 +12,64 @@ import { PushOptIn } from '@/components/pwa/PushOptIn';
 import { notifyPush } from '@/lib/push';
 import { signOut, useSession, useAuthReady } from '@/lib/auth';
 import {
-  useAdminInquiries,
-  useAdminPieces,
+  useAdminInquiriesPage,
+  useAdminPiecesPage,
+  useAdminProfilesPage,
+  useAdminStats,
+  useAuditLogPage,
   useAllProfiles,
   useCampaigns,
+  useCampaignsPage,
   useCreateCampaign,
   useCreativeProfile,
-  useFlags,
-  useJoinRequests,
-  useSubmissions,
+  useFlagsPage,
+  useSubmissionsPage,
   useUpdateCampaignStatus,
   useUpdateFlagStatus,
-  useUpdateJoinRequestStatus,
   useUpdateSubmissionStatus,
   useSetProfileAdmin,
   useLogAdminAction,
 } from '@/lib/store';
 import type { CampaignStatus, CreativeDiscipline, SubmissionStatus } from '@/lib/types';
+import { ADMIN_PAGE_SIZE } from '@/lib/repository/types';
 
 type Tab =
   | 'overview'
   | 'creators'
   | 'pieces'
   | 'inquiries'
-  | 'requests'
   | 'campaigns'
   | 'submissions'
-  | 'flags';
+  | 'flags'
+  | 'audit';
 
 const TABS: Array<FilterOption<Tab>> = [
   { value: 'overview', label: 'Overview' },
   { value: 'creators', label: 'Creators' },
   { value: 'pieces', label: 'Pieces' },
   { value: 'inquiries', label: 'Inquiries' },
-  { value: 'requests', label: 'Join requests' },
   { value: 'campaigns', label: 'Campaigns' },
   { value: 'submissions', label: 'Submissions' },
   { value: 'flags', label: 'Flags' },
+  { value: 'audit', label: 'Audit log' },
 ];
 
 const inputClass =
   'w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs outline-none focus:border-[#FF5A36]';
+
+function Pager({ total, page, onPage }: { total: number; page: number; onPage: (page: number) => void }) {
+  const pages = Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE));
+  if (pages <= 1) return null;
+  return (
+    <div className="mt-3 flex items-center justify-between px-1 text-[11px] text-stone-500">
+      <span>Page {page + 1} of {pages} · {total} total</span>
+      <span className="flex gap-2">
+        <button type="button" disabled={page === 0} onClick={() => onPage(page - 1)} className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 font-bold disabled:opacity-40">Previous</button>
+        <button type="button" disabled={page >= pages - 1} onClick={() => onPage(page + 1)} className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 font-bold disabled:opacity-40">Next</button>
+      </span>
+    </div>
+  );
+}
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
@@ -80,16 +97,23 @@ export default function AdminPage() {
   const session = useSession();
   const { data: ownProfile } = useCreativeProfile(session?.username || '');
   const [tab, setTab] = useState<Tab>('overview');
+  const [pagesByTab, setPagesByTab] = useState<Partial<Record<Tab, number>>>({});
+  const page = pagesByTab[tab] || 0;
+  const setPage = (next: number) => setPagesByTab({ ...pagesByTab, [tab]: next });
 
+  // Full list is only for resolving author names in other tabs.
   const { data: profiles } = useAllProfiles();
-  const { data: pieces } = useAdminPieces();
-  const { data: inquiries } = useAdminInquiries();
-  const { data: requests } = useJoinRequests();
-  const { data: campaigns } = useCampaigns();
-  const { data: submissions } = useSubmissions();
-  const { data: flags } = useFlags();
+  const { data: stats } = useAdminStats();
+  const { data: profilePage } = useAdminProfilesPage(page, tab === 'creators');
+  const { data: piecePage } = useAdminPiecesPage(page, tab === 'pieces');
+  const { data: inquiryPage } = useAdminInquiriesPage(page, tab === 'inquiries');
+  // Lightweight lookup so submissions can show campaign titles on any page.
+  const { data: allCampaigns } = useCampaigns();
+  const { data: campaignPage } = useCampaignsPage(page, tab === 'campaigns');
+  const { data: submissionPage } = useSubmissionsPage(page, tab === 'submissions');
+  const { data: flagPage } = useFlagsPage(page, tab === 'flags');
+  const { data: auditPage } = useAuditLogPage(page, tab === 'audit');
 
-  const updateJoin = useUpdateJoinRequestStatus();
   const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaignStatus();
   const updateSubmission = useUpdateSubmissionStatus();
@@ -148,6 +172,9 @@ export default function AdminPage() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/explore" aria-label="CreatHive home"><CreatHiveWordmark size="sm" href={null} /></Link>
           <div className="flex items-center gap-3">
+            <span className="hidden text-xs font-semibold text-stone-700 sm:inline">
+              {ownProfile?.displayName || session?.displayName || 'Admin'}
+            </span>
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500">Admin</span>
             <PushOptIn compact />
             <button type="button" onClick={() => void signOut()} title="Sign out" className="rounded-xl border border-stone-200 bg-white p-2 text-stone-500 hover:border-[#FF5A36] hover:text-[#FF5A36]">
@@ -158,21 +185,28 @@ export default function AdminPage() {
       </header>
 
       <div className="sticky top-16 z-20 border-b border-stone-200 bg-[#FDFBF7]/95 px-6 py-3 backdrop-blur">
-        <div className="mx-auto max-w-6xl"><FilterTabs options={TABS} value={tab} onChange={setTab} ariaLabel="Admin sections" /></div>
+        <div className="mx-auto max-w-6xl"><FilterTabs
+          options={TABS}
+          value={tab}
+          onChange={(next) => {
+            setTab(next);
+            setPagesByTab({}); // a page valid for one list may not exist in another
+          }}
+          ariaLabel="Admin sections"
+        /></div>
       </div>
 
       <main className="mx-auto max-w-6xl px-6 py-10">
         {tab === 'overview' ? (
           <Section title="Overview" description="A quiet snapshot of the hive — people, work, opportunities and things needing attention.">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <Stat value={(profiles || []).filter((p) => p.isYPATData).length} label="Live creators" />
-              <Stat value={(pieces || []).length} label="Pieces" />
-              <Stat value={(inquiries || []).filter((i) => i.status === 'PENDING').length} label="Pending inquiries" />
-              <Stat value={(requests || []).filter((r) => r.status === 'PENDING').length} label="Join requests" />
-              <Stat value={(campaigns || []).filter((c) => c.status === 'OPEN').length} label="Open campaigns" />
-              <Stat value={(submissions || []).length} label="Submissions" />
-              <Stat value={(flags || []).filter((f) => f.status === 'OPEN').length} label="Open flags" />
-              <Stat value={(pieces || []).reduce((sum, p) => sum + p.applauseCount, 0)} label="Applauses" />
+              <Stat value={stats?.liveCreators ?? 0} label="Live creators" />
+              <Stat value={stats?.pieces ?? 0} label="Pieces" />
+              <Stat value={stats?.pendingInquiries ?? 0} label="Pending inquiries" />
+              <Stat value={stats?.openCampaigns ?? 0} label="Open campaigns" />
+              <Stat value={stats?.submissions ?? 0} label="Submissions" />
+              <Stat value={stats?.openFlags ?? 0} label="Open flags" />
+              <Stat value={stats?.applause ?? 0} label="Applauses" />
             </div>
           </Section>
         ) : null}
@@ -180,7 +214,7 @@ export default function AdminPage() {
         {tab === 'creators' ? (
           <Section title="Creators" description="Profiles on CreatHive. Grant or revoke admin access here.">
             <Surface className="divide-y divide-stone-100 p-2">
-              {(profiles || []).map((p) => (
+              {(profilePage?.items || []).map((p) => (
                 <div key={p.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
                     <Link href={`/${p.username}`} className="text-sm font-bold hover:text-[#FF5A36]">{p.displayName}</Link>
@@ -204,7 +238,7 @@ export default function AdminPage() {
         {tab === 'pieces' ? (
           <Section title="Pieces" description="Everything published, including drafts and unlisted work.">
             <Surface className="divide-y divide-stone-100 p-2">
-              {(pieces || []).map((p) => (
+              {(piecePage?.items || []).map((p) => (
                 <div key={p.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
                     <Link href={`/p/${p.id}`} className="text-sm font-bold hover:text-[#FF5A36]">{p.title}</Link>
@@ -220,7 +254,7 @@ export default function AdminPage() {
         {tab === 'inquiries' ? (
           <Section title="Inquiries" description="Booking and collaboration requests sent from public profiles.">
             <Surface className="divide-y divide-stone-100 p-2">
-              {(inquiries || []).map((i) => (
+              {(inquiryPage?.items || []).map((i) => (
                 <div key={i.id} className="p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-bold">{i.senderName} <span className="font-normal text-stone-500">→ {nameById.get(i.creativeId)?.displayName || 'creator'}</span></p>
@@ -230,27 +264,7 @@ export default function AdminPage() {
                   <p className="mt-2 text-xs leading-relaxed text-stone-700">{i.message}</p>
                 </div>
               ))}
-              {!inquiries?.length ? <p className="p-6 text-center text-xs text-stone-500">No inquiries yet.</p> : null}
-            </Surface>
-          </Section>
-        ) : null}
-
-        {tab === 'requests' ? (
-          <Section title="Join requests" description="People asking for a CreatHive space.">
-            <Surface className="divide-y divide-stone-100 p-2">
-              {(requests || []).map((r) => (
-                <div key={r.id} className="flex flex-wrap items-center gap-3 p-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold">{r.displayName} <span className="font-normal text-stone-500">@{r.handle}</span></p>
-                    <p className="text-[11px] text-stone-500">{r.email} · {r.tagline}</p>
-                  </div>
-                  <span className="text-[10px] font-bold uppercase text-stone-400">{r.status}</span>
-                  {r.status === 'PENDING' ? (
-                    <button type="button" onClick={() => { updateJoin.mutate({ id: r.id, status: 'APPROVED' }); log.mutate({ action: 'approve_join_request', target: r.id }); }} className="rounded-lg bg-[#18181B] px-3 py-1.5 text-[11px] font-bold text-white">Approve</button>
-                  ) : null}
-                </div>
-              ))}
-              {!requests?.length ? <p className="p-6 text-center text-xs text-stone-500">No join requests yet.</p> : null}
+              {!inquiryPage?.items.length ? <p className="p-6 text-center text-xs text-stone-500">No inquiries yet.</p> : null}
             </Surface>
           </Section>
         ) : null}
@@ -293,7 +307,7 @@ export default function AdminPage() {
               </NeoButton>
             </Surface>
             <Surface className="divide-y divide-stone-100 p-2">
-              {(campaigns || []).map((c) => (
+              {(campaignPage?.items || []).map((c) => (
                 <div key={c.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold">{c.title}</p>
@@ -309,7 +323,7 @@ export default function AdminPage() {
                   </button>
                 </div>
               ))}
-              {!campaigns?.length ? <p className="p-6 text-center text-xs text-stone-500">No campaigns yet.</p> : null}
+              {!campaignPage?.items.length ? <p className="p-6 text-center text-xs text-stone-500">No campaigns yet.</p> : null}
             </Surface>
           </Section>
         ) : null}
@@ -317,11 +331,11 @@ export default function AdminPage() {
         {tab === 'submissions' ? (
           <Section title="Submissions" description="Work sent in response to campaigns.">
             <Surface className="divide-y divide-stone-100 p-2">
-              {(submissions || []).map((s) => (
+              {(submissionPage?.items || []).map((s) => (
                 <div key={s.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold">{nameById.get(s.creativeId)?.displayName || 'Creator'}</p>
-                    <p className="text-[11px] text-stone-500">{campaigns?.find((c) => c.id === s.campaignId)?.title || 'Campaign'}{s.note ? ` · ${s.note}` : ''}</p>
+                    <p className="text-[11px] text-stone-500">{allCampaigns?.find((c) => c.id === s.campaignId)?.title || 'Campaign'}{s.note ? ` · ${s.note}` : ''}</p>
                   </div>
                   <select
                     className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-[11px] font-bold"
@@ -334,7 +348,7 @@ export default function AdminPage() {
                   </select>
                 </div>
               ))}
-              {!submissions?.length ? <p className="p-6 text-center text-xs text-stone-500">No submissions yet.</p> : null}
+              {!submissionPage?.items.length ? <p className="p-6 text-center text-xs text-stone-500">No submissions yet.</p> : null}
             </Surface>
           </Section>
         ) : null}
@@ -342,7 +356,7 @@ export default function AdminPage() {
         {tab === 'flags' ? (
           <Section title="Flags" description="Reports from the community.">
             <Surface className="divide-y divide-stone-100 p-2">
-              {(flags || []).map((f) => (
+              {(flagPage?.items || []).map((f) => (
                 <div key={f.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold">{f.targetType} · {f.targetId}</p>
@@ -354,9 +368,51 @@ export default function AdminPage() {
                   ) : null}
                 </div>
               ))}
-              {!flags?.length ? <p className="p-6 text-center text-xs text-stone-500">No flags yet.</p> : null}
+              {!flagPage?.items.length ? <p className="p-6 text-center text-xs text-stone-500">No flags yet.</p> : null}
             </Surface>
           </Section>
+        ) : null}
+
+        {tab === 'audit' ? (
+          <Section title="Audit log" description="Privileged actions, with the admin who performed them.">
+            <Surface className="divide-y divide-stone-100 p-2">
+              {(auditPage?.items || []).map((entry) => (
+                <div key={entry.id} className="flex flex-wrap items-center gap-3 p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold">{entry.action.replace(/_/g, ' ')}</p>
+                    <p className="truncate text-[11px] text-stone-500">
+                      {nameById.get(entry.adminId || '')?.displayName ||
+                        (entry.adminId ? entry.adminId.slice(0, 8) : 'System')}
+                      {entry.target ? ` · ${entry.target.slice(0, 24)}` : ''}
+                      {entry.meta && Object.keys(entry.meta).length
+                        ? ` · ${Object.entries(entry.meta).map(([k, v]) => `${k}: ${String(v)}`).join(', ')}`
+                        : ''}
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-stone-400">
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+              {!auditPage?.items.length ? <p className="p-6 text-center text-xs text-stone-500">No audit events yet.</p> : null}
+            </Surface>
+          </Section>
+        ) : null}
+
+        {tab !== 'overview' ? (
+          <Pager
+            total={
+              tab === 'creators' ? (profilePage?.total || 0) :
+              tab === 'pieces' ? (piecePage?.total || 0) :
+              tab === 'inquiries' ? (inquiryPage?.total || 0) :
+              tab === 'campaigns' ? (campaignPage?.total || 0) :
+              tab === 'submissions' ? (submissionPage?.total || 0) :
+              tab === 'flags' ? (flagPage?.total || 0) :
+              (auditPage?.total || 0)
+            }
+            page={page}
+            onPage={setPage}
+          />
         ) : null}
       </main>
     </div>

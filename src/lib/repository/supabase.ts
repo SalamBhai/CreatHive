@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { localRepository } from './local';
 import { INITIAL_PROFILES, INITIAL_PIECES } from '@/lib/sample-data';
-import type { DataRepository, NewInquiry, NewPiece, NewJoinRequest } from './types';
+import type { DataRepository, NewInquiry, NewPiece, PageOptions, Paged } from './types';
 import type {
   CreativeProfile,
   CreativePiece,
@@ -15,7 +15,6 @@ import type {
   ContentFlag,
   FlagStatus,
 } from '@/lib/types';
-import type { JoinRequest } from '@/lib/store-types';
 
 /** Fail only when a Supabase call is actually made, not at import time. */
 function getDb() {
@@ -25,11 +24,36 @@ function getDb() {
   return supabase;
 }
 
+/** Server-side page: Postgres does the range + exact count, so the client
+ *  never downloads the whole table just to show twenty rows. */
+async function paged<T>(
+  table: string,
+  options: PageOptions,
+  map: (row: Record<string, unknown>) => T
+): Promise<Paged<T>> {
+  const from = options.page * options.pageSize;
+  const { data, count, error } = await getDb()
+    .from(table)
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, from + options.pageSize - 1);
+  if (error) throw error;
+  return { items: (data || []).map((row) => map(row as Record<string, unknown>)), total: count ?? 0 };
+}
+
+const toAudit = (r: Record<string, unknown>) => ({
+  id: String(r.id),
+  adminId: r.admin_id ? String(r.admin_id) : undefined,
+  action: String(r.action ?? ''),
+  target: String(r.target ?? ''),
+  meta: (r.meta && typeof r.meta === 'object' ? r.meta : {}) as Record<string, unknown>,
+  createdAt: String(r.created_at),
+});
+
 /* Row shapes (snake_case) → domain objects (camelCase). */
 type ProfileRow = Record<string, unknown> & { id: string; username: string };
 type PieceRow = Record<string, unknown> & { id: string; creative_id: string; created_at: string };
 type InquiryRow = Record<string, unknown> & { id: string; creative_id: string; created_at: string };
-type JoinRow = Record<string, unknown> & { id: string; created_at: string };
 type CampaignRow = Record<string, unknown> & { id: string; created_at: string };
 type SubmissionRow = Record<string, unknown> & { id: string; created_at: string };
 type FlagRow = Record<string, unknown> & { id: string; created_at: string };
@@ -170,16 +194,6 @@ const toInquiry = (r: InquiryRow): PerformanceInquiry => ({
   createdAt: r.created_at,
 });
 
-const toJoin = (r: JoinRow): JoinRequest => ({
-  id: r.id,
-  handle: String(r.handle ?? ''),
-  displayName: String(r.display_name ?? ''),
-  email: String(r.email ?? ''),
-  tagline: String(r.tagline ?? ''),
-  status: r.status as JoinRequest['status'],
-  createdAt: r.created_at,
-});
-
 const toCampaign = (r: CampaignRow): Campaign => ({
   id: r.id,
   title: String(r.title ?? ''),
@@ -307,6 +321,16 @@ export const supabaseRepository: DataRepository = {
       p_meta: meta,
     });
     if (error) throw error; // audit failures must not silently pass
+  },
+
+  async listAuditLog() {
+    const { data, error } = await getDb()
+      .from('audit_log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return (data || []).map((r: Record<string, unknown>) => toAudit(r));
   },
 
   async listPieces(options) {
@@ -479,33 +503,6 @@ export const supabaseRepository: DataRepository = {
     return id;
   },
 
-  async listJoinRequests() {
-    const { data, error } = await getDb().from('join_requests').select('*');
-    if (error) throw error;
-    return (data as JoinRow[]).map(toJoin);
-  },
-
-  async submitJoinRequest(request: NewJoinRequest) {
-    const { data, error } = await getDb()
-      .from('join_requests')
-      .insert({
-        handle: request.handle,
-        display_name: request.displayName,
-        email: request.email,
-        tagline: request.tagline,
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    return toJoin(data as JoinRow);
-  },
-
-  async updateJoinRequestStatus(id, status) {
-    const { error } = await getDb().from('join_requests').update({ status }).eq('id', id);
-    if (error) throw error;
-    return id;
-  },
-
   async listAllPieces() {
     const { data, error } = await getDb().from('pieces').select('*').order('created_at', { ascending: false });
     if (error) throw error;
@@ -601,5 +598,57 @@ export const supabaseRepository: DataRepository = {
     const { error } = await getDb().from('flags').update({ status }).eq('id', id);
     if (error) throw error;
     return id;
+  },
+
+  async getAdminStats() {
+    const db = getDb();
+    const results = await Promise.all([
+      db.from('profiles').select('*', { count: 'exact', head: true }).eq('is_deleted', false),
+      db.from('pieces').select('*', { count: 'exact', head: true }).eq('is_deleted', false),
+      db.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', 'PENDING').eq('is_deleted', false),
+      db.from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'OPEN').eq('is_deleted', false),
+      db.from('submissions').select('*', { count: 'exact', head: true }).eq('is_deleted', false),
+      db.from('flags').select('*', { count: 'exact', head: true }).eq('status', 'OPEN').eq('is_deleted', false),
+      db.from('pieces').select('applause_count').eq('is_deleted', false),
+    ]);
+    const failure = results.find((result) => result.error);
+    if (failure?.error) throw failure.error;
+
+    return {
+      liveCreators: results[0].count ?? 0,
+      pieces: results[1].count ?? 0,
+      pendingInquiries: results[2].count ?? 0,
+      openCampaigns: results[3].count ?? 0,
+      submissions: results[4].count ?? 0,
+      openFlags: results[5].count ?? 0,
+      applause: (results[6].data || []).reduce(
+        (sum: number, row: Record<string, unknown>) => sum + Number(row.applause_count ?? 0),
+        0
+      ),
+    };
+  },
+
+  // Live/admin rows only: mocks stay visible in Explore, but they are not
+  // manageable accounts and do not belong in paginated admin tables.
+  async listProfilesPage(options) {
+    return paged('profiles', options, (row) => toProfile(row as ProfileRow));
+  },
+  async listAllPiecesPage(options) {
+    return paged('pieces', options, (row) => toPiece(row as PieceRow));
+  },
+  async listAllInquiriesPage(options) {
+    return paged('inquiries', options, (row) => toInquiry(row as InquiryRow));
+  },
+  async listCampaignsPage(options) {
+    return paged('campaigns', options, (row) => toCampaign(row as CampaignRow));
+  },
+  async listSubmissionsPage(options) {
+    return paged('submissions', options, (row) => toSubmission(row as SubmissionRow));
+  },
+  async listFlagsPage(options) {
+    return paged('flags', options, (row) => toFlag(row as FlagRow));
+  },
+  async listAuditLogPage(options) {
+    return paged('audit_log', options, toAudit);
   },
 };

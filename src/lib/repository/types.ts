@@ -10,12 +10,33 @@ import type {
   SubmissionStatus,
   ContentFlag,
   FlagStatus,
+  AuditLogEntry,
 } from '@/lib/types';
-import type { JoinRequest } from '@/lib/store-types';
+
+export const ADMIN_PAGE_SIZE = 20;
+
+export interface PageOptions {
+  page: number;
+  pageSize: number;
+}
+
+export interface Paged<T> {
+  items: T[];
+  total: number;
+}
+
+export interface AdminStats {
+  liveCreators: number;
+  pieces: number;
+  pendingInquiries: number;
+  openCampaigns: number;
+  submissions: number;
+  openFlags: number;
+  applause: number;
+}
 
 export type NewPiece = Omit<CreativePiece, 'id' | 'createdAt' | 'applauseCount'>;
 export type NewInquiry = Omit<PerformanceInquiry, 'id' | 'createdAt' | 'status'>;
-export type NewJoinRequest = Omit<JoinRequest, 'id' | 'status' | 'createdAt'>;
 
 /** The single boundary the UI talks to. Local + Supabase implementations live behind it. */
 export interface DataRepository {
@@ -28,6 +49,7 @@ export interface DataRepository {
   setProfileAdmin(id: string, makeAdmin: boolean): Promise<void>;
   /** Record an admin action in the audit log (actor derived from auth.uid()). */
   logAdminAction(action: string, target?: string, meta?: Record<string, unknown>): Promise<void>;
+  listAuditLog(): Promise<AuditLogEntry[]>;
 
   // Pieces
   listPieces(options?: { creativeId?: string; discipline?: CreativeDiscipline | 'ALL'; includeDrafts?: boolean }): Promise<CreativePiece[]>;
@@ -47,11 +69,6 @@ export interface DataRepository {
   sendInquiry(inquiry: NewInquiry): Promise<PerformanceInquiry>;
   updateInquiryStatus(id: string, status: InquiryStatus): Promise<string>;
 
-  // Admin: join requests
-  listJoinRequests(): Promise<JoinRequest[]>;
-  submitJoinRequest(request: NewJoinRequest): Promise<JoinRequest>;
-  updateJoinRequestStatus(id: string, status: JoinRequest['status']): Promise<string>;
-
   // Admin: cross-creator views
   listAllPieces(): Promise<CreativePiece[]>;
   listAllInquiries(): Promise<PerformanceInquiry[]>;
@@ -68,4 +85,15 @@ export interface DataRepository {
   listFlags(): Promise<ContentFlag[]>;
   createFlag(flag: Omit<ContentFlag, 'id' | 'createdAt' | 'status'>): Promise<ContentFlag>;
   updateFlagStatus(id: string, status: FlagStatus): Promise<string>;
+
+  getAdminStats(): Promise<AdminStats>;
+
+  // Server-side paginated admin lists (range + exact count)
+  listProfilesPage(options: PageOptions): Promise<Paged<CreativeProfile>>;
+  listAllPiecesPage(options: PageOptions): Promise<Paged<CreativePiece>>;
+  listAllInquiriesPage(options: PageOptions): Promise<Paged<PerformanceInquiry>>;
+  listCampaignsPage(options: PageOptions): Promise<Paged<Campaign>>;
+  listSubmissionsPage(options: PageOptions): Promise<Paged<Submission>>;
+  listFlagsPage(options: PageOptions): Promise<Paged<ContentFlag>>;
+  listAuditLogPage(options: PageOptions): Promise<Paged<AuditLogEntry>>;
 }
