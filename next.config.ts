@@ -49,6 +49,8 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  // web-push uses Node crypto/http2; keep it out of the Turbopack bundle.
+  serverExternalPackages: ['web-push'],
   // React Compiler handles memoisation automatically (no manual useMemo/useCallback needed).
   reactCompiler: true,
   images: {

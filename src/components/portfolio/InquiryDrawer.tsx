@@ -5,6 +5,7 @@ import { PaperPlaneTilt, CheckCircle } from '@phosphor-icons/react';
 import { BottomSheet } from '../ui/BottomSheet';
 import { NeoButton } from '../ui/NeoButton';
 import { useSendInquiry } from '@/lib/store';
+import { notifyPush } from '@/lib/push';
 import type { InquiryEventType } from '@/lib/types';
 
 interface InquiryDrawerProps {
@@ -46,7 +47,8 @@ export function InquiryDrawer({
         message,
       },
       {
-        onSuccess: () => {
+        onSuccess: (sent) => {
+          void notifyPush('new_inquiry', sent.id);
           setIsSuccess(true);
           setTimeout(() => {
             setIsSuccess(false);

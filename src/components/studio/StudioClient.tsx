@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Plus, ArrowUpRight, PaperPlaneTilt, ClockCounterClockwise } from '@phosphor-icons/react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { NeoButton } from '@/components/ui/NeoButton';
@@ -84,7 +85,14 @@ export default function StudioPage() {
   const { session } = useDataSource();
   const currentUsername = session?.username || DEMO_USERNAME;
 
-  const [view, setView] = useState<StudioView>('overview');
+  // Notification deep links land on the relevant tab (e.g. ?view=inquiries).
+  const searchParams = useSearchParams();
+  const requestedView = searchParams.get('view');
+  const initialView: StudioView =
+    requestedView === 'inquiries' || requestedView === 'pieces' || requestedView === 'profile'
+      ? requestedView
+      : 'overview';
+  const [view, setView] = useState<StudioView>(initialView);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPiece, setEditingPiece] = useState<CreativePiece | null>(null);
   const [previewKey, setPreviewKey] = useState(0);

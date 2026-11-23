@@ -99,7 +99,7 @@ These were either falsified as "done" in the previous version of this file, or w
 - [ ] Migrate mocks as seed data; keep them visible alongside real YPAT users.
 - [x] Admin page (clean, like Explore): creators, pieces, campaigns, submissions, inquiries, flags, metrics, gated by `is_admin`.
 - [x] Admin creates campaigns; creators submit through **Add New Piece** with campaign assignment.
-- [~] Submission workflow `OPEN → REVIEWING → ACCEPTED / REJECTED` in admin UI; notifications (in-app + email) still pending.
+- [~] Submission workflow `OPEN → REVIEWING → ACCEPTED / REJECTED` in admin UI. Web Push (free VAPID) done for new inquiries, new submissions and submission decisions; in-app/email digests still pending.
 - [ ] Analytics: profile views, applause, campaign conversion; audit log for admin actions.
 - [x] PWA completeness: installable manifest with 192/512/maskable icons, precached offline shell, network-first pages, cache-first assets, connectivity banner.
 - [ ] Moderation, reporting, rate limits, backups, observability.

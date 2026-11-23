@@ -13,6 +13,7 @@ import {
   ArrowsClockwise,
 } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
+import { PushOptIn } from '@/components/pwa/PushOptIn';
 
 export type StudioView = 'overview' | 'pieces' | 'inquiries' | 'profile';
 
@@ -93,6 +94,7 @@ export function StudioShell({
           </div>
 
           <div className="flex items-center gap-2">
+            <PushOptIn compact />
             <Link
               href={`/${username}`}
               target="_blank"

@@ -3,7 +3,7 @@
  * - Precaches the app shell (landing, explore, fonts, brand art, scene photos)
  * - Navigations: network-first, falling back to the cached page, then the shell
  * - Static assets: cache-first (their URLs are content-hashed by Next.js)
- * - API, auth and RSC traffic is never cached
+ * - API, auth, RSC and private routes (/studio, /admin, /join) are never cached
  */
 
 const SHELL_CACHE = 'creathive-shell-v1';
@@ -73,11 +73,15 @@ function isStaticAsset(pathname) {
   );
 }
 
+const PRIVATE_ROUTES = ['/studio', '/admin', '/join'];
+
 async function networkFirst(request) {
   const cache = await caches.open(PAGE_CACHE);
+  const pathname = new URL(request.url).pathname;
+  const isPrivate = PRIVATE_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'));
   try {
     const response = await fetch(request);
-    if (response && response.ok && response.type === 'basic') {
+    if (!isPrivate && response && response.ok && response.type === 'basic') {
       cache.put(request, response.clone());
     }
     return response;
@@ -118,4 +122,45 @@ self.addEventListener('fetch', (event) => {
   if (isStaticAsset(url.pathname)) {
     event.respondWith(cacheFirst(request));
   }
+});
+
+/* ---------- Web Push ---------- */
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    // A plain-text payload is still better than no notification.
+    data = { body: event.data ? event.data.text() : '' };
+  }
+  const title = typeof data.title === 'string' && data.title ? data.title : 'CreatHive';
+  const body = typeof data.body === 'string' ? data.body : 'You have a new update from CreatHive.';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
+      tag: typeof data.tag === 'string' ? data.tag : 'creathive',
+      data: { url: typeof data.url === 'string' ? data.url : '/studio' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  // Never let a payload open an arbitrary origin.
+  let target = self.location.origin + '/studio';
+  try {
+    const url = new URL(event.notification.data?.url || '/studio', self.location.origin);
+    if (url.origin === self.location.origin) target = url.href;
+  } catch {
+    // keep the safe default
+  }
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const match = windows.find((client) => client.url === target);
+      return match ? match.focus() : clients.openWindow(target);
+    })
+  );
 });

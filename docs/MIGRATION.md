@@ -76,7 +76,7 @@ Important product decision: **campaigns and the submissions review queue belong 
 ## Phase 7 — Cross-cutting
 
 - Auth + onboarding + username claim + YPAT verification.
-- Notifications (in-app + email).
+- Notifications: Web Push over VAPID is wired for inquiries/submissions (`009_push_subscriptions.sql`); in-app and email digests are still pending.
 - OG image generation, service worker, observability, backups, rate limits.
 - Feature flags for gradual rollout while mocks remain visible.
 

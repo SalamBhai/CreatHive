@@ -23,6 +23,7 @@ Instead of fragmented Google Drive links or lost email attachments, **CreatHive*
 - **⚡ Kinetic Neo-Editorial UI:** Warm paper canvas (`#FDFBF7`), soft-brutalist buttons with spring physics, and `@phosphor-icons/react` duotone SVGs (zero generic emojis).
 - **📱 True Progressive Web App (PWA):** Installable on iOS & Android (`manifest.json`), offline-ready shell, safe-area-inset native ergonomics.
 - **🎯 Conversion Funnel & Booking:** Direct "Book for Gig / Performance" inquiry modal, instant applause counters with confetti bursts, and native web share.
+- **🔔 Notifications:** Free VAPID Web Push for new booking inquiries, campaign submissions and submission decisions — no paid service required.
 - **🛠️ Creator Studio:** Unlimited management access to publish, edit, and track portfolio conversions.
 
 ---

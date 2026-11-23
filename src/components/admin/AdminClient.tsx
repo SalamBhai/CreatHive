@@ -8,6 +8,8 @@ import { Surface } from '@/components/ui/Surface';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
+import { PushOptIn } from '@/components/pwa/PushOptIn';
+import { notifyPush } from '@/lib/push';
 import { signOut, useSession, useAuthReady } from '@/lib/auth';
 import {
   useAdminInquiries,
@@ -147,6 +149,7 @@ export default function AdminPage() {
           <Link href="/explore" aria-label="CreatHive home"><CreatHiveWordmark size="sm" href={null} /></Link>
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500">Admin</span>
+            <PushOptIn compact />
             <button type="button" onClick={() => void signOut()} title="Sign out" className="rounded-xl border border-stone-200 bg-white p-2 text-stone-500 hover:border-[#FF5A36] hover:text-[#FF5A36]">
               <SignOut size={16} weight="bold" />
             </button>
@@ -323,7 +326,7 @@ export default function AdminPage() {
                   <select
                     className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-[11px] font-bold"
                     value={s.status}
-                    onChange={(e) => { const next = e.target.value as SubmissionStatus; updateSubmission.mutate({ id: s.id, status: next }); log.mutate({ action: 'set_submission_status', target: s.id, meta: { status: next } }); }}
+                    onChange={(e) => { const next = e.target.value as SubmissionStatus; updateSubmission.mutate({ id: s.id, status: next }, { onSuccess: () => { if (next === 'ACCEPTED' || next === 'REJECTED') void notifyPush('submission_decision', s.id); } }); log.mutate({ action: 'set_submission_status', target: s.id, meta: { status: next } }); }}
                   >
                     {(['OPEN', 'REVIEWING', 'ACCEPTED', 'REJECTED'] as SubmissionStatus[]).map((status) => (
                       <option key={status} value={status}>{status.toLowerCase()}</option>

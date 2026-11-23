@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { useAddPiece, useAllPieces, useCampaigns, useCreateSubmission, useUpdatePiece } from '@/lib/store';
+import { notifyPush } from '@/lib/push';
 import { ALLOWED_EMBED_HOSTS } from '@/lib/media';
 import { MEDIA_LABELS, mediaTypeForNiche } from '@/lib/media-format';
 import { MAX_TAGS, normalizeTags } from '@/lib/tags';
@@ -148,12 +149,15 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
 
     const onDone = (savedId?: string) => {
       if (campaignId && savedId) {
-        submitToCampaign.mutate({
-          campaignId,
-          creativeId: profile.id,
-          pieceId: savedId,
-          note: subtitle || undefined,
-        });
+        submitToCampaign.mutate(
+          {
+            campaignId,
+            creativeId: profile.id,
+            pieceId: savedId,
+            note: subtitle || undefined,
+          },
+          { onSuccess: (submission) => void notifyPush('new_submission', submission.id) }
+        );
       }
       if (mode === 'draft') {
         // Keep everything on screen — a draft is a checkpoint, not a finish.
