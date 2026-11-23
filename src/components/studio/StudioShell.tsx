@@ -117,18 +117,19 @@ export function StudioShell({
               @{username}
             </div>
             {onRefreshPreview ? (
-              <button
-                type="button"
+              <Tooltip
+                label="Refresh preview"
+                side="bottom"
                 onClick={onRefreshPreview}
-                title="Refresh preview"
-                className="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
+                triggerClassName="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
               >
                 <ArrowsClockwise size={16} weight="bold" />
-              </button>
+              </Tooltip>
             ) : null}
             {onSignOut ? (
               <Tooltip
                 label="Sign out of CreatHive"
+                side="bottom"
                 onClick={onSignOut}
                 triggerClassName="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
               >

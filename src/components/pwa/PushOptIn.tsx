@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Bell, BellSlash } from '@phosphor-icons/react';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { disablePush, enablePush, isPushSubscribed, pushSupported } from '@/lib/push';
 
 /** Capability is external to React; useSyncExternalStore keeps SSR and the
@@ -47,12 +48,11 @@ export function PushOptIn({ compact = false }: { compact?: boolean }) {
 
   return (
     <span className="inline-flex flex-col items-end">
-      <button
-        type="button"
+      <Tooltip
+        label={subscribed ? 'Turn off notifications' : 'Turn on notifications'}
+        side="bottom"
         onClick={() => void toggle()}
-        disabled={busy}
-        title={subscribed ? 'Turn off notifications' : 'Turn on notifications'}
-        className={
+        triggerClassName={
           compact
             ? `rounded-xl border bg-white p-2 transition-colors disabled:opacity-50 ${
                 subscribed
@@ -68,7 +68,7 @@ export function PushOptIn({ compact = false }: { compact?: boolean }) {
       >
         {subscribed ? <Bell size={15} weight="fill" /> : <BellSlash size={15} weight="bold" />}
         {!compact && <span>{busy ? 'Saving…' : subscribed ? 'Notifications on' : 'Notify me'}</span>}
-      </button>
+      </Tooltip>
       {error ? <span className="mt-1 text-[10px] text-red-600">{error}</span> : null}
     </span>
   );
