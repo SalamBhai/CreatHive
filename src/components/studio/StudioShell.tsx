@@ -131,10 +131,9 @@ export function StudioShell({
                 onClick={onSignOut}
                 title="Sign out"
                 aria-label="Sign out"
-                className="inline-flex items-center justify-center rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36] md:gap-1.5 md:px-3 md:py-2"
+                className="inline-flex items-center justify-center rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
               >
                 <SignOut size={16} weight="bold" />
-                <span className="hidden md:inline">Sign out</span>
               </button>
             ) : null}
           </div>
