@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { QueryProvider } from '@/lib/query-provider';
+import { PwaProvider } from '@/components/pwa/PwaProvider';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://creathive.app';
 
@@ -22,6 +23,11 @@ export const metadata: Metadata = {
   description:
     'CreatHive — pronounced “Creative” — is a mobile-first PWA for creatives to showcase multi-discipline portfolios, capture performance opportunities, and manage work with unlimited access.',
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'CreatHive',
+    statusBarStyle: 'default',
+  },
   icons: {
     icon: '/favicon.ico',
     apple: '/icons/apple-touch-icon.png',
@@ -65,6 +71,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
+        <PwaProvider />
         <QueryProvider>
           {children}
         </QueryProvider>

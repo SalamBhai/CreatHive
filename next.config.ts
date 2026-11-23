@@ -26,6 +26,25 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // The service worker must never be cached by the browser — otherwise
+        // users keep an old shell after a deploy.
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self'",
+          },
+        ],
+      },
     ];
   },
   cacheComponents: true,

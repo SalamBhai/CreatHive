@@ -26,6 +26,8 @@ export interface DataRepository {
   updateProfile(username: string, patch: Partial<CreativeProfile>): Promise<CreativeProfile>;
   /** Admin-only: grant/revoke another user's admin status via a server RPC. */
   setProfileAdmin(id: string, makeAdmin: boolean): Promise<void>;
+  /** Record an admin action in the audit log (actor derived from auth.uid()). */
+  logAdminAction(action: string, target?: string, meta?: Record<string, unknown>): Promise<void>;
 
   // Pieces
   listPieces(options?: { creativeId?: string; discipline?: CreativeDiscipline | 'ALL'; includeDrafts?: boolean }): Promise<CreativePiece[]>;

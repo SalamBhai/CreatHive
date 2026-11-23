@@ -24,6 +24,7 @@ import {
   useUpdateJoinRequestStatus,
   useUpdateSubmissionStatus,
   useSetProfileAdmin,
+  useLogAdminAction,
 } from '@/lib/store';
 import type { CampaignStatus, CreativeDiscipline, SubmissionStatus } from '@/lib/types';
 
@@ -92,6 +93,7 @@ export default function AdminPage() {
   const updateSubmission = useUpdateSubmissionStatus();
   const updateFlag = useUpdateFlagStatus();
   const setAdmin = useSetProfileAdmin();
+  const log = useLogAdminAction();
 
   const [draft, setDraft] = useState({ title: '', description: '', discipline: 'ALL' as CreativeDiscipline | 'ALL', reward: '', deadline: '' });
 
@@ -185,7 +187,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     disabled={!p.isYPATData}
-                    onClick={() => setAdmin.mutate({ id: p.id, makeAdmin: !p.isAdmin })}
+                    onClick={() => { setAdmin.mutate({ id: p.id, makeAdmin: !p.isAdmin }); log.mutate({ action: p.isAdmin ? 'revoke_admin' : 'grant_admin', target: p.id }); }}
                     className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-bold text-stone-600 hover:border-[#FF5A36] hover:text-[#FF5A36] disabled:opacity-40"
                   >
                     {p.isAdmin ? 'Revoke' : 'Make admin'}
@@ -241,7 +243,7 @@ export default function AdminPage() {
                   </div>
                   <span className="text-[10px] font-bold uppercase text-stone-400">{r.status}</span>
                   {r.status === 'PENDING' ? (
-                    <button type="button" onClick={() => updateJoin.mutate({ id: r.id, status: 'APPROVED' })} className="rounded-lg bg-[#18181B] px-3 py-1.5 text-[11px] font-bold text-white">Approve</button>
+                    <button type="button" onClick={() => { updateJoin.mutate({ id: r.id, status: 'APPROVED' }); log.mutate({ action: 'approve_join_request', target: r.id }); }} className="rounded-lg bg-[#18181B] px-3 py-1.5 text-[11px] font-bold text-white">Approve</button>
                   ) : null}
                 </div>
               ))}
@@ -280,6 +282,7 @@ export default function AdminPage() {
                     deadline: draft.deadline ? new Date(draft.deadline).toISOString() : undefined,
                     status: 'OPEN',
                   });
+                  log.mutate({ action: 'create_campaign', target: draft.title.trim() });
                   setDraft({ title: '', description: '', discipline: 'ALL', reward: '', deadline: '' });
                 }}
               >
@@ -296,7 +299,7 @@ export default function AdminPage() {
                   <span className="text-[10px] font-bold uppercase text-stone-400">{c.status}</span>
                   <button
                     type="button"
-                    onClick={() => updateCampaign.mutate({ id: c.id, status: (c.status === 'OPEN' ? 'CLOSED' : 'OPEN') as CampaignStatus })}
+                    onClick={() => { const next = (c.status === 'OPEN' ? 'CLOSED' : 'OPEN') as CampaignStatus; updateCampaign.mutate({ id: c.id, status: next }); log.mutate({ action: next === 'OPEN' ? 'reopen_campaign' : 'close_campaign', target: c.id }); }}
                     className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-bold text-stone-600 hover:border-[#FF5A36] hover:text-[#FF5A36]"
                   >
                     {c.status === 'OPEN' ? 'Close' : 'Reopen'}
@@ -320,7 +323,7 @@ export default function AdminPage() {
                   <select
                     className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-[11px] font-bold"
                     value={s.status}
-                    onChange={(e) => updateSubmission.mutate({ id: s.id, status: e.target.value as SubmissionStatus })}
+                    onChange={(e) => { const next = e.target.value as SubmissionStatus; updateSubmission.mutate({ id: s.id, status: next }); log.mutate({ action: 'set_submission_status', target: s.id, meta: { status: next } }); }}
                   >
                     {(['OPEN', 'REVIEWING', 'ACCEPTED', 'REJECTED'] as SubmissionStatus[]).map((status) => (
                       <option key={status} value={status}>{status.toLowerCase()}</option>
@@ -344,7 +347,7 @@ export default function AdminPage() {
                   </div>
                   <span className="text-[10px] font-bold uppercase text-stone-400">{f.status}</span>
                   {f.status === 'OPEN' ? (
-                    <button type="button" onClick={() => updateFlag.mutate({ id: f.id, status: 'RESOLVED' })} className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-bold text-stone-600 hover:border-[#FF5A36] hover:text-[#FF5A36]">Resolve</button>
+                    <button type="button" onClick={() => { updateFlag.mutate({ id: f.id, status: 'RESOLVED' }); log.mutate({ action: 'resolve_flag', target: f.id }); }} className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-bold text-stone-600 hover:border-[#FF5A36] hover:text-[#FF5A36]">Resolve</button>
                   ) : null}
                 </div>
               ))}

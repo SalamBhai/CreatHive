@@ -1,17 +1,50 @@
 {
   "name": "CreatHive — Built for the limitless Creatives...",
   "short_name": "CreatHive",
-  "description": "CreatHive — pronounced Creative — a mobile-first PWA for creatives to showcase multi-discipline portfolios, capture performance opportunities, and manage work.",
+  "description": "CreatHive — pronounced Creative — a mobile-first stage for spoken word, poetry, dance, music and visual design.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#FDFBF7",
   "theme_color": "#FF5A36",
   "orientation": "portrait-primary",
+  "categories": ["arts", "entertainment", "social"],
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explore the hive",
+      "short_name": "Explore",
+      "description": "Browse work from the YPAT cohort",
+      "url": "/explore",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Creator Studio",
+      "short_name": "Studio",
+      "description": "Manage your pieces and inquiries",
+      "url": "/studio",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     }
   ]
 }

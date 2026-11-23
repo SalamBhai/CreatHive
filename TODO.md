@@ -101,7 +101,7 @@ These were either falsified as "done" in the previous version of this file, or w
 - [x] Admin creates campaigns; creators submit through **Add New Piece** with campaign assignment.
 - [~] Submission workflow `OPEN → REVIEWING → ACCEPTED / REJECTED` in admin UI; notifications (in-app + email) still pending.
 - [ ] Analytics: profile views, applause, campaign conversion; audit log for admin actions.
-- [ ] PWA completeness: service worker / offline shell (manifest exists, SW missing).
+- [x] PWA completeness: installable manifest with 192/512/maskable icons, precached offline shell, network-first pages, cache-first assets, connectivity banner.
 - [ ] Moderation, reporting, rate limits, backups, observability.
 
 ### Not scoped yet, worth deciding

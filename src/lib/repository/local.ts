@@ -77,6 +77,10 @@ export const localRepository: DataRepository = {
     if (match) write(KEYS.profiles, { ...all, [match[0]]: { ...match[1], isAdmin: makeAdmin } });
   },
 
+  async logAdminAction() {
+    // Local/mock mode has no server audit log — no-op.
+  },
+
   async listPieces(options) {
     let result = pieces();
     if (options?.creativeId) {

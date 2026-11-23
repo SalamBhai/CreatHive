@@ -295,6 +295,15 @@ export const supabaseRepository: DataRepository = {
     if (error) throw error;
   },
 
+  async logAdminAction(action, target = '', meta = {}) {
+    const { error } = await getDb().rpc('log_admin_action', {
+      p_action: action,
+      p_target: target,
+      p_meta: meta,
+    });
+    if (error) throw error; // audit failures must not silently pass
+  },
+
   async listPieces(options) {
     // A mock owner id (non-UUID) can only have mock pieces — skip the DB query.
     const skipDb = !!options?.creativeId && !isUuid(options.creativeId);

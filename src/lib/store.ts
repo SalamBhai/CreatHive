@@ -188,6 +188,13 @@ export function useSetProfileAdmin() {
   });
 }
 
+export function useLogAdminAction() {
+  return useMutation({
+    mutationFn: (input: { action: string; target?: string; meta?: Record<string, unknown> }) =>
+      repository.logAdminAction(input.action, input.target, input.meta),
+  });
+}
+
 export function useReorderPieces() {
   const queryClient = useQueryClient();
   return useMutation({

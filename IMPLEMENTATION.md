@@ -296,9 +296,9 @@ CreatHive/
 - [ ] Profile Settings & Opportunity Availability toggle.
 
 ### Phase 4: PWA & Social Share Engine
-- [ ] Web App Manifest (`manifest.json`) configuration with mobile standalone display.
-- [ ] Service worker registration & offline cache strategy.
-- [ ] Dynamic OpenGraph Image (`opengraph-image.tsx`) for instant social card rendering when shared on WhatsApp/X.
+- [x] Web App Manifest (`manifest.json`) configuration with mobile standalone display.
+- [x] Service worker registration & offline cache strategy.
+- [x] Dynamic OpenGraph Image (`opengraph-image.tsx`) for instant social card rendering when shared on WhatsApp/X.
 
 ### Phase 5: Production Polish & Submission
 - [ ] Populate Sheriffdeen's actual YPAT profile (Software Engineer & Creative Technologist showcase).

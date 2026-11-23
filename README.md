@@ -55,6 +55,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser (or `http://localhost:3000/sheriff` to view the YPAT showcase profile).
 
+The installable PWA (manifest, icons and offline shell) is active in production builds. To test offline behaviour locally, run `npm run build && npm start`, load the site and reload once (so the service worker caches its assets), then toggle offline in DevTools.
+
 ---
 
 ## 📄 Architecture & Implementation
