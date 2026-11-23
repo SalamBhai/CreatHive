@@ -2,7 +2,7 @@
 
 import { supabase, usingSupabase } from './supabase';
 
-export type UploadKind = 'avatar' | 'media' | 'gallery' | 'cover';
+export type UploadKind = 'avatar' | 'media' | 'gallery' | 'cover' | 'inquiry';
 
 export interface UploadResult {
   url: string;

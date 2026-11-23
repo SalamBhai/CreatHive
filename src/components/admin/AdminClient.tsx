@@ -12,7 +12,6 @@ import { PushOptIn } from '@/components/pwa/PushOptIn';
 import { notifyPush } from '@/lib/push';
 import { signOut, useSession, useAuthReady } from '@/lib/auth';
 import {
-  useAdminInquiriesPage,
   useAdminPiecesPage,
   useAdminProfilesPage,
   useAdminStats,
@@ -37,7 +36,6 @@ type Tab =
   | 'overview'
   | 'creators'
   | 'pieces'
-  | 'inquiries'
   | 'campaigns'
   | 'submissions'
   | 'flags'
@@ -47,7 +45,6 @@ const TABS: Array<FilterOption<Tab>> = [
   { value: 'overview', label: 'Overview' },
   { value: 'creators', label: 'Creators' },
   { value: 'pieces', label: 'Pieces' },
-  { value: 'inquiries', label: 'Inquiries' },
   { value: 'campaigns', label: 'Campaigns' },
   { value: 'submissions', label: 'Submissions' },
   { value: 'flags', label: 'Flags' },
@@ -106,7 +103,6 @@ export default function AdminPage() {
   const { data: stats } = useAdminStats();
   const { data: profilePage } = useAdminProfilesPage(page, tab === 'creators');
   const { data: piecePage } = useAdminPiecesPage(page, tab === 'pieces');
-  const { data: inquiryPage } = useAdminInquiriesPage(page, tab === 'inquiries');
   // Lightweight lookup so submissions can show campaign titles on any page.
   const { data: allCampaigns } = useCampaigns();
   const { data: campaignPage } = useCampaignsPage(page, tab === 'campaigns');
@@ -202,7 +198,6 @@ export default function AdminPage() {
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <Stat value={stats?.liveCreators ?? 0} label="Live creators" />
               <Stat value={stats?.pieces ?? 0} label="Pieces" />
-              <Stat value={stats?.pendingInquiries ?? 0} label="Pending inquiries" />
               <Stat value={stats?.openCampaigns ?? 0} label="Open campaigns" />
               <Stat value={stats?.submissions ?? 0} label="Submissions" />
               <Stat value={stats?.openFlags ?? 0} label="Open flags" />
@@ -247,24 +242,6 @@ export default function AdminPage() {
                   <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold uppercase text-stone-600">{p.status || 'PUBLIC'}</span>
                 </div>
               ))}
-            </Surface>
-          </Section>
-        ) : null}
-
-        {tab === 'inquiries' ? (
-          <Section title="Inquiries" description="Booking and collaboration requests sent from public profiles.">
-            <Surface className="divide-y divide-stone-100 p-2">
-              {(inquiryPage?.items || []).map((i) => (
-                <div key={i.id} className="p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-bold">{i.senderName} <span className="font-normal text-stone-500">→ {nameById.get(i.creativeId)?.displayName || 'creator'}</span></p>
-                    <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold uppercase text-stone-600">{i.status}</span>
-                  </div>
-                  <p className="mt-1 text-[11px] text-stone-500">{i.senderEmail} · {i.eventType.toLowerCase()}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-stone-700">{i.message}</p>
-                </div>
-              ))}
-              {!inquiryPage?.items.length ? <p className="p-6 text-center text-xs text-stone-500">No inquiries yet.</p> : null}
             </Surface>
           </Section>
         ) : null}
@@ -404,7 +381,6 @@ export default function AdminPage() {
             total={
               tab === 'creators' ? (profilePage?.total || 0) :
               tab === 'pieces' ? (piecePage?.total || 0) :
-              tab === 'inquiries' ? (inquiryPage?.total || 0) :
               tab === 'campaigns' ? (campaignPage?.total || 0) :
               tab === 'submissions' ? (submissionPage?.total || 0) :
               tab === 'flags' ? (flagPage?.total || 0) :

@@ -251,11 +251,6 @@ drop policy if exists "admins update flags" on public.flags;
 create policy "admins update flags" on public.flags for update
   using (public.is_admin()) with check (public.is_admin());
 
--- Inquiries: admins may read across creators.
-drop policy if exists "admins read inquiries" on public.inquiries;
-create policy "admins read inquiries" on public.inquiries for select
-  using (public.is_admin());
-
 -- Audit log: admin only.
 drop policy if exists "admins read audit" on public.audit_log;
 create policy "admins read audit" on public.audit_log for select using (public.is_admin());
@@ -524,3 +519,18 @@ create policy "users manage own push subscriptions" on public.push_subscriptions
 alter table public.inquiries add column if not exists notified_at timestamptz;
 alter table public.submissions add column if not exists notified_at timestamptz;
 alter table public.submissions add column if not exists decision_notified_at timestamptz;
+
+-- ===== 011_inquiry_attachments.sql =====
+
+-- Richer inquiry workflow: reference images + review/response timeline.
+alter table public.inquiries
+  add column if not exists attachments jsonb not null default '[]'::jsonb,
+  add column if not exists reviewed_at timestamptz,
+  add column if not exists responded_at timestamptz,
+  add column if not exists reply_note text;
+
+-- ===== 013_inquiry_reply_email.sql =====
+
+-- One-shot guard for the creator → recruiter reply email.
+alter table public.inquiries
+  add column if not exists reply_email_sent_at timestamptz;

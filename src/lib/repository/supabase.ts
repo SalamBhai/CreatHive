@@ -191,6 +191,12 @@ const toInquiry = (r: InquiryRow): PerformanceInquiry => ({
   eventType: r.event_type as PerformanceInquiry['eventType'],
   message: String(r.message ?? ''),
   status: r.status as InquiryStatus,
+  attachments: Array.isArray(r.attachments)
+    ? (r.attachments as PerformanceInquiry['attachments'])
+    : [],
+  reviewedAt: r.reviewed_at ? String(r.reviewed_at) : undefined,
+  respondedAt: r.responded_at ? String(r.responded_at) : undefined,
+  replyNote: r.reply_note ? String(r.reply_note) : undefined,
   createdAt: r.created_at,
 });
 
@@ -490,6 +496,7 @@ export const supabaseRepository: DataRepository = {
         sender_phone: inquiry.senderPhone ?? null,
         event_type: inquiry.eventType,
         message: inquiry.message,
+        attachments: inquiry.attachments ?? [],
       })
       .select()
       .single();
@@ -497,8 +504,15 @@ export const supabaseRepository: DataRepository = {
     return toInquiry(data as InquiryRow);
   },
 
-  async updateInquiryStatus(id, status) {
-    const { error } = await getDb().from('inquiries').update({ status }).eq('id', id);
+  async updateInquiryStatus(id, status, note?: string) {
+    const now = new Date().toISOString();
+    const patch: Record<string, unknown> = { status };
+    if (status === 'REVIEWED' || status === 'RESPONDED' || status === 'DECLINED') {
+      patch.reviewed_at = now;
+    }
+    if (status === 'RESPONDED' || status === 'DECLINED') patch.responded_at = now;
+    if (note !== undefined) patch.reply_note = note;
+    const { error } = await getDb().from('inquiries').update(patch).eq('id', id);
     if (error) throw error;
     return id;
   },
@@ -507,12 +521,6 @@ export const supabaseRepository: DataRepository = {
     const { data, error } = await getDb().from('pieces').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     return (data as PieceRow[]).map(toPiece).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
-  },
-
-  async listAllInquiries() {
-    const { data, error } = await getDb().from('inquiries').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
-    return (data as InquiryRow[]).map(toInquiry);
   },
 
   async listCampaigns() {
@@ -605,7 +613,6 @@ export const supabaseRepository: DataRepository = {
     const results = await Promise.all([
       db.from('profiles').select('*', { count: 'exact', head: true }).eq('is_deleted', false),
       db.from('pieces').select('*', { count: 'exact', head: true }).eq('is_deleted', false),
-      db.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', 'PENDING').eq('is_deleted', false),
       db.from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'OPEN').eq('is_deleted', false),
       db.from('submissions').select('*', { count: 'exact', head: true }).eq('is_deleted', false),
       db.from('flags').select('*', { count: 'exact', head: true }).eq('status', 'OPEN').eq('is_deleted', false),
@@ -617,11 +624,10 @@ export const supabaseRepository: DataRepository = {
     return {
       liveCreators: results[0].count ?? 0,
       pieces: results[1].count ?? 0,
-      pendingInquiries: results[2].count ?? 0,
-      openCampaigns: results[3].count ?? 0,
-      submissions: results[4].count ?? 0,
-      openFlags: results[5].count ?? 0,
-      applause: (results[6].data || []).reduce(
+      openCampaigns: results[2].count ?? 0,
+      submissions: results[3].count ?? 0,
+      openFlags: results[4].count ?? 0,
+      applause: (results[5].data || []).reduce(
         (sum: number, row: Record<string, unknown>) => sum + Number(row.applause_count ?? 0),
         0
       ),
@@ -635,9 +641,6 @@ export const supabaseRepository: DataRepository = {
   },
   async listAllPiecesPage(options) {
     return paged('pieces', options, (row) => toPiece(row as PieceRow));
-  },
-  async listAllInquiriesPage(options) {
-    return paged('inquiries', options, (row) => toInquiry(row as InquiryRow));
   },
   async listCampaignsPage(options) {
     return paged('campaigns', options, (row) => toCampaign(row as CampaignRow));

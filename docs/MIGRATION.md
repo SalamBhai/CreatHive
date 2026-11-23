@@ -65,7 +65,7 @@ Important product decision: **campaigns and the submissions review queue belong 
 
 - **Creator-scoped:** pieces, inquiries (real "Book a Gig" requests), applause — always filtered by the creator's `profile.id`.
 - **Admin-scoped:** join/signup requests (stored separately in `creathive_join_requests_v1`), campaigns, submissions queue, moderation, platform metrics.
-- Never write onboarding/signup records into the creator inquiry store. Studio's `useInquiries(creativeId)` scopes by owner; admin reads join requests via `useJoinRequests()`.
+- Never write onboarding/signup records into the creator inquiry store. `useInquiries(creativeId)` scopes by owner; admins have no inquiry view (migration `012` drops the old read policy). Legacy join requests were removed from the app entirely.
 
 ## Phase 6 — Admin
 

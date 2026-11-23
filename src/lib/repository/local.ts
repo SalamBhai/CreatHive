@@ -182,20 +182,26 @@ export const localRepository: DataRepository = {
     return created;
   },
 
-  async updateInquiryStatus(id: string, status: InquiryStatus) {
+  async updateInquiryStatus(id: string, status: InquiryStatus, note?: string) {
+    const now = new Date().toISOString();
     write(
       KEYS.inquiries,
-      inquiries().map((i) => (i.id === id ? { ...i, status } : i))
+      inquiries().map((i) => {
+        if (i.id !== id) return i;
+        const reviewedAt = ['REVIEWED', 'RESPONDED', 'DECLINED'].includes(status)
+          ? i.reviewedAt || now
+          : i.reviewedAt;
+        const respondedAt = ['RESPONDED', 'DECLINED'].includes(status)
+          ? i.respondedAt || now
+          : i.respondedAt;
+        return { ...i, status, reviewedAt, respondedAt, replyNote: note ?? i.replyNote };
+      })
     );
     return id;
   },
 
   async listAllPieces() {
     return pieces();
-  },
-
-  async listAllInquiries() {
-    return inquiries();
   },
 
   async listCampaigns() {
@@ -253,7 +259,6 @@ export const localRepository: DataRepository = {
     return {
       liveCreators: Object.values(profiles()).filter((p) => p.isYPATData).length,
       pieces: allPieces.length,
-      pendingInquiries: inquiries().filter((i) => i.status === 'PENDING').length,
       openCampaigns: campaigns().filter((c) => c.status === 'OPEN').length,
       submissions: submissions().length,
       openFlags: flags().filter((f) => f.status === 'OPEN').length,
@@ -266,9 +271,6 @@ export const localRepository: DataRepository = {
   },
   async listAllPiecesPage(options) {
     return paginate(pieces(), options);
-  },
-  async listAllInquiriesPage(options) {
-    return paginate(inquiries(), options);
   },
   async listCampaignsPage(options) {
     return paginate(campaigns(), options);

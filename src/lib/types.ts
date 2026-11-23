@@ -114,7 +114,12 @@ export type InquiryEventType =
   | 'SPEAKING'
   | 'OTHER';
 
-export type InquiryStatus = 'PENDING' | 'REVIEWED' | 'RESPONDED';
+export type InquiryStatus = 'PENDING' | 'REVIEWED' | 'RESPONDED' | 'DECLINED';
+
+export interface InquiryAttachment {
+  url: string;
+  publicId?: string;
+}
 
 export type CampaignStatus = 'OPEN' | 'CLOSED';
 
@@ -166,5 +171,10 @@ export interface PerformanceInquiry {
   eventDate?: string;
   message: string;
   status: InquiryStatus;
+  /** Reference images uploaded with the invitation (max 3). */
+  attachments?: InquiryAttachment[];
+  reviewedAt?: string;
+  respondedAt?: string;
+  replyNote?: string;
   createdAt: string;
 }

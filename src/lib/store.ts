@@ -124,10 +124,6 @@ export function useAdminPieces() {
   return useQuery({ queryKey: ['admin-pieces'], queryFn: () => repository.listAllPieces() });
 }
 
-export function useAdminInquiries() {
-  return useQuery({ queryKey: ['admin-inquiries'], queryFn: () => repository.listAllInquiries() });
-}
-
 export function useCampaigns() {
   return useQuery({ queryKey: ['campaigns'], queryFn: () => repository.listCampaigns() });
 }
@@ -168,9 +164,6 @@ export function useAdminProfilesPage(page: number, enabled = true) {
 }
 export function useAdminPiecesPage(page: number, enabled = true) {
   return useAdminPage('admin-pieces-page', page, repository.listAllPiecesPage, enabled);
-}
-export function useAdminInquiriesPage(page: number, enabled = true) {
-  return useAdminPage('admin-inquiries-page', page, repository.listAllInquiriesPage, enabled);
 }
 export function useCampaignsPage(page: number, enabled = true) {
   return useAdminPage('admin-campaigns-page', page, repository.listCampaignsPage, enabled);
@@ -347,11 +340,11 @@ export function useDeletePiece() {
 export function useUpdateInquiryStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: InquiryStatus }) =>
-      repository.updateInquiryStatus(id, status),
+    mutationFn: ({ id, status, note }: { id: string; status: InquiryStatus; note?: string }) =>
+      repository.updateInquiryStatus(id, status, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inquiries'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-inquiries'] });
+      invalidateAdminViews(queryClient);
     },
   });
 }

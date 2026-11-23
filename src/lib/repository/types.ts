@@ -28,7 +28,6 @@ export interface Paged<T> {
 export interface AdminStats {
   liveCreators: number;
   pieces: number;
-  pendingInquiries: number;
   openCampaigns: number;
   submissions: number;
   openFlags: number;
@@ -67,11 +66,10 @@ export interface DataRepository {
   // Inquiries (creator-scoped)
   listInquiries(creativeId?: string): Promise<PerformanceInquiry[]>;
   sendInquiry(inquiry: NewInquiry): Promise<PerformanceInquiry>;
-  updateInquiryStatus(id: string, status: InquiryStatus): Promise<string>;
+  updateInquiryStatus(id: string, status: InquiryStatus, note?: string): Promise<string>;
 
   // Admin: cross-creator views
   listAllPieces(): Promise<CreativePiece[]>;
-  listAllInquiries(): Promise<PerformanceInquiry[]>;
 
   // Campaigns and submissions
   listCampaigns(): Promise<Campaign[]>;
@@ -91,7 +89,6 @@ export interface DataRepository {
   // Server-side paginated admin lists (range + exact count)
   listProfilesPage(options: PageOptions): Promise<Paged<CreativeProfile>>;
   listAllPiecesPage(options: PageOptions): Promise<Paged<CreativePiece>>;
-  listAllInquiriesPage(options: PageOptions): Promise<Paged<PerformanceInquiry>>;
   listCampaignsPage(options: PageOptions): Promise<Paged<Campaign>>;
   listSubmissionsPage(options: PageOptions): Promise<Paged<Submission>>;
   listFlagsPage(options: PageOptions): Promise<Paged<ContentFlag>>;

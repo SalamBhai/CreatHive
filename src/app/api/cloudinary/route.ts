@@ -4,18 +4,18 @@ import { getUserFromRequest } from '@/lib/supabase-server';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_MEDIA_BYTES = 100 * 1024 * 1024;
-const KINDS = ['avatar', 'media', 'gallery', 'cover'] as const;
+const KINDS = ['avatar', 'media', 'gallery', 'cover', 'inquiry'] as const;
 type UploadKind = (typeof KINDS)[number];
 
 /** Best-effort in-memory throttle (per process). A hosted app should use Redis. */
 const attempts = new Map<string, number[]>();
-function rateLimited(key: string) {
+function rateLimited(key: string, max: number) {
   const now = Date.now();
   const recent = (attempts.get(key) || []).filter((t) => now - t < 60_000);
   recent.push(now);
   attempts.set(key, recent);
   if (attempts.size > 1000) attempts.clear();
-  return recent.length > 20;
+  return recent.length > max;
 }
 
 function json(body: unknown, status: number) {
@@ -35,18 +35,6 @@ function resourceTypeFor(file: File): 'image' | 'video' | 'raw' | null {
 }
 
 export async function POST(request: Request) {
-  const user = usingSupabase ? await getUserFromRequest(request) : null;
-  if (usingSupabase && !user) return json({ error: 'Sign in to upload.' }, 401);
-
-  const rateKey = user?.id || request.headers.get('x-forwarded-for') || 'anon';
-  if (rateLimited(rateKey)) {
-    return json({ error: 'Too many uploads. Please wait a moment.' }, 429);
-  }
-
-  const secret = process.env.CLOUDINARY_API_SECRET;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  if (!secret || !apiKey) return json({ error: 'Uploads are not configured.' }, 503);
-
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -59,11 +47,37 @@ export async function POST(request: Request) {
   const kind: UploadKind = KINDS.includes(rawKind as UploadKind) ? (rawKind as UploadKind) : 'media';
   if (!(file instanceof File)) return json({ error: 'No file provided.' }, 400);
 
-  const resourceType = resourceTypeFor(file);
-  if (!resourceType) {
-    return json({ error: 'Unsupported file type. Use an image, audio, video or PDF.' }, 415);
+  // Inquiry reference images may be attached by signed-out visitors; every
+  // other upload kind still requires a Supabase session in live mode.
+  const anonymous = kind === 'inquiry';
+  const user = usingSupabase ? await getUserFromRequest(request) : null;
+  if (usingSupabase && !user && !anonymous) return json({ error: 'Sign in to upload.' }, 401);
+
+  const rateKey = `${anonymous ? 'inquiry' : 'user'}:${user?.id || request.headers.get('x-forwarded-for') || 'anon'}`;
+  if (rateLimited(rateKey, anonymous ? 6 : 20)) {
+    return json({ error: 'Too many uploads. Please wait a moment.' }, 429);
   }
-  const limit = resourceType === 'image' ? MAX_IMAGE_BYTES : MAX_MEDIA_BYTES;
+
+  const secret = process.env.CLOUDINARY_API_SECRET;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  if (!secret || !apiKey) return json({ error: 'Uploads are not configured.' }, 503);
+
+  const resourceType = resourceTypeFor(file);
+  if (!resourceType || (anonymous && resourceType !== 'image')) {
+    return json(
+      {
+        error: anonymous
+          ? 'Attach images only (JPG, PNG, WEBP, GIF).'
+          : 'Unsupported file type. Use an image, audio, video or PDF.',
+      },
+      415
+    );
+  }
+  const limit = anonymous
+    ? 5 * 1024 * 1024
+    : resourceType === 'image'
+      ? MAX_IMAGE_BYTES
+      : MAX_MEDIA_BYTES;
   if (file.size === 0 || file.size > limit) {
     return json(
       { error: `File must be between 1 byte and ${Math.round(limit / 1024 / 1024)} MB.` },
@@ -74,7 +88,7 @@ export async function POST(request: Request) {
   const username = String(user?.user_metadata?.username || 'local')
     .toLowerCase()
     .replace(/[^a-z0-9_-]/g, '') || 'local';
-  const folder = `creathive/${username}/${kind}`;
+  const folder = anonymous ? 'creathive/inquiries' : `creathive/${username}/${kind}`;
   const timestamp = Math.floor(Date.now() / 1000);
   const signature = cloudinary.utils.api_sign_request({ folder, timestamp }, secret);
 

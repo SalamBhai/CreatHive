@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Plus, ArrowUpRight, PaperPlaneTilt, ClockCounterClockwise } from '@phosphor-icons/react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -20,6 +21,7 @@ import {
   useUpdateInquiryStatus,
 } from '@/lib/store';
 import { signInLocal, signOut, useAuthReady } from '@/lib/auth';
+import { requestInquiryReplyEmail } from '@/lib/inquiry-reply';
 import { usingSupabase } from '@/lib/supabase';
 import { useDataSource } from '@/lib/data-source';
 import { StudioGate } from '@/components/studio/StudioGate';
@@ -91,6 +93,7 @@ export default function StudioPage({ initialView }: { initialView: StudioView })
     router.push(next === 'overview' ? '/studio' : `/studio/${next}`);
   const view = initialView;
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [replyNotes, setReplyNotes] = useState<Record<string, string>>({});
   const [editingPiece, setEditingPiece] = useState<CreativePiece | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
   const refreshPreview = () => setPreviewKey((k) => k + 1);
@@ -334,7 +337,9 @@ export default function StudioPage({ initialView }: { initialView: StudioView })
                           ? 'border-[#FFAE19]/40 bg-[#FFF7ED] text-[#C2410C]'
                           : inquiry.status === 'RESPONDED'
                             ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                            : 'border-stone-200 text-stone-500'
+                            : inquiry.status === 'DECLINED'
+                              ? 'border-red-200 bg-red-50 text-red-600'
+                              : 'border-stone-200 text-stone-500'
                       }`}
                     >
                       <ClockCounterClockwise size={12} weight="bold" />
@@ -342,24 +347,102 @@ export default function StudioPage({ initialView }: { initialView: StudioView })
                     </span>
                   </div>
                   <p className="mt-3 text-xs leading-relaxed text-stone-700">{inquiry.message}</p>
-                  {inquiry.status !== 'RESPONDED' ? (
-                    <div className="mt-4 flex flex-wrap gap-2 border-t border-stone-200 pt-3">
-                      {inquiry.status === 'PENDING' ? (
+
+                  {inquiry.attachments?.length ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {inquiry.attachments.map((file, index) => (
+                        <a
+                          key={`${file.url}-${index}`}
+                          href={file.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={`Reference image ${index + 1}`}
+                        >
+                          <Image
+                            src={file.url}
+                            alt={`Reference ${index + 1}`}
+                            width={64}
+                            height={64}
+                            unoptimized
+                            className="h-16 w-16 rounded-lg border border-stone-200 object-cover transition-transform hover:scale-105"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-stone-500">
+                    <span>Sent {new Date(inquiry.createdAt).toLocaleDateString()}</span>
+                    {inquiry.reviewedAt ? (
+                      <span>Reviewed {new Date(inquiry.reviewedAt).toLocaleDateString()}</span>
+                    ) : null}
+                    {inquiry.respondedAt ? (
+                      <span>
+                        {inquiry.status === 'DECLINED' ? 'Declined' : 'Responded'}{' '}
+                        {new Date(inquiry.respondedAt).toLocaleDateString()}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {inquiry.replyNote ? (
+                    <p className="mt-2 rounded-lg border border-stone-100 bg-stone-50 p-2.5 text-xs text-stone-700">
+                      Note: {inquiry.replyNote}
+                    </p>
+                  ) : null}
+
+                  {!['RESPONDED', 'DECLINED'].includes(inquiry.status) ? (
+                    <div className="mt-4 border-t border-stone-200 pt-3">
+                      <input
+                        value={replyNotes[inquiry.id] || ''}
+                        onChange={(e) =>
+                          setReplyNotes((current) => ({ ...current, [inquiry.id]: e.target.value }))
+                        }
+                        placeholder="Private note for yourself (optional)"
+                        className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs outline-none focus:border-[#FF5A36]"
+                      />
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {inquiry.status === 'PENDING' ? (
+                          <button
+                            type="button"
+                            onClick={() => updateInquiry.mutate({ id: inquiry.id, status: 'REVIEWED' })}
+                            className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-bold text-stone-700 hover:border-[#FF5A36] hover:text-[#FF5A36]"
+                          >
+                            Mark reviewed
+                          </button>
+                        ) : null}
                         <button
                           type="button"
-                          onClick={() => updateInquiry.mutate({ id: inquiry.id, status: 'REVIEWED' })}
-                          className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-bold text-stone-700 hover:border-[#FF5A36] hover:text-[#FF5A36]"
+                          onClick={() =>
+                            updateInquiry.mutate(
+                              {
+                                id: inquiry.id,
+                                status: 'RESPONDED',
+                                note: replyNotes[inquiry.id] || undefined,
+                              },
+                              { onSuccess: () => void requestInquiryReplyEmail(inquiry.id) }
+                            )
+                          }
+                          className="rounded-lg bg-[#18181B] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-black"
                         >
-                          Mark reviewed
+                          Mark responded
                         </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={() => updateInquiry.mutate({ id: inquiry.id, status: 'RESPONDED' })}
-                        className="rounded-lg bg-[#18181B] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-black"
-                      >
-                        Mark responded
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateInquiry.mutate(
+                              {
+                                id: inquiry.id,
+                                status: 'DECLINED',
+                                note: replyNotes[inquiry.id] || undefined,
+                              },
+                              { onSuccess: () => void requestInquiryReplyEmail(inquiry.id) }
+                            )
+                          }
+                          className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-bold text-stone-500 hover:border-red-400 hover:text-red-600"
+                        >
+                          Decline
+                        </button>
+                      </div>
                     </div>
                   ) : null}
                 </Surface>

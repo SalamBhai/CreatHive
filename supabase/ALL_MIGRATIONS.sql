@@ -436,3 +436,25 @@ alter table public.submissions add column if not exists decision_notified_at tim
 -- schema.sql already defines it; this migration brings older databases up to date.
 alter table public.pieces add column if not exists sort_order integer not null default 0;
 create index if not exists pieces_sort_order_idx on public.pieces (creative_id, sort_order);
+
+-- ===== 011_inquiry_attachments.sql =====
+
+-- Richer inquiry workflow: reference images + review/response timeline.
+alter table public.inquiries
+  add column if not exists attachments jsonb not null default '[]'::jsonb,
+  add column if not exists reviewed_at timestamptz,
+  add column if not exists responded_at timestamptz,
+  add column if not exists reply_note text;
+
+-- ===== 012_inquiries_creator_only.sql =====
+
+-- Inquiries are creator-scoped private messages between a creative and a
+-- recruiter. Admins do not get a cross-creator view — RLS already limits
+-- reads/writes to the owning creative and the public insert policy.
+drop policy if exists "admins read inquiries" on public.inquiries;
+
+-- ===== 013_inquiry_reply_email.sql =====
+
+-- One-shot guard for the creator → recruiter reply email.
+alter table public.inquiries
+  add column if not exists reply_email_sent_at timestamptz;

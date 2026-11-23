@@ -89,15 +89,15 @@ These were either falsified as "done" in the previous version of this file, or w
 ### Medium — Studio / UX
 - [x] Banner upload UI — URL field + upload in `ProfileEditor`, image shown in `ProfileHero` with the gradient as fallback. Needs migration `003_banner_upload.sql` on the live DB.
 - [x] Full-post composer — `+` image/grid can upload files (URLs still accepted), captions, left/centre/right alignment, and optional video poster URL.
-- [x] `/admin` built: overview metrics, creators, pieces, inquiries, join requests, campaigns, submissions and flags behind an admin gate. Needs migration `004` and `is_admin = true` on your profile.
+- [x] `/admin` built: overview metrics, creators, pieces, campaigns, submissions, flags and audit log behind an admin gate. Inquiries are creator-only; no admin view. Needs migration `004` and `is_admin = true` on your profile.
 
 ### Large — data & platform (see `docs/MIGRATION.md`)
 - [~] Supabase project: `profiles`, `pieces`, `inquiries`, `join_requests`, `campaigns`, `submissions`, `flags`, `audit_log` + RLS and `is_admin()` helper (schema.sql / migration 004). `applause_events` still not modelled.
 - [ ] Sup Auth + onboarding: YPAT verification, username claim UX, email verification polish. (Signup, session, profile provisioning and check-email state are done.)
 - [ ] Cloudinary: transformations, replace/delete using stored `public_id`, cleanup jobs. (Signed uploads, folders, validation and public_id storage are done.)
-- [~] Applied: `001` + `002`. Still to apply: `003_banner_upload.sql` and `004_admin_campaigns.sql`.
+- [~] Migrations `001`–`012` exist; `ALL_MIGRATIONS.sql` applies them in order (includes inquiry attachments and creator-only inquiry RLS).
 - [ ] Migrate mocks as seed data; keep them visible alongside real YPAT users.
-- [x] Admin page (clean, like Explore): creators, pieces, campaigns, submissions, inquiries, flags, metrics, gated by `is_admin`.
+- [x] Admin page (clean, like Explore): creators, pieces, campaigns, submissions, flags, audit log, metrics, gated by `is_admin`. Inquiries stay private to their creative.
 - [x] Admin creates campaigns; creators submit through **Add New Piece** with campaign assignment.
 - [~] Submission workflow `OPEN → REVIEWING → ACCEPTED / REJECTED` in admin UI. Web Push (free VAPID) done for new inquiries, new submissions and submission decisions; in-app/email digests still pending.
 - [ ] Analytics: profile views, applause, campaign conversion; audit log for admin actions.
@@ -106,7 +106,9 @@ These were either falsified as "done" in the previous version of this file, or w
 
 ### Not scoped yet, worth deciding
 - [ ] Search across creators/pieces — `src/lib/search.ts` exists but is **not imported anywhere**; either wire it into Explore or delete it.
+- [x] Inquiry workflow: `PENDING → REVIEWED → RESPONDED / DECLINED`, private notes, review/response timestamps, up to 3 reference images. Decisions are emailed to the recruiter via Brevo (reply-to = creative's public email) with a one-shot guard.
 - [ ] Messaging between creatives and reviewers.
+- [ ] Booking confirmation, payments and dispute resolution on top of the inquiry lifecycle.
 - [ ] Monetisation / paid campaigns.
 - [ ] Multi-language.
 

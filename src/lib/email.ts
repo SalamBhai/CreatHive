@@ -37,6 +37,8 @@ interface SendEmailOptions {
   text?: string;
   from?: string;
   fromName?: string;
+  /** Optional reply-to address — lets a recruiter reply straight to the creative. */
+  replyTo?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -105,6 +107,7 @@ async function sendViaBrevo(options: SendEmailOptions): Promise<boolean> {
     body: JSON.stringify({
       sender,
       to: [{ email: options.to }],
+      ...(options.replyTo ? { replyTo: { email: options.replyTo } } : {}),
       subject: options.subject,
       htmlContent: options.html,
       textContent: options.text || htmlToText(options.html),
@@ -134,6 +137,7 @@ async function sendViaSmtp(options: SendEmailOptions): Promise<boolean> {
   const info = await transporter.sendMail({
     from: `${sender.name} <${sender.email}>`,
     to: options.to,
+    ...(options.replyTo ? { replyTo: options.replyTo } : {}),
     subject: options.subject,
     html: options.html,
     text: options.text || htmlToText(options.html),
@@ -230,5 +234,67 @@ export async function sendPasswordResetEmail({
     subject: 'Password reset — CreatHive',
     html: getEmailTemplate(content),
     text: `Reset your CreatHive password: ${resetUrl}`,
+  });
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (char) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] as string
+  );
+}
+
+/** Creator → recruiter reply, closing the inquiry loop without a chat system. */
+export async function sendInquiryReplyEmail({
+  to,
+  senderName,
+  creativeName,
+  creativeUsername,
+  status,
+  note,
+  replyTo,
+}: {
+  to: string;
+  senderName: string;
+  creativeName: string;
+  creativeUsername: string;
+  status: 'RESPONDED' | 'DECLINED';
+  note?: string;
+  replyTo?: string;
+}): Promise<boolean> {
+  const accepted = status === 'RESPONDED';
+  const safeNote = note?.trim();
+  const content = `
+    <h2 style="margin:0 0 18px;font-size:24px;line-height:1.25;">
+      ${accepted ? 'Your invitation got a reply' : 'An update on your invitation'}
+    </h2>
+    <p style="margin:0 0 14px;">Hi ${escapeHtml(senderName || 'there')},</p>
+    <p style="margin:0 0 14px;">
+      <strong style="color:${BRAND.coral};">${escapeHtml(creativeName)}</strong>
+      ${accepted ? 'has responded to' : 'has declined'} the opportunity you sent through CreatHive.
+    </p>
+    ${
+      safeNote
+        ? `<div style="margin:18px 0;padding:16px;border-left:3px solid ${BRAND.coral};background:${BRAND.paper};font-size:14px;line-height:1.6;">${escapeHtml(safeNote)}</div>`
+        : ''
+    }
+    ${button('View their profile →', `${SITE_URL}/${encodeURIComponent(creativeUsername)}`)}
+    <p style="margin:0;font-size:13px;color:${BRAND.muted};">
+      ${
+        replyTo
+          ? 'You can reply directly to this email to continue the conversation.'
+          : 'Visit their profile for the contact details they share publicly.'
+      }
+    </p>`;
+
+  return sendEmail({
+    to,
+    replyTo,
+    subject: `${accepted ? 'Reply' : 'Update'} from ${creativeName} — CreatHive`,
+    html: getEmailTemplate(content),
+    text: `${creativeName} ${accepted ? 'responded to' : 'declined'} your CreatHive invitation.${
+      safeNote ? `\n\nNote: ${safeNote}` : ''
+    }\n\nView their profile: ${SITE_URL}/${encodeURIComponent(creativeUsername)}`,
   });
 }

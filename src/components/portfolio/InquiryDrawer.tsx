@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PaperPlaneTilt, CheckCircle } from '@phosphor-icons/react';
+import Image from 'next/image';
+import { PaperPlaneTilt, CheckCircle, UploadSimple, X } from '@phosphor-icons/react';
 import { BottomSheet } from '../ui/BottomSheet';
 import { NeoButton } from '../ui/NeoButton';
 import { useSendInquiry } from '@/lib/store';
 import { notifyPush } from '@/lib/push';
-import type { InquiryEventType } from '@/lib/types';
+import { uploadFile } from '@/lib/upload';
+import type { InquiryAttachment, InquiryEventType } from '@/lib/types';
 
 interface InquiryDrawerProps {
   isOpen: boolean;
@@ -28,9 +30,33 @@ export function InquiryDrawer({
   const [eventType, setEventType] = useState<InquiryEventType>('PERFORMANCE');
 
   const [message, setMessage] = useState('');
+  const [attachments, setAttachments] = useState<InquiryAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
   const inquiryMutation = useSendInquiry();
+
+  const addImages = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setUploadError('');
+    const picked = Array.from(files).slice(0, 3 - attachments.length);
+    if (!picked.length) {
+      setUploadError('You can attach up to 3 images.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const uploaded = await Promise.all(picked.map((file) => uploadFile(file, 'inquiry')));
+      setAttachments((current) =>
+        [...current, ...uploaded.map(({ url, publicId }) => ({ url, publicId }))].slice(0, 3)
+      );
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Upload failed. Try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +71,7 @@ export function InquiryDrawer({
         senderPhone,
         eventType,
         message,
+        attachments,
       },
       {
         onSuccess: (sent) => {
@@ -53,8 +80,8 @@ export function InquiryDrawer({
           setTimeout(() => {
             setIsSuccess(false);
             onClose();
-            // Reset form
             setMessage('');
+            setAttachments([]);
           }, 2000);
         },
       }
@@ -171,9 +198,52 @@ export function InquiryDrawer({
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-bold text-[#18181B] mb-1">
+              Reference images <span className="font-normal text-stone-500">(optional, up to 3)</span>
+            </label>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-stone-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={(e) => void addImages(e.target.files)}
+              />
+              <UploadSimple size={16} weight="bold" />
+              {uploading ? 'Uploading…' : 'Attach images'}
+            </label>
+            {uploadError ? <p className="mt-1.5 text-[11px] text-red-600">{uploadError}</p> : null}
+            {attachments.length ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {attachments.map((file, index) => (
+                  <span key={`${file.url}-${index}`} className="relative">
+                    <Image
+                      src={file.url}
+                      alt={`Reference ${index + 1}`}
+                      width={56}
+                      height={56}
+                      unoptimized
+                      className="h-14 w-14 rounded-lg border border-stone-200 object-cover"
+                    />
+                    <button
+                      type="button"
+                      aria-label={`Remove reference ${index + 1}`}
+                      onClick={() => setAttachments((current) => current.filter((_, i) => i !== index))}
+                      className="absolute -right-1.5 -top-1.5 rounded-full border border-stone-200 bg-white p-0.5 text-stone-600"
+                    >
+                      <X size={11} weight="bold" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
           <div className="pt-2">
             <NeoButton
               type="submit"
+              disabled={inquiryMutation.isPending || uploading}
               variant="primary"
               size="lg"
               className="w-full"
