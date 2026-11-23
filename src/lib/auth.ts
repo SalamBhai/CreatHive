@@ -4,7 +4,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase, usingSupabase } from './supabase';
 import { repository } from './repository';
-import { queryClient } from './query-client';
+import { clearQueryCache } from './query-persistence';
 import type { CreativeDiscipline } from './types';
 
 export interface AppSession {
@@ -47,6 +47,7 @@ function emit() {
 }
 
 export function signInLocal(session: AppSession) {
+  if (current && current.username !== session.username) clearQueryCache();
   current = session;
   loaded = true;
   if (typeof window !== 'undefined') {
@@ -95,6 +96,12 @@ function setRemote(app: AppSession | null, event?: AuthChangeEvent) {
   if (app === remoteSession) {
     if (!wasReady) emitRemote();
     return;
+  }
+  // Never let one identity's persisted query cache surface for another user.
+  // `wasReady` guards the first session resolution so a normal page load
+  // restores the cache instead of wiping it.
+  if (wasReady && (remoteSession?.userId ?? null) !== (app?.userId ?? null)) {
+    clearQueryCache();
   }
   remoteSession = app;
   emitRemote();
@@ -147,8 +154,9 @@ export async function signOut() {
   } else {
     signOutLocal();
   }
-  // Never leave one user's cached data visible to the next account.
-  queryClient.clear();
+  // Never leave one user's cached data visible to the next account — clear
+  // both memory and the IndexedDB copy so sign-out survives a reload.
+  clearQueryCache();
 }
 
 /** Ensure a profile row exists for the signed-in user, keyed by auth.uid(). */
