@@ -411,7 +411,7 @@ export const supabaseRepository: DataRepository = {
     if (!isUuid(id)) return localRepository.applaudPiece(id);
     // Atomic + idempotent: one applause per signed-in user per piece.
     // Returns the authoritative new count from the database.
-    const { data, error } = await getDb().rpc('applaud_piece', { piece_id: id });
+    const { data, error } = await getDb().rpc('applaud_piece', { p_piece_id: id });
     if (error) throw error;
     return Number(data);
   },
