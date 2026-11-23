@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowUpRight } from '@phosphor-icons/react';
+import { ArrowUpRight, MagnifyingGlass, X } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { StudioLink } from '@/components/ui/StudioLink';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
@@ -12,6 +12,7 @@ import { Surface } from '@/components/ui/Surface';
 import { resolveAvatarUrl } from '@/lib/avatar';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { useAllPieces, useAllProfiles } from '@/lib/store';
+import { searchPieces, searchProfiles } from '@/lib/search';
 import type { CreativeDiscipline } from '@/lib/types';
 
 const NICHES = [
@@ -37,16 +38,65 @@ const nicheOptions: Array<FilterOption<NicheFilter>> = NICHES.map((value) => {
   };
 });
 
+const PAGE_SIZE = 9;
+
 export default function ExplorePage() {
   const [niche, setNiche] = useState<NicheFilter>('ALL');
+  const [query, setQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const { data: profiles } = useAllProfiles();
   const { data: pieces, isLoading } = useAllPieces();
 
   const profileById = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
 
-  const visiblePieces = (pieces || [])
+  // Text search over title/subtitle/tags and creator name/bio, combined with
+  // the niche filter. Matching a creator surfaces all of their pieces.
+  const searched = (() => {
+    const q = query.trim();
+    if (!q) return pieces || [];
+    const matched = searchPieces(pieces || [], { query: q });
+    const profileRecord = Object.fromEntries((profiles || []).map((p) => [p.username, p]));
+    const matchedCreatorIds = new Set(
+      searchProfiles(profileRecord, { query: q }).map((p) => p.id)
+    );
+    const fromCreators = (pieces || []).filter((p) => matchedCreatorIds.has(p.creativeId));
+    // De-dupe by id — a piece can match both by text and by its creator.
+    return [...new Map([...matched, ...fromCreators].map((p) => [p.id, p])).values()];
+  })();
+  const visiblePieces = searched
     .filter((piece) => niche === 'ALL' || piece.discipline === niche)
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+
+  const shown = visiblePieces.slice(0, visibleCount);
+  const hasMore = visibleCount < visiblePieces.length;
+
+  // Reveal the next page when the sentinel scrolls into view.
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((c) => c + PAGE_SIZE);
+        }
+      },
+      { rootMargin: '240px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore]);
+
+  // Reset paging whenever the filter or query changes.
+  const changeNiche = (value: NicheFilter) => {
+    setNiche(value);
+    setVisibleCount(PAGE_SIZE);
+  };
+  const changeQuery = (value: string) => {
+    setQuery(value);
+    setVisibleCount(PAGE_SIZE);
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#18181B]">
@@ -75,9 +125,16 @@ export default function ExplorePage() {
             Work from the YPAT cohort — spoken word, dance, poetry, and design, in one quiet place.
           </p>
 
-          {profiles && profiles.length > 0 ? (
+          {profiles && profiles.length > 0 && profiles.some((p) => !p.isAdmin) ? (
             <div className="mt-9 flex flex-wrap items-center gap-2.5">
-              {profiles.filter((profile) => !profile.isAdmin).map((profile) => (
+              {profiles
+                .filter((profile) => !profile.isAdmin)
+                .filter((profile) =>
+                  !query.trim() ||
+                  profile.displayName?.toLowerCase().includes(query.trim().toLowerCase()) ||
+                  profile.username.toLowerCase().includes(query.trim().toLowerCase())
+                )
+                .map((profile) => (
                 <Link
                   key={profile.id}
                   href={`/${profile.username}`}
@@ -101,13 +158,38 @@ export default function ExplorePage() {
         </div>
       </section>
 
-      {/* Niches filter */}
+      {/* Search + niches filter */}
       <div className="sticky top-16 z-20 border-b border-stone-200 bg-[#FDFBF7]/95 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-6 py-3">
+          <div className="relative mb-3 max-w-md">
+            <MagnifyingGlass
+              size={16}
+              weight="bold"
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => changeQuery(e.target.value)}
+              placeholder="Search work, tags, creatives…"
+              aria-label="Search the hive"
+              className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-10 pr-10 text-xs font-sans-ui outline-none transition-colors placeholder:text-stone-400 focus:border-[#FF5A36]"
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => changeQuery('')}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-stone-400 hover:text-[#FF5A36]"
+              >
+                <X size={14} weight="bold" />
+              </button>
+            ) : null}
+          </div>
           <FilterTabs
             options={nicheOptions}
             value={niche}
-            onChange={setNiche}
+            onChange={changeNiche}
             ariaLabel="Niches"
           />
         </div>
@@ -121,7 +203,7 @@ export default function ExplorePage() {
           </div>
         ) : visiblePieces.length > 0 ? (
           <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-            {visiblePieces.map((piece, index) => {
+            {shown.map((piece, index) => {
               const author = profileById[piece.creativeId];
               const config = DISCIPLINE_CONFIG[piece.discipline] || DISCIPLINE_CONFIG.OTHER;
               return (
@@ -192,7 +274,20 @@ export default function ExplorePage() {
               );
             })}
           </div>
-        ) : (
+        ) : null}
+
+        {/* Infinite-scroll sentinel + quiet end-of-feed note */}
+        {!isLoading && hasMore ? (
+          <div ref={sentinelRef} className="flex justify-center py-10">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#FF5A36] border-t-transparent" />
+          </div>
+        ) : null}
+        {!isLoading && visiblePieces.length > PAGE_SIZE && !hasMore ? (
+          <p className="py-10 text-center text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+            You&rsquo;ve seen it all.
+          </p>
+        ) : null}
+        {!isLoading && visiblePieces.length === 0 ? (
           <div className="py-24 text-center">
             <p className="font-editorial text-2xl text-stone-600">Nothing in this niche yet.</p>
             <button
@@ -203,7 +298,7 @@ export default function ExplorePage() {
               Show all work
             </button>
           </div>
-        )}
+        ) : null}
       </main>
 
       <footer className="border-t border-stone-200 bg-white">
