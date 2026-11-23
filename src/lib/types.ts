@@ -89,6 +89,11 @@ export interface CreativePiece {
   contextNote?: string; // e.g. "Live performance at YPAT Summit"
   tags: string[];
   createdAt: string;
+  createdBy?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  isDeleted?: boolean;
+  deletedAt?: string;
 }
 
 export type InquiryEventType =

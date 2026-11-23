@@ -82,7 +82,7 @@ export const localRepository: DataRepository = {
   },
 
   async listPieces(options) {
-    let result = pieces();
+    let result = pieces().filter((p) => !p.isDeleted);
     if (options?.creativeId) {
       result = result.filter((p) => p.creativeId === options.creativeId);
     }
@@ -98,7 +98,7 @@ export const localRepository: DataRepository = {
   },
 
   async getPiece(id) {
-    return pieces().find((p) => p.id === id);
+    return pieces().find((p) => p.id === id && !p.isDeleted);
   },
 
   async addPiece(piece: NewPiece) {
@@ -119,7 +119,13 @@ export const localRepository: DataRepository = {
   },
 
   async deletePiece(id) {
-    write(KEYS.pieces, pieces().filter((p) => p.id !== id));
+    // Soft delete — keep the row, mark it deleted.
+    write(
+      KEYS.pieces,
+      pieces().map((p) =>
+        p.id === id ? { ...p, isDeleted: true, deletedAt: new Date().toISOString() } : p
+      )
+    );
     return id;
   },
 

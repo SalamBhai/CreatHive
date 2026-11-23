@@ -104,7 +104,12 @@ const toPiece = (r: PieceRow): CreativePiece => ({
   applauseCount: Number(r.applause_count ?? 0),
   duration: r.duration ? String(r.duration) : undefined,
   tags: (r.tags as string[]) || [],
-  createdAt: r.created_at,
+  createdAt: String(r.created_at ?? ''),
+  createdBy: r.created_by ? String(r.created_by) : undefined,
+  updatedAt: r.updated_at ? String(r.updated_at) : undefined,
+  updatedBy: r.updated_by ? String(r.updated_by) : undefined,
+  isDeleted: Boolean(r.is_deleted),
+  deletedAt: r.deleted_at ? String(r.deleted_at) : undefined,
 });
 
 const fromPiece = (p: NewPiece | CreativePiece) => ({
@@ -309,7 +314,7 @@ export const supabaseRepository: DataRepository = {
     const skipDb = !!options?.creativeId && !isUuid(options.creativeId);
     let real: CreativePiece[] = [];
     if (!skipDb) {
-      let query = getDb().from('pieces').select('*');
+      let query = getDb().from('pieces').select('*').eq('is_deleted', false);
       if (options?.creativeId) query = query.eq('creative_id', options.creativeId);
       if (!options?.includeDrafts) query = query.eq('status', 'PUBLIC');
       if (options?.discipline && options.discipline !== 'ALL') {
@@ -358,6 +363,7 @@ export const supabaseRepository: DataRepository = {
         .from('pieces')
         .select('*')
         .eq('id', id)
+        .eq('is_deleted', false)
         .maybeSingle();
       if (error) throw error;
       if (data) {
@@ -374,7 +380,7 @@ export const supabaseRepository: DataRepository = {
     const ownerId = authData.user?.id || piece.creativeId;
     const { data, error } = await getDb()
       .from('pieces')
-      .insert({ ...fromPiece(piece), creative_id: ownerId })
+      .insert({ ...fromPiece(piece), creative_id: ownerId, created_by: ownerId })
       .select()
       .single();
     if (error) throw error;
@@ -395,7 +401,11 @@ export const supabaseRepository: DataRepository = {
 
   async deletePiece(id) {
     if (!isUuid(id)) return localRepository.deletePiece(id);
-    const { error } = await getDb().from('pieces').delete().eq('id', id);
+    // Soft delete — preserve the row and its audit history.
+    const { error } = await getDb()
+      .from('pieces')
+      .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+      .eq('id', id);
     if (error) throw error;
     return id;
   },
