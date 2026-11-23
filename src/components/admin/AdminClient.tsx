@@ -194,7 +194,7 @@ export default function AdminPage() {
 
       <main className="mx-auto max-w-6xl px-6 py-10">
         {tab === 'overview' ? (
-          <Section title="Overview" description="A quiet snapshot of the hive — people, work, opportunities and things needing attention.">
+          <Section title="Overview" description="A quiet snapshot of the hive: people, work, opportunities and things needing attention.">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <Stat value={stats?.liveCreators ?? 0} label="Live creators" />
               <Stat value={stats?.pieces ?? 0} label="Pieces" />

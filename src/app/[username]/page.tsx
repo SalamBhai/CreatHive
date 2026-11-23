@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${profile.displayName} (@${profile.username}) — CreatHive Portfolio`,
+    title: `${profile.displayName} (@${profile.username}) | CreatHive Portfolio`,
     description: `${profile.tagline}. ${profile.bio.slice(0, 150)}...`,
     // og:image comes from the dynamic opengraph-image.tsx share card
     openGraph: {

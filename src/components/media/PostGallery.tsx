@@ -18,7 +18,7 @@ export function PostGallery({ images, title }: { images: string[]; title: string
         <Image
           key={images[index]}
           src={images[index]}
-          alt={`${title} — image ${index + 1} of ${total}`}
+          alt={`${title}, image ${index + 1} of ${total}`}
           fill
           sizes="(max-width: 768px) 100vw, 768px"
           unoptimized

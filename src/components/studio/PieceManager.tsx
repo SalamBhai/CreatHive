@@ -156,7 +156,7 @@ export function PieceManager({ pieces, onEdit, onRefreshPreview }: PieceManagerP
         );
       })}
       {ordered.length === 0 ? (
-        <Surface className="py-12 text-center text-sm text-stone-500">No pieces yet — publish your first work.</Surface>
+        <Surface className="py-12 text-center text-sm text-stone-500">No pieces yet. Publish your first work.</Surface>
       ) : null}
     </div>
   );

@@ -16,7 +16,7 @@ export function ConversionBar({ profile }: ConversionBarProps) {
   const handleShare = async () => {
     const url = window.location.href;
     const shareData = {
-      title: `${profile.displayName} — CreatHive Portfolio`,
+      title: `${profile.displayName} | CreatHive Portfolio`,
       text: `Check out ${profile.displayName}'s creative showcase on CreatHive:`,
       url,
     };

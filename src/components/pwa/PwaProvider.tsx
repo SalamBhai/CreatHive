@@ -42,7 +42,7 @@ export function PwaProvider() {
       className="fixed left-1/2 top-2 z-[100] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-stone-200 bg-white px-4 py-2 text-[11px] font-semibold text-[#18181B] shadow-[0_8px_30px_rgba(24,24,27,0.12)]"
     >
       <WifiSlash size={14} weight="bold" className="text-[#FF5A36]" />
-      Offline — showing your last saved pages.
+      Offline. Showing your last saved pages.
     </div>
   );
 }

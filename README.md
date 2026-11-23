@@ -7,7 +7,7 @@
 
 ## 🌟 The Vision
 
-Initiated in response to the **UNICEF / Generation Unlimited Nigeria (GenU 9JA) 2026–27 Young People's Action Team (YPAT)** creative talent showcase call:
+Initiated in response to the **UNICEF / Generation Unlimited Nigeria (GenU 9JA) 2026 to 2027 Young People's Action Team (YPAT)** creative talent showcase call:
 > *"If you’re into spoken word, poetry, music, dance, or any other creative field, please share about what you do alongside the link to the sample of your work."*
 
 Instead of fragmented Google Drive links or lost email attachments, **CreatHive** provides an instant, distraction-free stage designed for sensory, visual, and performance art.
@@ -23,7 +23,7 @@ Instead of fragmented Google Drive links or lost email attachments, **CreatHive*
 - **⚡ Kinetic Neo-Editorial UI:** Warm paper canvas (`#FDFBF7`), soft-brutalist buttons with spring physics, and `@phosphor-icons/react` duotone SVGs (zero generic emojis).
 - **📱 True Progressive Web App (PWA):** Installable on iOS & Android (`manifest.json`), offline-ready shell, safe-area-inset native ergonomics.
 - **🎯 Conversion Funnel & Booking:** Direct "Book for Gig / Performance" inquiry modal, instant applause counters with confetti bursts, and native web share.
-- **🔔 Notifications:** Free VAPID Web Push for new booking inquiries, campaign submissions and submission decisions — no paid service required.
+- **🔔 Notifications:** Free VAPID Web Push for new booking inquiries, campaign submissions and submission decisions. No paid service required.
 - **🛠️ Creator Studio:** Unlimited management access to publish, edit, and track portfolio conversions.
 
 ---
@@ -70,5 +70,5 @@ See [IMPLEMENTATION.md](./IMPLEMENTATION.md) for the complete design system, dat
 
 **Saula Sheriffdeen Olamilekan**  
 *Creative Technologist & Visual Product Engineer*  
-UNICEF / GenU 9JA Young People's Action Team (YPAT Member ID: 1485, 2026–27)  
+UNICEF / GenU 9JA Young People's Action Team (YPAT Member ID: 1485, 2026 to 2027)  
 Email: [saulasheriffdeen@gmail.com](mailto:saulasheriffdeen@gmail.com)

@@ -132,7 +132,7 @@ export default function ExplorePage() {
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-stone-200 bg-[#FDFBF7]/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/explore" aria-label="CreatHive (pronounced Creative) — home">
+          <Link href="/explore" aria-label="CreatHive (pronounced Creative), home">
             <CreatHiveWordmark size="sm" href={null} />
           </Link>
           <StudioLink className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-600 hover:text-[#FF5A36]">
@@ -151,7 +151,7 @@ export default function ExplorePage() {
             Explore the hive.
           </h1>
           <p className="mt-5 max-w-xl font-sans-ui text-sm leading-relaxed text-stone-600 md:text-base">
-            Work from the YPAT cohort — spoken word, dance, poetry, and design, in one quiet place.
+            Work from the YPAT cohort: spoken word, dance, poetry and design, in one quiet place.
           </p>
 
           {featuredCreators.length > 0 ? (
@@ -344,7 +344,7 @@ export default function ExplorePage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-8 text-center sm:flex-row sm:text-left">
           <CreatHiveWordmark size="sm" />
           <p className="text-[11px] font-medium text-stone-500">
-            Built for the limitless creatives — YPAT 2026–27.
+            Built for the limitless creatives. YPAT 2026 to 2027.
           </p>
         </div>
       </footer>

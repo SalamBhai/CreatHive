@@ -76,9 +76,9 @@ export default function CampaignsClient() {
         <div className="mt-8 rounded-2xl border border-stone-200 bg-[#FFF7ED] p-5">
           <h2 className="font-editorial text-lg font-semibold">How it works</h2>
           <ol className="mt-3 grid gap-2 text-xs leading-relaxed text-stone-700 sm:grid-cols-3">
-            <li><span className="font-bold text-[#FF5A36]">1. Choose</span> — browse an open brief below.</li>
-            <li><span className="font-bold text-[#FF5A36]">2. Submit</span> — attach a published piece, or create one and pick the campaign.</li>
-            <li><span className="font-bold text-[#FF5A36]">3. Track</span> — follow the status here: open → reviewing → accepted / rejected.</li>
+            <li><span className="font-bold text-[#FF5A36]">1. Choose</span>: browse an open brief below.</li>
+            <li><span className="font-bold text-[#FF5A36]">2. Submit</span>: attach a published piece, or create one and pick the campaign.</li>
+            <li><span className="font-bold text-[#FF5A36]">3. Track</span>: follow the status here: open, reviewing, accepted or rejected.</li>
           </ol>
         </div>
 

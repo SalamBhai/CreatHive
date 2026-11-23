@@ -44,10 +44,10 @@ export async function generateMetadata({
   'use cache';
   const { id } = await params;
   const piece = await loadPiece(id);
-  if (!piece) return { title: 'Post not found — CreatHive' };
+  if (!piece) return { title: 'Post not found | CreatHive' };
 
   return {
-    title: `${piece.title} — CreatHive`,
+    title: `${piece.title} | CreatHive`,
     description: piece.subtitle || `A creative piece on CreatHive: ${piece.tags.join(', ')}`,
     openGraph: {
       title: piece.title,

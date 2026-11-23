@@ -7,7 +7,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://creathive.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'CreatHive — Built for the limitless Creatives...',
+  title: 'CreatHive: Built for the limitless creatives',
   applicationName: 'CreatHive (pronounced “Creative”)',
   keywords: [
     'CreatHive',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     'YPAT 2026',
   ],
   description:
-    'CreatHive — pronounced “Creative” — is a mobile-first PWA for creatives to showcase multi-discipline portfolios, capture performance opportunities, and manage work with unlimited access.',
+    'CreatHive, pronounced “Creative”, is a mobile-first app for creatives to share portfolios, find opportunities and manage their work.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -37,9 +37,9 @@ export const metadata: Metadata = {
     apple: '/icons/apple-touch-icon.png',
   },
   openGraph: {
-    title: 'CreatHive — Built for the limitless Creatives...',
+    title: 'CreatHive: Built for the limitless creatives',
     description:
-      'CreatHive (pronounced “Creative”) — a stage for spoken word artists, dancers, poets, and visual tech creators.',
+      'CreatHive, pronounced “Creative”, is a stage for spoken word artists, dancers, poets and visual creators.',
     type: 'website',
   },
 };

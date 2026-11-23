@@ -19,7 +19,7 @@ import type {
 /** Fail only when a Supabase call is actually made, not at import time. */
 function getDb() {
   if (!supabase) {
-    throw new Error('Supabase client is not configured — check NEXT_PUBLIC_SUPABASE_* env vars.');
+    throw new Error('Supabase client is not configured. Check NEXT_PUBLIC_SUPABASE_* env vars.');
   }
   return supabase;
 }

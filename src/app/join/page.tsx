@@ -109,14 +109,14 @@ export default function JoinPage() {
                   setError(
                     err instanceof Error
                       ? err.message
-                      : 'Not verified yet — open the link in your email first.'
+                      : 'Not verified yet. Open the link in your email first.'
                   );
                 } finally {
                   setBusy(false);
                 }
               }}
             >
-              {busy ? 'Signing in…' : "I've verified — sign in"}
+              {busy ? 'Signing in…' : "I've verified. Sign in"}
             </NeoButton>
             {error ? <p className="text-xs text-red-600">{error}</p> : null}
           </Surface>
@@ -200,7 +200,7 @@ export default function JoinPage() {
                 })}
               </div>
               <p className="mt-1.5 text-[11px] text-stone-500">
-                Pick all that fit — {disciplines.length || 'none'} selected.
+                Pick all that fit. {disciplines.length || 'none'} selected.
               </p>
             </div>
 

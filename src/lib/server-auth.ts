@@ -28,7 +28,7 @@ export function validateSignUpInput(input: Partial<SignUpInput>): string | null 
   if (!EMAIL_RE.test(email)) return 'Enter a valid email address.';
   if (password.length < 6) return 'Password must be at least 6 characters.';
   if (!USERNAME_RE.test(username)) {
-    return 'Handle must be 3–30 characters: lowercase letters, numbers, _ or -.';
+    return 'Handle must be 3 to 30 characters: lowercase letters, numbers, _ or -.';
   }
   if (displayName.trim().length > 80) return 'Display name is too long.';
   return null;

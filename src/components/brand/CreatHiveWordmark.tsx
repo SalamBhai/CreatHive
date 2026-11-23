@@ -45,7 +45,7 @@ export function CreatHiveWordmark({
   const content = (
     <div
       className={`inline-flex flex-col items-center select-none ${className}`}
-      title="CreatHive — pronounced “Creative”"
+      title="CreatHive, pronounced “Creative”"
     >
       {/* Spoken form of the neologism, for assistive tech. */}
       <span className="sr-only">CreatHive, pronounced Creative.</span>
@@ -68,7 +68,7 @@ export function CreatHiveWordmark({
       {/* Tagline */}
       {showTagline && (
         <p className={`font-editorial italic tracking-wide text-center ${taglineSpacing} ${tone === 'light' ? 'text-white/80' : 'text-stone-600'} ${currentSize.tagline}`}>
-          “Built for the limitless Creatives...”
+          Made for every creative
         </p>
       )}
     </div>

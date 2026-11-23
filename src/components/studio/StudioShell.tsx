@@ -11,6 +11,7 @@ import {
   Eye,
   ArrowLeft,
   ArrowsClockwise,
+  SignOut,
 } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { PushOptIn } from '@/components/pwa/PushOptIn';
@@ -128,9 +129,12 @@ export function StudioShell({
               <button
                 type="button"
                 onClick={onSignOut}
-                className="hidden rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-bold text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36] md:inline-flex"
+                title="Sign out"
+                aria-label="Sign out"
+                className="inline-flex items-center justify-center rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36] md:gap-1.5 md:px-3 md:py-2"
               >
-                Sign out
+                <SignOut size={16} weight="bold" />
+                <span className="hidden md:inline">Sign out</span>
               </button>
             ) : null}
           </div>
@@ -161,7 +165,7 @@ export function StudioShell({
               Your work, your way.
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-stone-500">
-              Publish, curate, and track how your portfolio performs — from one calm place.
+              Publish work, curate your portfolio and track how it performs, all in one calm place.
             </p>
           </div>
         </aside>

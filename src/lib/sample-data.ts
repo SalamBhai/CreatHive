@@ -11,7 +11,7 @@ export const INITIAL_PROFILES: Record<string, CreativeProfile> = {
     bannerGradient: 'from-amber-500/20 via-orange-500/20 to-red-500/20',
     disciplines: ['UIUX_DESIGN', 'TECH_IMAGERY', 'MOTION_ANIMATION', 'SPOKEN_WORD'],
     location: 'Lagos, Nigeria 🇳🇬',
-    cohortBadge: 'UNICEF / GenU 9JA YPAT ID: 1485 (2026–27)',
+    cohortBadge: 'UNICEF / GenU 9JA YPAT ID: 1485 (2026 to 2027)',
     isAvailableForGigs: true,
     socialLinks: {
       email: 'saulasheriffdeen@gmail.com',
@@ -38,7 +38,7 @@ export const INITIAL_PROFILES: Record<string, CreativeProfile> = {
     bannerGradient: 'from-rose-500/20 via-amber-500/20 to-emerald-500/20',
     disciplines: ['SPOKEN_WORD', 'POETRY', 'MUSIC'],
     location: 'Abuja, Nigeria 🇳🇬',
-    cohortBadge: 'UNICEF / GenU 9JA YPAT 2026–27',
+    cohortBadge: 'UNICEF / GenU 9JA YPAT 2026 to 2027',
     isAvailableForGigs: true,
     socialLinks: {
       email: 'amina.bello@example.com',
@@ -58,12 +58,12 @@ export const INITIAL_PROFILES: Record<string, CreativeProfile> = {
     username: 'zainab',
     displayName: 'Zainab Okoye',
     tagline: 'Dance & Movement Storyteller',
-    bio: 'Using the body as an archive — contemporary dance, movement films, and choreographies rooted in Niger Delta rhythms.',
+    bio: 'Using the body as an archive: contemporary dance, movement films and choreographies rooted in Niger Delta rhythms.',
     avatarUrl: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=400&q=80',
     bannerGradient: 'from-pink-500/20 via-rose-500/20 to-orange-500/20',
     disciplines: ['DANCE', 'MOTION_ANIMATION'],
     location: 'Port Harcourt, Nigeria 🇳🇬',
-    cohortBadge: 'UNICEF / GenU 9JA YPAT 2026–27',
+    cohortBadge: 'UNICEF / GenU 9JA YPAT 2026 to 2027',
     isAvailableForGigs: true,
     socialLinks: { instagram: 'https://instagram.com' },
     themeStyle: 'soft-brutal',
@@ -80,7 +80,7 @@ export const INITIAL_PROFILES: Record<string, CreativeProfile> = {
     bannerGradient: 'from-violet-500/20 via-purple-500/20 to-fuchsia-500/20',
     disciplines: ['POETRY', 'SPOKEN_WORD'],
     location: 'Enugu, Nigeria 🇳🇬',
-    cohortBadge: 'UNICEF / GenU 9JA YPAT 2026–27',
+    cohortBadge: 'UNICEF / GenU 9JA YPAT 2026 to 2027',
     isAvailableForGigs: true,
     socialLinks: { twitter: 'https://twitter.com' },
     themeStyle: 'editorial',
@@ -97,7 +97,7 @@ export const INITIAL_PROFILES: Record<string, CreativeProfile> = {
     bannerGradient: 'from-amber-500/20 via-orange-500/20 to-yellow-500/20',
     disciplines: ['GRAPHIC_DESIGN', 'TECH_IMAGERY'],
     location: 'Ibadan, Nigeria 🇳🇬',
-    cohortBadge: 'UNICEF / GenU 9JA YPAT 2026–27',
+    cohortBadge: 'UNICEF / GenU 9JA YPAT 2026 to 2027',
     isAvailableForGigs: false,
     socialLinks: { portfolioUrl: 'https://example.com' },
     themeStyle: 'soft-brutal',
@@ -145,7 +145,7 @@ export const INITIAL_PIECES: CreativePiece[] = [
       {
         id: 'b2',
         type: 'paragraph',
-        html: 'This piece began as a voice note in a Lagos traffic jam. By the time I got home, the rhythm had become a chorus — and the chorus had become a question: <strong>who gets to tell our stories?</strong>',
+        html: 'This piece began as a voice note in a Lagos traffic jam. By the time I got home, the rhythm had become a chorus, and the chorus had become a question: <strong>who gets to tell our stories?</strong>',
       },
       {
         id: 'b3',
@@ -289,7 +289,7 @@ that still says your name when you are gone?`,
     duration: '03:08',
     applauseCount: 212,
     tags: ['Spoken Word', 'Lagos', 'Voice'],
-    textContent: `Listen — the market is a language
+    textContent: `Listen: the market is a language
 of hands, of heat, of "how much" and "last price".
 I am learning to say belonging in that tongue.`,
     createdAt: '2026-11-02T15:30:00Z',

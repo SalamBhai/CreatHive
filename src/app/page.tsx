@@ -95,7 +95,7 @@ export default function HomePage() {
       {/* Fixed, quiet header. */}
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-30 h-28 bg-gradient-to-b from-black/70 to-transparent" />
       <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-6 py-5 md:px-14">
-        <Link href="/explore" aria-label="CreatHive (pronounced Creative) — home">
+        <Link href="/explore" aria-label="CreatHive (pronounced Creative), home">
           <CreatHiveWordmark size="sm" tone="light" href={null} />
         </Link>
         <StudioLink className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/80 transition-colors hover:text-white">
@@ -178,8 +178,8 @@ export default function HomePage() {
         image="/images/scenes/spoken-word.jpg"
         alt="A microphone lit by a warm spotlight in a dark room"
       >
-        <SceneHeading>Let the voice carry.</SceneHeading>
-        <SceneNote>Kinetic waveforms. Read-along scripts. Nothing in between.</SceneNote>
+        <SceneHeading>Let your voice be heard.</SceneHeading>
+        <SceneNote>Play your audio. Share your script.</SceneNote>
       </VisualScene>
 
       {/* 02 — Dance */}
@@ -189,8 +189,8 @@ export default function HomePage() {
         alt="A dancer in motion against a dark studio backdrop"
         imagePosition="center 30%"
       >
-        <SceneHeading>Give movement the frame.</SceneHeading>
-        <SceneNote>Full-screen reels. Ambient previews. No thumbnails.</SceneNote>
+        <SceneHeading>Show your moves.</SceneHeading>
+        <SceneNote>Watch full videos, with no clutter.</SceneNote>
       </VisualScene>
 
       {/* 03 — Poetry */}
@@ -199,8 +199,8 @@ export default function HomePage() {
         image="/images/scenes/poetry.jpg"
         alt="A fountain pen writing on textured paper"
       >
-        <SceneHeading>Words need room.</SceneHeading>
-        <SceneNote>A quiet reader for loud thoughts.</SceneNote>
+        <SceneHeading>Let your words breathe.</SceneHeading>
+        <SceneNote>Read poems in a clean, calm space.</SceneNote>
       </VisualScene>
 
       {/* 04 — Design */}
@@ -209,8 +209,8 @@ export default function HomePage() {
         image="/images/scenes/design.jpg"
         alt="A design system open on a computer beside a notebook"
       >
-        <SceneHeading>Show the work. Skip the code.</SceneHeading>
-        <SceneNote>Screens, walkthroughs, 3D worlds.</SceneNote>
+        <SceneHeading>Show what you made.</SceneHeading>
+        <SceneNote>Screens, designs and 3D work.</SceneNote>
       </VisualScene>
 
       {/* 05 — The close */}
@@ -220,8 +220,8 @@ export default function HomePage() {
         alt="A crowd under concert lights with hands raised"
         align="center"
       >
-        <SceneHeading>One link. All of you.</SceneHeading>
-        <SceneNote>Book. Applaud. Share.</SceneNote>
+        <SceneHeading>One link for it all.</SceneHeading>
+        <SceneNote>Book, applaud and share your work.</SceneNote>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
           <SolidLink href="/explore">Explore Arts</SolidLink>
           <GhostLink href="/studio">Creator Studio</GhostLink>
@@ -253,8 +253,8 @@ export default function HomePage() {
 
       {/* Quiet footer, kept off the visual narrative. */}
       <footer className="hidden items-center justify-between bg-[#0B0B0C] px-6 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 md:flex md:px-14">
-        <span>YPAT 2026 — 27</span>
-        <span>Built for the limitless Creatives...</span>
+        <span>YPAT 2026 to 2027</span>
+        <span>Made for every creative</span>
       </footer>
     </main>
   );

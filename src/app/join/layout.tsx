@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export function generateMetadata(): Metadata {
   return {
-    title: 'Join the hive — CreatHive',
+    title: 'Join the hive | CreatHive',
     description: 'Request your CreatHive space: one link for your spoken word, poetry, dance, design and more.',
   };
 }

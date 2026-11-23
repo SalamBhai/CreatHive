@@ -264,9 +264,9 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             onChange={(e) => setStatus(e.target.value as PieceStatus)}
             className={inputClass}
           >
-            <option value="PUBLIC">Public — appears everywhere</option>
-            <option value="UNLISTED">Unlisted — only via direct link</option>
-            <option value="DRAFT">Draft — private to you</option>
+            <option value="PUBLIC">Public: appears everywhere</option>
+            <option value="UNLISTED">Unlisted: only via direct link</option>
+            <option value="DRAFT">Draft: private to you</option>
           </select>
         </div>
 
@@ -289,7 +289,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <label className="block text-xs font-bold text-[#18181B]">Tags</label>
-              {info('Help people find this', 'Lowercase words, max 8. Used for search and suggestions — not the niche filter.')}
+              {info('Help people find this', 'Lowercase words, max 8. Used for search and suggestions, not the niche filter.')}
             </div>
             <span className={`text-[10px] font-bold ${currentTags.length >= MAX_TAGS ? 'text-[#FF5A36]' : 'text-stone-400'}`}>
               {currentTags.length}/{MAX_TAGS}
@@ -303,7 +303,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             className={inputClass}
           />
           <p className="mt-1.5 text-[11px] leading-relaxed text-stone-500">
-            Your words — lowercase, max {MAX_TAGS}. Used for search, not the niche filter.
+            Your words: lowercase, max {MAX_TAGS}. Used for search, not the niche filter.
           </p>
           {suggestedTags.length > 0 && currentTags.length < MAX_TAGS ? (
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -374,7 +374,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               rows={4}
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
-              placeholder="Plain text version — readers can also open the long-form story below."
+              placeholder="Plain text version. Readers can also open the long-form story below."
               className="w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 font-editorial text-base italic outline-none"
             />
           </div>
@@ -463,7 +463,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               type="url"
               value={pdfUrl}
               onChange={(e) => setPdfUrl(e.target.value)}
-              placeholder="Link to a PDF — rendered in the full post view"
+              placeholder="Link to a PDF. It renders in the full post view."
               className={inputClass}
             />
           </div>
@@ -526,7 +526,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         ) : null}
         {draftSavedId ? (
           <p className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-700">
-            Draft saved — your entries are still here. Publish to finalize, or find it under Pieces → draft.
+            Draft saved. Your entries are still here. Publish to finalize, or find it under Pieces, draft.
           </p>
         ) : null}
         <div className="ml-auto flex flex-wrap items-center gap-3">

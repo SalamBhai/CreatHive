@@ -181,7 +181,7 @@ export function getEmailTemplate(content: string): string {
 <html lang="en">
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
 <body style="margin:0;padding:0;background:${BRAND.paper};font-family:Arial,Helvetica,sans-serif;color:${BRAND.ink};">
-  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Your creative space is ready — add your first piece.</div>
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Your creative space is ready. Add your first piece.</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.paper};padding:32px 12px;">
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${BRAND.line};border-radius:16px;overflow:hidden;">
@@ -231,7 +231,7 @@ export async function sendPasswordResetEmail({
     <p style="margin:0;font-size:13px;color:${BRAND.muted};">If you didn&rsquo;t request this, you can safely ignore this email.</p>`;
   return sendEmail({
     to: email,
-    subject: 'Password reset — CreatHive',
+    subject: 'Password reset | CreatHive',
     html: getEmailTemplate(content),
     text: `Reset your CreatHive password: ${resetUrl}`,
   });
@@ -291,7 +291,7 @@ export async function sendInquiryReplyEmail({
   return sendEmail({
     to,
     replyTo,
-    subject: `${accepted ? 'Reply' : 'Update'} from ${creativeName} — CreatHive`,
+    subject: `${accepted ? 'Reply' : 'Update'} from ${creativeName} | CreatHive`,
     html: getEmailTemplate(content),
     text: `${creativeName} ${accepted ? 'responded to' : 'declined'} your CreatHive invitation.${
       safeNote ? `\n\nNote: ${safeNote}` : ''

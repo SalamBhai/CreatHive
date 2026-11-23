@@ -240,7 +240,7 @@ export default function StudioPage({ initialView }: { initialView: StudioView })
           <SectionHeading
             eyebrow="Creator Studio"
             title={`Welcome back, ${profile?.displayName?.split(' ')[0] || 'Creator'}`}
-            description="Publish work, respond to opportunities, and see what your portfolio is doing — all from one calm workspace."
+            description="Publish work, respond to opportunities and see how your portfolio is doing, all in one calm workspace."
             action={
               <NeoButton variant="primary" icon={<Plus size={17} weight="bold" />} onClick={openAdd}>
                 Add New Piece
