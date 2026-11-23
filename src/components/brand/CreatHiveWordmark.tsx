@@ -68,7 +68,7 @@ export function CreatHiveWordmark({
       {/* Tagline */}
       {showTagline && (
         <p className={`font-editorial italic tracking-wide text-center ${taglineSpacing} ${tone === 'light' ? 'text-white/80' : 'text-stone-600'} ${currentSize.tagline}`}>
-          Made for every creative
+          “Built for the limitless Creatives...”
         </p>
       )}
     </div>

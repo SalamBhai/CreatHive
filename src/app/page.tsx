@@ -254,7 +254,7 @@ export default function HomePage() {
       {/* Quiet footer, kept off the visual narrative. */}
       <footer className="hidden items-center justify-between bg-[#0B0B0C] px-6 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 md:flex md:px-14">
         <span>YPAT 2026 to 2027</span>
-        <span>Made for every creative</span>
+        <span>Built for the limitless Creatives...</span>
       </footer>
     </main>
   );
