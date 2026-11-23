@@ -14,6 +14,7 @@ import {
   SignOut,
 } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { PushOptIn } from '@/components/pwa/PushOptIn';
 
 export type StudioView = 'overview' | 'pieces' | 'inquiries' | 'profile';
@@ -126,15 +127,13 @@ export function StudioShell({
               </button>
             ) : null}
             {onSignOut ? (
-              <button
-                type="button"
+              <Tooltip
+                label="Sign out of CreatHive"
                 onClick={onSignOut}
-                title="Sign out"
-                aria-label="Sign out"
-                className="inline-flex items-center justify-center rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
+                triggerClassName="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
               >
                 <SignOut size={16} weight="bold" />
-              </button>
+              </Tooltip>
             ) : null}
           </div>
         </div>

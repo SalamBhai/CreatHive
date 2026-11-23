@@ -13,6 +13,10 @@ interface TooltipProps {
   children: React.ReactNode;
   side?: 'top' | 'bottom';
   className?: string;
+  /** Optional action — the tooltip's trigger also performs this on click. */
+  onClick?: () => void;
+  /** Classes for the trigger button itself. */
+  triggerClassName?: string;
 }
 
 /**
@@ -20,7 +24,7 @@ interface TooltipProps {
  * a spring-in reveal with a matching arrow. Works on hover, focus and click
  * (so it's keyboard and touch accessible).
  */
-export function Tooltip({ label, title, children, side = 'top', className }: TooltipProps) {
+export function Tooltip({ label, title, children, side = 'top', className, onClick, triggerClassName }: TooltipProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -35,8 +39,14 @@ export function Tooltip({ label, title, children, side = 'top', className }: Too
         aria-expanded={open}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A36]/50"
+        onClick={() => {
+          setOpen((v) => !v);
+          onClick?.();
+        }}
+        className={clsx(
+          'inline-flex items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A36]/50',
+          triggerClassName
+        )}
       >
         {children}
       </button>
