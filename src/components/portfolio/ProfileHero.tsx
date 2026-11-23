@@ -2,18 +2,12 @@
 
 import React from 'react';
 import Image from 'next/image';
-import {
-  MapPin,
-  EnvelopeSimple,
-  WhatsappLogo,
-  XLogo,
-  GithubLogo,
-  CheckCircle,
-} from '@phosphor-icons/react';
+import { MapPin, CheckCircle } from '@phosphor-icons/react';
 import { CreativeProfile } from '@/lib/types';
 import { DisciplineChip } from '../ui/DisciplineChip';
 import { resolveAvatarUrl } from '@/lib/avatar';
 import { VerifiedHiveBadge } from '@/components/brand/VerifiedHiveBadge';
+import { SocialQuickIcons, SocialMoreIcons } from './SocialLinks';
 
 interface ProfileHeroProps {
   profile: CreativeProfile;
@@ -67,51 +61,8 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
             </div>
           </div>
 
-          {/* Social Quick Icons */}
-          <div className="flex items-center gap-2">
-            {profile.socialLinks.email && (
-              <a
-                href={`mailto:${profile.socialLinks.email}`}
-                className="w-9 h-9 rounded-xl border border-stone-200 bg-white hover:bg-[#FFF3E8] flex items-center justify-center text-[#18181B] transition-colors"
-                title="Send Email"
-              >
-                <EnvelopeSimple size={18} weight="bold" />
-              </a>
-            )}
-            {profile.socialLinks.whatsapp && (
-              <a
-                href={`https://wa.me/${profile.socialLinks.whatsapp.replace(/[^0-9]/g, '')}`}
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-xl border border-stone-200 bg-[#E7F8EC] hover:bg-[#d6f3de] flex items-center justify-center text-[#18181B] transition-colors"
-                title="WhatsApp"
-              >
-                <WhatsappLogo size={18} weight="bold" className="text-[#25D366]" />
-              </a>
-            )}
-            {profile.socialLinks.twitter && (
-              <a
-                href={profile.socialLinks.twitter}
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-[#18181B] transition-colors"
-                title="Twitter / X"
-              >
-                <XLogo size={18} weight="bold" />
-              </a>
-            )}
-            {profile.socialLinks.github && (
-              <a
-                href={profile.socialLinks.github}
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-[#18181B] transition-colors"
-                title="GitHub"
-              >
-                <GithubLogo size={18} weight="bold" />
-              </a>
-            )}
-          </div>
+          {/* First three links stay beside the avatar; the rest wrap into a grid below. */}
+          <SocialQuickIcons links={profile.socialLinks} />
         </div>
 
         {/* Name & Title */}
@@ -157,6 +108,8 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
             <DisciplineChip key={d} discipline={d} size="sm" />
           ))}
         </div>
+
+        <SocialMoreIcons links={profile.socialLinks} />
       </div>
     </div>
   );

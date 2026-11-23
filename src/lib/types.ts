@@ -29,6 +29,8 @@ export interface SocialLinks {
   instagram?: string;
   linkedin?: string;
   github?: string;
+  substack?: string;
+  medium?: string;
   portfolioUrl?: string;
 }
 

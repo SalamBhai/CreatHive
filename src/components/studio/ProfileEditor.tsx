@@ -15,6 +15,8 @@ const SOCIAL_FIELDS: Array<{ key: keyof SocialLinks; label: string; placeholder:
   { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/...' },
   { key: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/...' },
   { key: 'github', label: 'GitHub', placeholder: 'https://github.com/...' },
+  { key: 'substack', label: 'Substack', placeholder: 'https://...substack.com/...' },
+  { key: 'medium', label: 'Medium', placeholder: 'https://medium.com/...' },
   { key: 'portfolioUrl', label: 'Website', placeholder: 'https://...' },
 ];
 
