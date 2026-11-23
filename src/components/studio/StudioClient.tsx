@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Plus, ArrowUpRight, PaperPlaneTilt, ClockCounterClockwise } from '@phosphor-icons/react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { NeoButton } from '@/components/ui/NeoButton';
@@ -81,18 +81,15 @@ function SectionHeading({
   );
 }
 
-export default function StudioPage() {
+export default function StudioPage({ initialView }: { initialView: StudioView }) {
   const { session } = useDataSource();
   const currentUsername = session?.username || DEMO_USERNAME;
+  const router = useRouter();
 
-  // Notification deep links land on the relevant tab (e.g. ?view=inquiries).
-  const searchParams = useSearchParams();
-  const requestedView = searchParams.get('view');
-  const initialView: StudioView =
-    requestedView === 'inquiries' || requestedView === 'pieces' || requestedView === 'profile'
-      ? requestedView
-      : 'overview';
-  const [view, setView] = useState<StudioView>(initialView);
+  // Tabs are routes, so refresh/refresh-preserving links keep the same view.
+  const goToView = (next: StudioView) =>
+    router.push(next === 'overview' ? '/studio' : `/studio/${next}`);
+  const view = initialView;
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPiece, setEditingPiece] = useState<CreativePiece | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
@@ -229,7 +226,7 @@ export default function StudioPage() {
   const shell = (
     <StudioShell
       view={view}
-      onViewChange={setView}
+      onViewChange={goToView}
       username={currentUsername}
       onSignOut={() => signOut()}
       onRefreshPreview={refreshPreview}
@@ -260,7 +257,7 @@ export default function StudioPage() {
                 <h2 className="font-editorial text-xl font-semibold">Recent work</h2>
                 <button
                   type="button"
-                  onClick={() => setView('pieces')}
+                  onClick={() => goToView('pieces')}
                   className="text-[11px] font-bold text-[#FF5A36] hover:underline"
                 >
                   Manage all →
@@ -278,7 +275,7 @@ export default function StudioPage() {
               </p>
               <button
                 type="button"
-                onClick={() => setView('profile')}
+                onClick={() => goToView('profile')}
                 className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5A36] hover:underline"
               >
                 Edit profile &amp; socials <ArrowUpRight size={14} weight="bold" />

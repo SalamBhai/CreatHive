@@ -429,3 +429,10 @@ create policy "users manage own push subscriptions" on public.push_subscriptions
 alter table public.inquiries add column if not exists notified_at timestamptz;
 alter table public.submissions add column if not exists notified_at timestamptz;
 alter table public.submissions add column if not exists decision_notified_at timestamptz;
+
+-- ===== 010_piece_sort_order.sql =====
+
+-- Studio piece reordering (up/down + drag) persists sort_order.
+-- schema.sql already defines it; this migration brings older databases up to date.
+alter table public.pieces add column if not exists sort_order integer not null default 0;
+create index if not exists pieces_sort_order_idx on public.pieces (creative_id, sort_order);

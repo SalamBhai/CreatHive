@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const sent = await sendPushToUsers([row.creative_id], {
       title: 'New booking inquiry',
       body: `${row.sender_name || 'Someone'} · ${kind}`,
-      url: '/studio?view=inquiries',
+      url: '/studio/inquiries',
       tag: `inquiry-${row.id}`,
     });
     if (sent === 0) await releaseGuard(db, 'inquiries', id, 'notified_at');
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
   const sent = await sendPushToUsers([submission.creative_id], {
     title: accepted ? 'Submission accepted' : 'Submission update',
     body: accepted ? 'Your campaign submission was accepted.' : 'Your campaign submission was reviewed.',
-    url: '/studio?view=pieces',
+    url: '/studio/pieces',
     tag: `decision-${submission.id}`,
   });
   if (sent === 0) await releaseGuard(db, 'submissions', id, 'decision_notified_at');

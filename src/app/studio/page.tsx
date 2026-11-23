@@ -13,7 +13,7 @@ export default function StudioPage() {
         </div>
       }
     >
-      <StudioClient />
+      <StudioClient initialView="overview" />
     </Suspense>
   );
 }
