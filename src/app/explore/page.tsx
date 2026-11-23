@@ -40,17 +40,44 @@ const nicheOptions: Array<FilterOption<NicheFilter>> = NICHES.map((value) => {
 });
 
 const PAGE_SIZE = 9;
+const FEATURED_CREATORS = 6;
 
 export default function ExplorePage() {
   const router = useRouter();
   const [niche, setNiche] = useState<NicheFilter>('ALL');
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Chosen once per page load; the server render uses a fixed seed so hydration
+  // stays deterministic, and the client seeds from the time on first render.
+  const [shuffleSeed] = useState(() => (typeof window === 'undefined' ? 1 : Date.now()));
   const sentinelRef = useRef<HTMLDivElement>(null);
   const { data: profiles } = useAllProfiles();
   const { data: pieces, isLoading } = useAllPieces();
 
   const profileById = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+
+  // Featured creators: admins are never shown, search narrows the pool, and a
+  // seeded shuffle picks up to six — so the row is random but always capped.
+  const featuredCreators = (() => {
+    const term = query.trim().toLowerCase();
+    const eligible = (profiles || []).filter(
+      (profile) =>
+        !profile.isAdmin &&
+        (!term ||
+          profile.displayName?.toLowerCase().includes(term) ||
+          profile.username.toLowerCase().includes(term))
+    );
+    let seed = shuffleSeed || 1;
+    const random = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    for (let i = eligible.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [eligible[i], eligible[j]] = [eligible[j], eligible[i]];
+    }
+    return eligible.slice(0, FEATURED_CREATORS);
+  })();
 
   // Text search over title/subtitle/tags and creator name/bio, combined with
   // the niche filter. Matching a creator surfaces all of their pieces.
@@ -127,16 +154,9 @@ export default function ExplorePage() {
             Work from the YPAT cohort — spoken word, dance, poetry, and design, in one quiet place.
           </p>
 
-          {profiles && profiles.length > 0 && profiles.some((p) => !p.isAdmin) ? (
+          {featuredCreators.length > 0 ? (
             <div className="mt-9 flex flex-wrap items-center gap-2.5">
-              {profiles
-                .filter((profile) => !profile.isAdmin)
-                .filter((profile) =>
-                  !query.trim() ||
-                  profile.displayName?.toLowerCase().includes(query.trim().toLowerCase()) ||
-                  profile.username.toLowerCase().includes(query.trim().toLowerCase())
-                )
-                .map((profile) => (
+              {featuredCreators.map((profile) => (
                 <Link
                   key={profile.id}
                   href={`/${profile.username}`}
