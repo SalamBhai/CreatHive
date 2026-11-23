@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, MagnifyingGlass, X } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
@@ -41,6 +42,7 @@ const nicheOptions: Array<FilterOption<NicheFilter>> = NICHES.map((value) => {
 const PAGE_SIZE = 9;
 
 export default function ExplorePage() {
+  const router = useRouter();
   const [niche, setNiche] = useState<NicheFilter>('ALL');
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -215,9 +217,9 @@ export default function ExplorePage() {
                   transition={{ duration: 0.5, delay: Math.min(index, 5) * 0.04 }}
                 >
                   <Link
-                    href={author ? `/${author.username}` : '/'}
+                    href={`/p/${piece.id}`}
                     className="group block h-full"
-                    aria-label={`${piece.title} by ${author?.displayName ?? 'a CreatHive creative'}`}
+                    aria-label={`Read ${piece.title} by ${author?.displayName ?? 'a CreatHive creative'}`}
                   >
                     <Surface interactive className="flex h-full flex-col overflow-hidden">
                       <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
@@ -244,7 +246,24 @@ export default function ExplorePage() {
 
                         <div className="mt-auto flex items-center gap-2.5 pt-6">
                           {author ? (
-                            <>
+                            <span
+                              role="link"
+                              tabIndex={0}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                router.push(`/${author.username}`);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  router.push(`/${author.username}`);
+                                }
+                              }}
+                              className="flex cursor-pointer items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A36]/50"
+                              aria-label={`View ${author.displayName}'s profile`}
+                            >
                               <Image
                                 src={resolveAvatarUrl(author.avatarUrl, author.displayName || 'CreatHive')}
                                 alt=""
@@ -254,12 +273,12 @@ export default function ExplorePage() {
                                 className="h-8 w-8 rounded-full object-cover"
                               />
                               <div className="min-w-0">
-                                <p className="truncate text-xs font-bold text-[#18181B]">
+                                <p className="truncate text-xs font-bold text-[#18181B] transition-colors group-hover:text-[#FF5A36]">
                                   {author.displayName}
                                 </p>
                                 <p className="text-[11px] text-stone-500">@{author.username}</p>
                               </div>
-                            </>
+                            </span>
                           ) : null}
                           <ArrowUpRight
                             size={16}
