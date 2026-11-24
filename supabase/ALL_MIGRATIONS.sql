@@ -468,3 +468,8 @@ alter table public.pieces
   add column if not exists pdf_page_images text[] not null default '{}',
   add column if not exists pdf_page_public_ids text[] not null default '{}',
   add column if not exists pdf_cover_page integer;
+
+-- ===== 015_pdf_page_count.sql =====
+
+-- Page count reported at PDF upload, so the post can render pages inline.
+alter table public.pieces add column if not exists pdf_page_count integer;

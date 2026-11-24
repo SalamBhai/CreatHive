@@ -118,6 +118,7 @@ const toPiece = (r: PieceRow): CreativePiece => ({
   textContent: r.text_content ? String(r.text_content) : undefined,
   bodyHtml: r.body_html ? String(r.body_html) : undefined,
   pdfUrl: r.pdf_url ? String(r.pdf_url) : undefined,
+  pdfPageCount: r.pdf_page_count == null ? undefined : Number(r.pdf_page_count),
   pdfPublicId: r.pdf_public_id ? String(r.pdf_public_id) : undefined,
   pdfPageImages: (r.pdf_page_images as string[]) || [],
   pdfPagePublicIds: (r.pdf_page_public_ids as string[]) || [],
@@ -151,6 +152,7 @@ const fromPiece = (p: NewPiece | CreativePiece) => ({
   text_content: p.textContent ?? null,
   body_html: p.bodyHtml ?? null,
   pdf_url: p.pdfUrl ?? null,
+  pdf_page_count: p.pdfPageCount ?? null,
   pdf_public_id: p.pdfPublicId ?? null,
   pdf_page_images: p.pdfPageImages ?? [],
   pdf_page_public_ids: p.pdfPagePublicIds ?? [],
@@ -178,6 +180,7 @@ const fromPiecePatch = (p: Partial<CreativePiece>) => {
   if (p.textContent !== undefined) patch.text_content = p.textContent ?? null;
   if (p.bodyHtml !== undefined) patch.body_html = p.bodyHtml ?? null;
   if (p.pdfUrl !== undefined) patch.pdf_url = p.pdfUrl ?? null;
+  if (p.pdfPageCount !== undefined) patch.pdf_page_count = p.pdfPageCount ?? null;
   if (p.pdfPublicId !== undefined) patch.pdf_public_id = p.pdfPublicId ?? null;
   if (p.pdfPageImages !== undefined) patch.pdf_page_images = p.pdfPageImages ?? [];
   if (p.pdfPagePublicIds !== undefined) patch.pdf_page_public_ids = p.pdfPagePublicIds ?? [];

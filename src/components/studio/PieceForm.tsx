@@ -58,10 +58,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [pdfPublicId, setPdfPublicId] = useState(piece?.pdfPublicId || '');
   const [pdfPageImages, setPdfPageImages] = useState<string[]>(piece?.pdfPageImages || []);
   const [pdfPagePublicIds, setPdfPagePublicIds] = useState<string[]>(piece?.pdfPagePublicIds || []);
+  const [pdfPages, setPdfPages] = useState(piece?.pdfPageCount || 0);
   const [pdfCoverPage, setPdfCoverPage] = useState<number | undefined>(piece?.pdfCoverPage);
   const [imageSizes, setImageSizes] = useState<Record<string, number>>({});
   const [mediaBusy, setMediaBusy] = useState(false);
-  const [mediaNotice, setMediaNotice] = useState('');
   const [busyImageIndex, setBusyImageIndex] = useState<number | null>(null);
   const [status, setStatus] = useState<PieceStatus>(piece?.status || 'PUBLIC');
   const [campaignId, setCampaignId] = useState('');
@@ -113,7 +113,6 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     const picked = Array.from(files || []);
     if (!picked.length) return;
     setUploadError('');
-    setMediaNotice('');
 
     const tooLarge = picked.find((file) => file.size > MAX_FILE_BYTES);
     if (tooLarge) {
@@ -136,31 +135,27 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setMediaBusy(true);
     try {
       const results = await Promise.all(picked.map((file) => uploadFile(file, 'media')));
-      const notes: string[] = [];
       results.forEach((result, index) => {
         const file = picked[index];
         const kind =
           result.resourceType ||
           (file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'raw' : 'video');
-        if (kind === 'raw') {
+        if (kind === 'pdf' || kind === 'raw') {
           setPdfUrl(result.url);
           setPdfPublicId(result.publicId);
-          notes.push('PDF attached');
+          setPdfPages(result.pages ?? 0);
+          setPdfPageImages([]);
         } else if (kind === 'video') {
           setMediaUrl(result.url);
           setMediaPublicId(result.publicId);
-          notes.push('Audio / video attached');
-        } else if (pdfUrl) {
-          setPdfPageImages((current) => [...current, result.url]);
-          setPdfPagePublicIds((current) => [...current, result.publicId]);
-          setImageSizes((current) => ({ ...current, [result.url]: file.size }));
         } else {
+          // Images always land in the gallery. Marking one as a PDF page is an
+          // explicit action, so a cover photo can never become "page 1".
           setGalleryImages((current) => [...current, result.url]);
           setGalleryPublicIds((current) => [...current, result.publicId]);
           setImageSizes((current) => ({ ...current, [result.url]: file.size }));
         }
       });
-      setMediaNotice(Array.from(new Set(notes)).join(' · '));
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed.');
     } finally {
@@ -228,11 +223,11 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setBodyHtml('');
     setPdfUrl('');
     setPdfPublicId('');
+    setPdfPages(0);
     setPdfPageImages([]);
     setPdfPagePublicIds([]);
     setPdfCoverPage(undefined);
     setImageSizes({});
-    setMediaNotice('');
     setBusyImageIndex(null);
   };
 
@@ -263,6 +258,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       bodyHtml: bodyHtml || undefined,
       pdfUrl: pdfUrl || undefined,
       pdfPublicId: pdfPublicId || undefined,
+      pdfPageCount: pdfPages || undefined,
       pdfPageImages: pdfPageImages.filter(Boolean).length ? pdfPageImages.filter(Boolean) : undefined,
       pdfPagePublicIds: pdfPagePublicIds.filter(Boolean).length ? pdfPagePublicIds.filter(Boolean) : undefined,
       pdfCoverPage: pdfCoverPage,
@@ -361,7 +357,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               onChange={(e) => setDiscipline(e.target.value as CreativeDiscipline)}
               className={inputClass}
             >
-              <option value="SPOKEN_WORDS_POETRY">Spoken Words & Poetry</option>
+              <option value="SPOKEN_WORDS_POETRY">Spoken Words, Thoughts & Poetry</option>
               <option value="UIUX_DESIGN">UI/UX Mobile Design</option>
               <option value="TECH_IMAGERY">Tech Imagery & 3D</option>
               <option value="DANCE">Dance & Performance</option>
@@ -387,8 +383,8 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
                 onChange={(e) => setSpokenFormat(e.target.value as 'AUDIO' | 'TEXT')}
                 className={inputClass}
               >
-                <option value="AUDIO">Audio / spoken word</option>
-                <option value="TEXT">Written / poem</option>
+                <option value="AUDIO">Spoken word · audio</option>
+                <option value="TEXT">Writing · article, thoughts or poem</option>
               </select>
             </div>
           ) : null}
@@ -607,48 +603,61 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             />
           </div>
 
-          {uploadError ? <p className="mt-2 text-[11px] font-semibold text-red-600">{uploadError}</p> : null}
-          {mediaNotice && !uploadError ? (
-            <p className="mt-2 text-[11px] font-semibold text-emerald-700">{mediaNotice}</p>
-          ) : null}
+          <div className="mt-3 flex items-center gap-3 border-t border-stone-200 pt-3">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-white">
+              {coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={thumbnailUrl(coverImageUrl)} alt="Cover preview" className="h-full w-full object-cover" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-stone-400">Cover</span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold text-[#18181B]">Cover photo</p>
+              <button
+                type="button"
+                onClick={() => document.getElementById('cover-file')?.click()}
+                className="mt-1 rounded-xl border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-600 hover:border-[#FF5A36]"
+              >
+                {coverImageUrl ? 'Change cover' : 'Upload cover'}
+              </button>
+              <input
+                type="file"
+                id="cover-file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleUpload(file, 'cover', (url, id) => {
+                    setCoverImageUrl(url);
+                    setCoverPublicId(id);
+                  });
+                }}
+              />
+            </div>
+          </div>
 
-          <div className="mt-2 flex flex-wrap gap-2">
+          {uploadError ? <p className="mt-2 text-[11px] font-semibold text-red-600">{uploadError}</p> : null}
+          <div className="mt-2 flex flex-wrap items-start gap-2">
             {pdfUrl ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-[#FF5A36]">
+              <span className="inline-flex h-fit items-center gap-1.5 self-start rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-[#FF5A36]">
                 <a href={pdfUrl} target="_blank" rel="noreferrer">PDF ↗</a>
-                <button type="button" aria-label="Remove PDF" onClick={() => { setPdfUrl(""); setPdfPublicId(""); }} className="text-stone-400 hover:text-red-600">×</button>
+                <button type="button" aria-label="Remove PDF" onClick={() => { setPdfUrl(""); setPdfPublicId(""); setPdfPages(0); }} className="text-stone-400 hover:text-red-600">×</button>
               </span>
             ) : null}
 
             {mediaUrl ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-700">
+              <span className="inline-flex h-fit items-center gap-1.5 self-start rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-700">
                 <a href={mediaUrl} target="_blank" rel="noreferrer">Video / Audio ↗</a>
                 <button type="button" aria-label="Remove media" onClick={() => { setMediaUrl(""); setMediaPublicId(""); }} className="text-stone-400 hover:text-red-600">×</button>
               </span>
             ) : null}
 
             {[...pdfPageImages, ...galleryImages].map((url, index) => {
-              const pageIndex = pdfPageImages.indexOf(url);
-              const isCover = url === coverImageUrl || (pageIndex >= 0 && pdfCoverPage === pageIndex);
               return (
                 <div key={url + "-" + index} className="w-24 overflow-hidden rounded-lg border border-stone-200 bg-white">
                   <Image src={thumbnailUrl(url)} alt="" width={96} height={110} unoptimized loading="lazy" className="h-24 w-full object-cover" />
                   <div className="flex flex-col gap-1 border-t border-stone-100 p-1">
-                    <button
-                      type="button"
-                      title="Use as cover"
-                      onClick={() => {
-                        setCoverImageUrl(url);
-                        setCoverPublicId(pdfPagePublicIds[pageIndex] || galleryPublicIds[galleryImages.indexOf(url)] || "");
-                        if (pageIndex >= 0) setPdfCoverPage(pageIndex);
-                        setMediaNotice('Set as cover');
-                      }}
-                      className={`w-full whitespace-nowrap rounded py-1 text-[10px] font-bold ${
-                        isCover ? 'bg-[#FFF7ED] text-[#C2410C]' : 'text-[#FF5A36] hover:bg-[#FFF2EE]'
-                      }`}
-                    >
-                      {isCover ? 'Cover ✓' : 'Set cover'}
-                    </button>
                     <button
                       type="button"
                       aria-label="Remove image"

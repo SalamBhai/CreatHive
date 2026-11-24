@@ -23,3 +23,14 @@ export function cloudinaryImageUrl(
 
 /** Thumbnails for gallery/PDF strips — trimmed to drop flat white margins. */
 export const thumbnailUrl = (url?: string) => cloudinaryImageUrl(url, 160, { trim: true });
+
+/** Render a page of a PDF stored as a Cloudinary image resource. */
+export function pdfPageUrl(url: string | undefined, page: number, width = 1200): string {
+  if (!url) return '';
+  const marker = '/image/upload/';
+  const index = url.indexOf(marker);
+  if (index < 0) return url;
+  const head = url.slice(0, index + marker.length);
+  const tail = url.slice(index + marker.length).replace(/^[^/]+\//, '');
+  return `${head}f_auto,q_auto,pg_${page},w_${width}/${tail}`;
+}

@@ -176,7 +176,7 @@ export default function HomePage() {
 
       {/* 01 — Spoken words and poetry */}
       <VisualScene
-        label="Spoken Words & Poetry"
+        label="Spoken Words, Thoughts & Poetry"
         image="/images/scenes/spoken-word.jpg"
         alt="A microphone lit by a warm spotlight in a dark room"
       >

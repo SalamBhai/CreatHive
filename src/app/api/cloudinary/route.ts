@@ -33,7 +33,9 @@ function resourceTypeFor(file: File): 'image' | 'video' | 'raw' | null {
   if (type.startsWith('image/')) return 'image';
   // Cloudinary serves both video and audio from the `video` resource type.
   if (type.startsWith('video/') || type.startsWith('audio/')) return 'video';
-  if (type === 'application/pdf') return 'raw';
+  // Upload PDFs as images so Cloudinary can render each page on demand via
+  // pg_N transformations. As `raw` they are forced to download in browsers.
+  if (type === 'application/pdf') return 'image';
   return null;
 }
 
@@ -66,6 +68,7 @@ export async function POST(request: Request) {
   if (!secret || !apiKey) return json({ error: 'Uploads are not configured.' }, 503);
 
   const resourceType = resourceTypeFor(file);
+  const isPdf = file.type === 'application/pdf';
   if (!resourceType || (anonymous && resourceType !== 'image')) {
     return json(
       {
@@ -76,7 +79,7 @@ export async function POST(request: Request) {
       415
     );
   }
-  if (kind === 'pdf' && (resourceType !== 'raw' || file.type !== 'application/pdf')) {
+  if (kind === 'pdf' && !isPdf) {
     return json({ error: 'Only PDF files can be uploaded here.' }, 415);
   }
   const limit = anonymous
@@ -106,7 +109,7 @@ export async function POST(request: Request) {
     const bytes = Buffer.from(await file.arrayBuffer());
     // Stream the bytes instead of a base64 data URI. A data URI inflates the
     // payload by ~33% and breaks on larger PDFs/images.
-    const result = await new Promise<{ secure_url: string; public_id: string }>(
+    const result = await new Promise<{ secure_url: string; public_id: string; pages?: number }>(
       (resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { folder, resource_type: resourceType, timestamp, signature, api_key: apiKey } as never,
@@ -115,13 +118,25 @@ export async function POST(request: Request) {
               reject(uploadError || new Error('Upload returned no result'));
               return;
             }
-            resolve({ secure_url: uploaded.secure_url, public_id: uploaded.public_id });
+            resolve({
+              secure_url: uploaded.secure_url,
+              public_id: uploaded.public_id,
+              pages: uploaded.pages,
+            });
           }
         );
         stream.end(bytes);
       }
     );
-    return json({ url: result.secure_url, publicId: result.public_id, resourceType }, 200);
+    return json(
+      {
+        url: result.secure_url,
+        publicId: result.public_id,
+        resourceType: isPdf ? 'pdf' : resourceType,
+        pages: isPdf ? result.pages ?? 1 : undefined,
+      },
+      200
+    );
   } catch (error) {
     const err = error as {
       message?: string;

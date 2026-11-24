@@ -88,6 +88,7 @@ export interface CreativePiece {
   bodyHtml?: string; // WYSIWYG full-post body
   pdfUrl?: string; // Attached source PDF (brief, case study, call-to-work)
   pdfPublicId?: string; // Cloudinary public_id for the uploaded PDF
+  pdfPageCount?: number; // Page count reported by the upload, for inline rendering
   pdfPageImages?: string[]; // Converted page images, in reading order
   pdfPagePublicIds?: string[]; // Parallel to pdfPageImages
   pdfCoverPage?: number; // Zero-based index of the page used as cover

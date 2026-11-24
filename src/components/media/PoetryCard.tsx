@@ -58,7 +58,7 @@ export function PoetryCard({ piece }: PoetryCardProps) {
         <div className="p-5 md:p-6 bg-[#FCFAF6] border-b border-stone-200 space-y-3">
           <span className="inline-flex w-fit shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#8B5CF6]/40 bg-[#F5F3FF] px-2.5 py-1 text-xs font-bold leading-none text-[#8B5CF6]">
             <Feather size={13} weight="duotone" />
-            <span>Spoken Words & Poetry</span>
+            <span>Spoken Words, Thoughts & Poetry</span>
           </span>
 
           <h3 className="text-xl md:text-2xl font-editorial font-bold text-[#18181B] leading-tight italic">

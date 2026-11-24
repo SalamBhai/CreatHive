@@ -135,7 +135,7 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
       <div className="border-b border-stone-200 bg-[#FAF8F5] p-4 md:p-5">
         <div className="mb-3 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#FF5A36]/40 bg-[#FFF2EE] px-2.5 py-1 text-xs font-bold text-[#FF5A36]">
           <MicrophoneStage size={13} weight="duotone" />
-          <span>Spoken Words & Poetry</span>
+          <span>Spoken Words, Thoughts & Poetry</span>
         </div>
 
         <h3 className="font-editorial text-xl font-semibold leading-tight text-[#18181B] md:text-2xl">

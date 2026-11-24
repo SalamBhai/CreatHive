@@ -8,7 +8,9 @@ export interface UploadResult {
   url: string;
   publicId: string;
   /** Decided by the upload route from the file's real type. */
-  resourceType: 'image' | 'video' | 'raw' | null;
+  resourceType: 'image' | 'video' | 'raw' | 'pdf' | null;
+  /** Number of pages when a PDF was uploaded. */
+  pages?: number;
 }
 
 /** Upload a file through the signed Cloudinary route and surface errors to callers. */
@@ -36,5 +38,10 @@ export async function uploadFile(file: File, kind: UploadKind): Promise<UploadRe
   if (!response.ok || !data.url) {
     throw new Error(data.error || 'Upload failed. Please try again.');
   }
-  return { url: data.url, publicId: data.publicId || '', resourceType: data.resourceType || null };
+  return {
+    url: data.url,
+    publicId: data.publicId || '',
+    resourceType: data.resourceType || null,
+    pages: data.pages,
+  };
 }

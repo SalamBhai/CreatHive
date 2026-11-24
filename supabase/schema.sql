@@ -42,6 +42,7 @@ create table if not exists public.pieces (
   body_html text,
   pdf_url text,
   pdf_public_id text,
+  pdf_page_count integer,
   pdf_page_images text[] not null default '{}',
   pdf_page_public_ids text[] not null default '{}',
   pdf_cover_page integer,
