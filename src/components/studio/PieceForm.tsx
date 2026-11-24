@@ -41,7 +41,9 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [step, setStep] = useState<Step>('details');
   const [title, setTitle] = useState(piece?.title || '');
   const [subtitle, setSubtitle] = useState(piece?.subtitle || '');
-  const [discipline, setDiscipline] = useState<CreativeDiscipline>(piece?.discipline || 'SPOKEN_WORD');
+  const [discipline, setDiscipline] = useState<CreativeDiscipline>(
+    piece?.discipline || 'SPOKEN_WORDS_THOUGHTS_POETRY'
+  );
   const [spokenFormat, setSpokenFormat] = useState<'AUDIO' | 'TEXT'>(
     piece?.mediaType === 'AUDIO' ? 'AUDIO' : 'TEXT'
   );
@@ -67,7 +69,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [campaignId, setCampaignId] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [draftSavedId, setDraftSavedId] = useState<string | null>(null);
-  const mediaType = discipline === 'SPOKEN_WORDS_POETRY' ? spokenFormat : mediaTypeForNiche(discipline);
+  const mediaType = discipline === 'SPOKEN_WORDS_THOUGHTS_POETRY' ? spokenFormat : mediaTypeForNiche(discipline);
   const addPieceMutation = useAddPiece();
   const updatePieceMutation = useUpdatePiece();
   const { data: allPieces } = useAllPieces();
@@ -341,7 +343,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               className={inputClass}
             >
               {(Object.keys(DISCIPLINE_CONFIG) as Array<CreativeDiscipline | 'ALL'>)
-                .filter((d) => d !== 'ALL' && d !== 'OTHER' && d !== 'SPOKEN_WORDS_POETRY')
+                .filter((d) => d !== 'ALL' && d !== 'OTHER')
                 .map((d) => (
                   <option key={d} value={d}>{DISCIPLINE_CONFIG[d].label}</option>
                 ))}
@@ -356,7 +358,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               {MEDIA_LABELS[mediaType]}
             </div>
           </div>
-          {discipline === 'SPOKEN_WORDS_POETRY' ? (
+          {discipline === 'SPOKEN_WORDS_THOUGHTS_POETRY' ? (
             <div className="col-span-2">
               <label className={labelClass}>Format</label>
               <select

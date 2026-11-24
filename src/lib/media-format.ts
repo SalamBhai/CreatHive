@@ -3,10 +3,8 @@ import type { CreativeDiscipline, MediaType } from './types';
 /** Every niche has a natural media format. The Studio derives it automatically. */
 export const NICHE_MEDIA: Record<CreativeDiscipline, MediaType> = {
   // For the unified niche the creator picks audio or written format in the form.
-  SPOKEN_WORDS_POETRY: 'TEXT',
-  SPOKEN_WORD: 'AUDIO',
+  SPOKEN_WORDS_THOUGHTS_POETRY: 'TEXT',
   MUSIC: 'AUDIO',
-  POETRY: 'TEXT',
   DANCE: 'VIDEO',
   MOTION_ANIMATION: 'VIDEO',
   UIUX_DESIGN: 'IMAGE_GALLERY',

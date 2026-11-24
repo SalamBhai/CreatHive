@@ -4,7 +4,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   MicrophoneStage,
-  Feather,
   Waveform,
   Sparkle,
   Cube,
@@ -33,23 +32,11 @@ export const DISCIPLINE_CONFIG: Record<
     color: '#18181B',
     bg: '#FFFFFF',
   },
-  SPOKEN_WORDS_POETRY: {
+  SPOKEN_WORDS_THOUGHTS_POETRY: {
     label: 'Spoken Words, Thoughts & Poetry',
     icon: MicrophoneStage,
     color: '#FF5A36',
     bg: '#FFF2EE',
-  },
-  SPOKEN_WORD: {
-    label: 'Spoken Word',
-    icon: MicrophoneStage,
-    color: '#FF5A36',
-    bg: '#FFF2EE',
-  },
-  POETRY: {
-    label: 'Poetry & Verse',
-    icon: Feather,
-    color: '#8B5CF6',
-    bg: '#F5F3FF',
   },
   MUSIC: {
     label: 'Music & Vocals',

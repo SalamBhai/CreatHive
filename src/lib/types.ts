@@ -1,7 +1,5 @@
 export type CreativeDiscipline =
-  | 'SPOKEN_WORDS_POETRY'
-  | 'SPOKEN_WORD'
-  | 'POETRY'
+  | 'SPOKEN_WORDS_THOUGHTS_POETRY'
   | 'MUSIC'
   | 'DANCE'
   | 'TECH_IMAGERY'
@@ -12,19 +10,20 @@ export type CreativeDiscipline =
 
 export type MediaType = 'AUDIO' | 'VIDEO' | 'TEXT' | 'IMAGE_GALLERY';
 
-/** Disciplines shown as one niche. Existing values still match the group. */
-export const SPOKEN_POETRY_DISCIPLINES: CreativeDiscipline[] = [
-  'SPOKEN_WORDS_POETRY',
-  'SPOKEN_WORD',
-  'POETRY',
-];
+/** Newest first by last modification, falling back to creation date when a
+ *  record has never been modified. */
+export function sortByRecency<T extends { createdAt?: string; updatedAt?: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const time = (item: T) => Date.parse(item.updatedAt || item.createdAt || '') || 0;
+    return time(b) - time(a);
+  });
+}
 
 export function disciplineInFilter(
   discipline: CreativeDiscipline,
   filter?: CreativeDiscipline | 'ALL'
 ): boolean {
   if (!filter || filter === 'ALL') return true;
-  if (filter === 'SPOKEN_WORDS_POETRY') return SPOKEN_POETRY_DISCIPLINES.includes(discipline);
   return discipline === filter;
 }
 

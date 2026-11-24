@@ -14,13 +14,13 @@ import { resolveAvatarUrl } from '@/lib/avatar';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { useAllPieces, useAllProfiles } from '@/lib/store';
 import { searchPieces, searchProfiles } from '@/lib/search';
-import { disciplineInFilter, type CreativeDiscipline } from '@/lib/types';
+import { disciplineInFilter, sortByRecency, type CreativeDiscipline } from '@/lib/types';
 import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
 
 
 const NICHES = [
   'ALL',
-  'SPOKEN_WORDS_POETRY',
+  'SPOKEN_WORDS_THOUGHTS_POETRY',
   'DANCE',
   'MUSIC',
   'TECH_IMAGERY',
@@ -94,13 +94,13 @@ export default function ExplorePage() {
     // De-dupe by id — a piece can match both by text and by its creator.
     return [...new Map([...matched, ...fromCreators].map((p) => [p.id, p])).values()];
   })();
-  const visiblePieces = searched
-    .filter((piece) =>
+  const visiblePieces = sortByRecency(
+    searched.filter((piece) =>
       niche === 'ALL'
         ? true
         : disciplineInFilter(piece.discipline as CreativeDiscipline, niche)
     )
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  );
 
   const shown = visiblePieces.slice(0, visibleCount);
   const hasMore = visibleCount < visiblePieces.length;

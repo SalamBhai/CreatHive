@@ -1,5 +1,5 @@
 import type { DataRepository, NewInquiry, NewPiece, PageOptions, Paged } from './types';
-import { disciplineInFilter } from '@/lib/types';
+import { disciplineInFilter, sortByRecency } from '@/lib/types';
 import type {
   CreativeProfile,
   CreativePiece,
@@ -100,9 +100,10 @@ export const localRepository: DataRepository = {
     if (options?.discipline) {
       result = result.filter((p) => disciplineInFilter(p.discipline, options.discipline));
     }
-    return options?.creativeId
-      ? result.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-      : result.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    // Studio keeps explicit manual order; every public feed uses recency.
+    return options?.creativeId && options?.includeDrafts
+      ? [...result].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      : sortByRecency(result);
   },
 
   async getPiece(id) {

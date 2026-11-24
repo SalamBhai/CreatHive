@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { localRepository } from './local';
 import { INITIAL_PROFILES, INITIAL_PIECES } from '@/lib/sample-data';
 import type { DataRepository, NewInquiry, NewPiece, PageOptions, Paged } from './types';
-import { disciplineInFilter } from '@/lib/types';
+import { disciplineInFilter, sortByRecency } from '@/lib/types';
 import type {
   CreativeProfile,
   CreativePiece,
@@ -36,6 +36,8 @@ async function paged<T>(
   const { data, count, error } = await getDb()
     .from(table)
     .select('*', { count: 'exact' })
+    // Last modified first; rows never modified fall back to creation date.
+    .order('updated_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .range(from, from + options.pageSize - 1);
   if (error) throw error;
@@ -349,6 +351,7 @@ export const supabaseRepository: DataRepository = {
     const { data, error } = await getDb()
       .from('audit_log')
       .select('*')
+      .order('updated_at', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(200);
     if (error) throw error;
@@ -363,9 +366,7 @@ export const supabaseRepository: DataRepository = {
       let query = getDb().from('pieces').select('*').eq('is_deleted', false);
       if (options?.creativeId) query = query.eq('creative_id', options.creativeId);
       if (!options?.includeDrafts) query = query.eq('status', 'PUBLIC');
-      if (options?.discipline === 'SPOKEN_WORDS_POETRY') {
-        query = query.in('discipline', ['SPOKEN_WORDS_POETRY', 'SPOKEN_WORD', 'POETRY']);
-      } else if (options?.discipline && options.discipline !== 'ALL') {
+      if (options?.discipline && options.discipline !== 'ALL') {
         query = query.eq('discipline', options.discipline);
       }
       const { data, error } = await query;
@@ -398,11 +399,11 @@ export const supabaseRepository: DataRepository = {
       mocks = mocks.filter((p) => disciplineInFilter(p.discipline, options.discipline));
     }
 
-    return mergeById(real, mocks).sort((a, b) =>
-      options?.creativeId
-        ? (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-        : +new Date(b.createdAt) - +new Date(a.createdAt)
-    );
+    const merged = mergeById(real, mocks);
+    // Studio keeps explicit manual order; every public feed uses recency.
+    return options?.creativeId && options?.includeDrafts
+      ? [...merged].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      : sortByRecency(merged);
   },
 
   async getPiece(id) {
@@ -536,13 +537,17 @@ export const supabaseRepository: DataRepository = {
   },
 
   async listAllPieces() {
-    const { data, error } = await getDb().from('pieces').select('*').order('created_at', { ascending: false });
+    const { data, error } = await getDb().from('pieces').select('*')
+      .order('updated_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return (data as PieceRow[]).map(toPiece).map((p) => ({ ...p, isYPATData: true, source: 'live' as const }));
   },
 
   async listCampaigns() {
-    const { data, error } = await getDb().from('campaigns').select('*').order('created_at', { ascending: false });
+    const { data, error } = await getDb().from('campaigns').select('*')
+      .order('updated_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return (data as CampaignRow[]).map(toCampaign);
   },
@@ -571,7 +576,9 @@ export const supabaseRepository: DataRepository = {
   },
 
   async listSubmissions() {
-    const { data, error } = await getDb().from('submissions').select('*').order('created_at', { ascending: false });
+    const { data, error } = await getDb().from('submissions').select('*')
+      .order('updated_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return (data as SubmissionRow[]).map(toSubmission);
   },
@@ -601,7 +608,9 @@ export const supabaseRepository: DataRepository = {
   },
 
   async listFlags() {
-    const { data, error } = await getDb().from('flags').select('*').order('created_at', { ascending: false });
+    const { data, error } = await getDb().from('flags').select('*')
+      .order('updated_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return (data as FlagRow[]).map(toFlag);
   },

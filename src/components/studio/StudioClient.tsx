@@ -182,7 +182,7 @@ export default function StudioPage({ initialView }: { initialView: StudioView })
           <Link
             key={piece.id}
             href={`/p/${piece.id}`}
-            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-colors hover:border-stone-300"
+            className="flex min-w-0 items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-colors hover:border-stone-300"
           >
             <div
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-stone-200"
@@ -192,7 +192,7 @@ export default function StudioPage({ initialView }: { initialView: StudioView })
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="truncate text-sm font-bold text-[#18181B]">{piece.title}</h3>
-              <p className="text-[11px] text-stone-500">{config.label} · {piece.applauseCount} applauses</p>
+              <p className="truncate text-[11px] text-stone-500">{config.label} · {piece.applauseCount} applauses</p>
             </div>
             <ArrowUpRight size={14} weight="bold" className="shrink-0 text-stone-400" />
           </Link>
@@ -254,10 +254,10 @@ export default function StudioPage({ initialView }: { initialView: StudioView })
             <StatCard value={profile?.stats.viewsCount || 0} label="Views" tone="amber" />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Surface className="p-5">
-              <div className="flex items-center justify-between">
-                <h2 className="font-editorial text-xl font-semibold">Recent work</h2>
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <Surface className="min-w-0 overflow-hidden p-5">
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <h2 className="min-w-0 truncate font-editorial text-xl font-semibold">Recent work</h2>
                 <button
                   type="button"
                   onClick={() => goToView('pieces')}
@@ -269,7 +269,7 @@ export default function StudioPage({ initialView }: { initialView: StudioView })
               <div className="mt-4 space-y-2.5">{recentRows(3)}</div>
             </Surface>
 
-            <Surface className="p-5">
+            <Surface className="min-w-0 overflow-hidden p-5">
               <h2 className="font-editorial text-xl font-semibold">Your page</h2>
               <p className="mt-2 text-xs leading-relaxed text-stone-600">
                 {pieceCount} published {pieceCount === 1 ? 'piece' : 'pieces'} · {inquiries?.length || 0}{' '}

@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Star, ArrowUp, ArrowDown, PencilSimple, Trash, Eye, DotsSixVertical } from '@phosphor-icons/react';
+import { ArrowUp, ArrowDown, PencilSimple, Trash, Eye, DotsSixVertical } from '@phosphor-icons/react';
 import { Surface } from '@/components/ui/Surface';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
-import { useDeletePiece, useReorderPieces, useUpdatePiece } from '@/lib/store';
+import { useDeletePiece, useReorderPieces } from '@/lib/store';
 import type { CreativePiece } from '@/lib/types';
 
 interface PieceManagerProps {
@@ -21,7 +21,6 @@ export function PieceManager({ pieces, onEdit, onRefreshPreview }: PieceManagerP
   // carries the new order and the override is cleared in onSettled.
   const [pendingOrder, setPendingOrder] = useState<string[] | null>(null);
   const reorder = useReorderPieces();
-  const update = useUpdatePiece();
   const remove = useDeletePiece();
 
   const byId = new Map(pieces.map((p) => [p.id, p]));
@@ -90,11 +89,6 @@ export function PieceManager({ pieces, onEdit, onRefreshPreview }: PieceManagerP
                 <Link href={`/p/${piece.id}`} className="truncate text-sm font-bold text-[#18181B] hover:text-[#FF5A36]">
                   {piece.title}
                 </Link>
-                {piece.isFeatured ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#C2410C]">
-                    <Star size={10} weight="fill" /> Featured
-                  </span>
-                ) : null}
                 {status !== 'PUBLIC' ? (
                   <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-600">
                     {status.toLowerCase()}
@@ -107,24 +101,6 @@ export function PieceManager({ pieces, onEdit, onRefreshPreview }: PieceManagerP
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                onClick={() =>
-                  update.mutate(
-                    { id: piece.id, patch: { isFeatured: !piece.isFeatured } },
-                    { onSuccess: onRefreshPreview }
-                  )
-                }
-                title={piece.isFeatured ? 'Unfeature' : 'Feature'}
-                aria-label={piece.isFeatured ? 'Unfeature piece' : 'Feature piece'}
-                className={`rounded-lg border p-2 transition-colors ${
-                  piece.isFeatured
-                    ? 'border-[#FFAE19] bg-[#FFF7ED] text-[#F59E0B]'
-                    : 'border-stone-200 text-stone-500 hover:border-[#FFAE19] hover:text-[#F59E0B]'
-                }`}
-              >
-                <Star size={15} weight={piece.isFeatured ? 'fill' : 'regular'} />
-              </button>
               <div className="flex flex-col">
                 <button type="button" onClick={() => move(index, -1)} aria-label="Move up" className="rounded p-0.5 text-stone-400 hover:text-[#18181B]">
                   <ArrowUp size={13} weight="bold" />

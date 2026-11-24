@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowUpRight } from '@phosphor-icons/react';
+import { ArrowUpRight, SquaresFour } from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { ProfileHero } from '@/components/portfolio/ProfileHero';
 import { PieceRenderer } from '@/components/portfolio/PieceRenderer';
@@ -18,7 +18,6 @@ import {
   CreativeDiscipline,
   CreativePiece,
   CreativeProfile,
-  SPOKEN_POETRY_DISCIPLINES,
 } from '@/lib/types';
 
 interface PortfolioViewProps {
@@ -52,17 +51,11 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
   // Filter list options: All + only the disciplines this creative has work in
   const availableDisciplines: Array<CreativeDiscipline | 'ALL'> = ['ALL'];
   for (const discipline of profile.disciplines) {
-    const value = SPOKEN_POETRY_DISCIPLINES.includes(discipline)
-      ? 'SPOKEN_WORDS_POETRY'
-      : discipline;
-    if (!availableDisciplines.includes(value)) availableDisciplines.push(value);
+    if (!availableDisciplines.includes(discipline)) availableDisciplines.push(discipline);
   }
-  // Existing work may use a legacy discipline even if the profile doesn't list it.
+  // Existing work may use a discipline the profile doesn't list.
   for (const piece of pieces || []) {
-    const value = SPOKEN_POETRY_DISCIPLINES.includes(piece.discipline)
-      ? 'SPOKEN_WORDS_POETRY'
-      : piece.discipline;
-    if (!availableDisciplines.includes(value)) availableDisciplines.push(value);
+    if (!availableDisciplines.includes(piece.discipline)) availableDisciplines.push(piece.discipline);
   }
 
   const filterOptions: Array<FilterOption<CreativeDiscipline | 'ALL'>> =
@@ -80,8 +73,12 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
 
           <div className="flex items-center gap-2">
             {session ? (
-              <StudioLink className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 font-sans-ui text-[11px] font-bold text-[#18181B] hover:border-[#FF5A36] hover:text-[#FF5A36]">
-                Studio ↗
+              <StudioLink
+                aria-label="Open Studio"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-stone-300 bg-white text-[#18181B] hover:border-[#FF5A36] hover:text-[#FF5A36] sm:h-auto sm:w-auto sm:px-3 sm:py-1.5"
+              >
+                <SquaresFour size={17} weight="bold" className="sm:hidden" />
+                <span className="hidden font-sans-ui text-[11px] font-bold sm:inline">Studio ↗</span>
               </StudioLink>
             ) : null}
             <span className="font-sans-ui text-xs font-bold px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300 text-stone-700">

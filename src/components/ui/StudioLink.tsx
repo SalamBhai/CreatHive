@@ -8,16 +8,17 @@ import { useIsAdmin } from '@/lib/store';
 interface StudioLinkProps {
   children: React.ReactNode;
   className?: string;
+  'aria-label'?: string;
 }
 
 /** Routes signed-in creators to their Studio (admins to Admin); everyone else to join. */
-export function StudioLink({ children, className }: StudioLinkProps) {
+export function StudioLink({ children, className, 'aria-label': ariaLabel }: StudioLinkProps) {
   const session = useSession();
   const ready = useAuthReady();
   const isAdmin = useIsAdmin();
   const href = !ready ? '/studio' : isAdmin ? '/admin' : session ? '/studio' : '/join';
   return (
-    <Link href={href} className={className} aria-busy={!ready}>
+    <Link href={href} className={className} aria-label={ariaLabel} aria-busy={!ready}>
       {children}
     </Link>
   );

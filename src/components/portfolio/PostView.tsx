@@ -4,7 +4,14 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { ArrowLeft, ArrowRight, ArrowUpRight, ShareNetwork, Check } from '@phosphor-icons/react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  ShareNetwork,
+  Check,
+  SquaresFour,
+} from '@phosphor-icons/react';
 import { CreatHiveWordmark } from '@/components/brand/CreatHiveWordmark';
 import { Surface } from '@/components/ui/Surface';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
@@ -15,6 +22,7 @@ import { PostGallery } from '@/components/media/PostGallery';
 import { PdfAttachment } from '@/components/media/PdfAttachment';
 import { StudioLink } from '@/components/ui/StudioLink';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { sortByRecency } from '@/lib/types';
 import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
 
 
@@ -31,7 +39,7 @@ export function PostView({ id }: { id: string }) {
   const piece = singlePiece ?? (pieces || []).find((p) => p.id === id);
   const author = piece ? (profiles || []).find((p) => p.id === piece.creativeId) : undefined;
 
-  const sorted = [...(pieces || [])].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  const sorted = sortByRecency(pieces || []);
   const index = sorted.findIndex((p) => p.id === id);
   const previous = index > 0 ? sorted[index - 1] : undefined;
   const next = index >= 0 && index < sorted.length - 1 ? sorted[index + 1] : undefined;
@@ -90,8 +98,8 @@ export function PostView({ id }: { id: string }) {
         className="fixed inset-x-0 top-0 z-50 h-[2px] origin-left bg-[#FF5A36]"
       />
       <header className="sticky top-0 z-30 border-b border-stone-200 bg-[#FDFBF7]/95 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-5">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between gap-4 px-5">
+          <div className="flex min-w-0 items-center gap-3">
             <Link href={author ? `/${author.username}` : '/explore'} aria-label="Back" className="rounded-xl border border-stone-200 bg-white p-2">
               <ArrowLeft size={17} weight="bold" />
             </Link>
@@ -99,9 +107,13 @@ export function PostView({ id }: { id: string }) {
               <CreatHiveWordmark size="sm" href={null} />
             </Link>
           </div>
-          <div className="flex items-center gap-3">
-            <StudioLink className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-[11px] font-bold text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]">
-              Studio ↗
+          <div className="flex shrink-0 items-center gap-2">
+            <StudioLink
+              aria-label="Open Studio"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36] sm:h-auto sm:w-auto sm:px-3 sm:py-2"
+            >
+              <SquaresFour size={17} weight="bold" className="sm:hidden" />
+              <span className="hidden text-[11px] font-bold sm:inline">Studio ↗</span>
             </StudioLink>
             <button
               type="button"
@@ -113,7 +125,10 @@ export function PostView({ id }: { id: string }) {
               {copied ? <Check size={16} weight="bold" className="text-emerald-600" /> : <ShareNetwork size={16} weight="bold" />}
             </button>
             {author ? (
-              <Link href={`/${author.username}`} className="text-[11px] font-bold uppercase tracking-widest text-stone-600 hover:text-[#FF5A36]">
+              <Link
+                href={`/${author.username}`}
+                className="hidden max-w-[110px] truncate text-[11px] font-bold uppercase tracking-widest text-stone-600 hover:text-[#FF5A36] sm:inline"
+              >
                 @{author.username}
               </Link>
             ) : null}
