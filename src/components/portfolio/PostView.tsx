@@ -12,7 +12,10 @@ import { useAllPieces, useAllProfiles, usePiece } from '@/lib/store';
 import { resolveAvatarUrl } from '@/lib/avatar';
 import { toEmbedUrl } from '@/lib/media';
 import { PostGallery } from '@/components/media/PostGallery';
+import { PdfAttachment } from '@/components/media/PdfAttachment';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
+
 
 export function PostView({ id }: { id: string }) {
   const { data: pieces } = useAllPieces();
@@ -71,7 +74,11 @@ export function PostView({ id }: { id: string }) {
   }
 
   const config = DISCIPLINE_CONFIG[piece.discipline] || DISCIPLINE_CONFIG.OTHER;
-  const gallery = piece.galleryImages?.length ? piece.galleryImages : piece.coverImageUrl ? [piece.coverImageUrl] : [];
+  const gallery = piece.galleryImages?.length
+    ? piece.galleryImages
+    : piece.mediaType === 'IMAGE_GALLERY' && piece.coverImageUrl
+      ? [piece.coverImageUrl]
+      : [];
   const embedUrl = toEmbedUrl(piece.mediaUrl);
 
   return (
@@ -127,7 +134,7 @@ export function PostView({ id }: { id: string }) {
         {author ? (
           <Link href={`/${author.username}`} className="mt-6 flex items-center gap-3 border-y border-stone-200 py-4">
             <Image
-              src={resolveAvatarUrl(author.avatarUrl, author.displayName)}
+              src={cloudinaryImageUrl(resolveAvatarUrl(author.avatarUrl, author.displayName), 120)}
               alt=""
               width={40}
               height={40}
@@ -156,16 +163,14 @@ export function PostView({ id }: { id: string }) {
         ) : piece.mediaType === 'VIDEO' && piece.mediaUrl ? (
           <Surface className="mt-8 overflow-hidden">
             <div className="video-frame">
-              <video controls preload="metadata" src={piece.mediaUrl} poster={piece.coverImageUrl} />
+              <video controls preload="metadata" src={piece.mediaUrl} poster={cloudinaryImageUrl(piece.coverImageUrl, 1200)} />
             </div>
           </Surface>
         ) : null}
 
         {/* Structured gallery fields become a carousel. Images inserted in the
             WYSIWYG body stay inline in .story-body below, with their captions. */}
-        {gallery.length > 0 && piece.mediaType === 'IMAGE_GALLERY' ? (
-          <PostGallery images={gallery} title={piece.title} />
-        ) : null}
+        {gallery.length > 0 ? <PostGallery images={gallery} title={piece.title} /> : null}
 
         {piece.bodyHtml ? (
           <article className="story-body mt-10" dangerouslySetInnerHTML={{ __html: sanitizeHtml(piece.bodyHtml) }} />
@@ -175,21 +180,7 @@ export function PostView({ id }: { id: string }) {
           </article>
         ) : null}
 
-        {piece.pdfUrl ? (
-          <Surface className="mt-10 p-4 md:p-5">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-stone-500">Case study PDF</p>
-              <a href={piece.pdfUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5A36]">
-                Open PDF <ArrowUpRight size={14} weight="bold" />
-              </a>
-            </div>
-            {/* Aspect-ratio box keeps the frame compact without shrinking the
-                document — the browser renders the PDF at its own scale inside. */}
-            <div className="w-full overflow-hidden rounded-lg border border-stone-200 bg-stone-50" style={{ aspectRatio: '1 / 1.2' }}>
-              <iframe src={piece.pdfUrl} title="Case study PDF" className="h-full w-full border-0" />
-            </div>
-          </Surface>
-        ) : null}
+        {piece.pdfUrl ? <PdfAttachment piece={piece} /> : null}
 
         {piece.tags.length > 0 ? (
           <div className="mt-10 flex flex-wrap gap-2 border-t border-stone-200 pt-6">

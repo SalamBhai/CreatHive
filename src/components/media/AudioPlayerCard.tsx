@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,6 +18,9 @@ import { useApplaudPiece } from '@/lib/store';
 import { StoryReader } from './StoryReader';
 import { ApplauseNotice } from './ApplauseNotice';
 import { toEmbedUrl } from '@/lib/media';
+import { plainTextFromHtml } from '@/lib/sanitize';
+import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
+
 
 interface AudioPlayerCardProps {
   piece: CreativePiece;
@@ -32,6 +36,7 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
 
   const applaudMutation = useApplaudPiece();
   const embedUrl = toEmbedUrl(piece.mediaUrl);
+  const scriptText = plainTextFromHtml(piece.bodyHtml) || piece.textContent || '';
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -112,11 +117,25 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
         <audio ref={audioRef} src={piece.mediaUrl} preload="metadata" />
       ) : null}
 
+      {/* Cover artwork, when the creator supplied one (skipped for embeds). */}
+      {!embedUrl && piece.coverImageUrl ? (
+        <div className="relative h-40 w-full overflow-hidden bg-stone-100 md:h-48">
+          <Image
+            src={cloudinaryImageUrl(piece.coverImageUrl, 1200)}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 100vw, 640px"
+            unoptimized
+            className="object-cover"
+          />
+        </div>
+      ) : null}
+
       {/* Header Info */}
       <div className="border-b border-stone-200 bg-[#FAF8F5] p-4 md:p-5">
         <div className="mb-3 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#FF5A36]/40 bg-[#FFF2EE] px-2.5 py-1 text-xs font-bold text-[#FF5A36]">
           <MicrophoneStage size={13} weight="duotone" />
-          <span>Spoken Word</span>
+          <span>Spoken Words & Poetry</span>
         </div>
 
         <h3 className="font-editorial text-xl font-semibold leading-tight text-[#18181B] md:text-2xl">
@@ -226,7 +245,7 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
             ) : null}
 
             {/* Read Transcript Toggle */}
-            {piece.textContent && (
+            {scriptText && (
               <NeoButton
                 variant="secondary"
                 size="sm"
@@ -255,7 +274,7 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
 
         {/* Expandable Substack-Style Transcript Drawer */}
         <AnimatePresence>
-          {showTranscript && piece.textContent && (
+          {showTranscript && scriptText && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -265,9 +284,9 @@ export function AudioPlayerCard({ piece }: AudioPlayerCardProps) {
             >
               <div className="p-4 bg-[#FDFBF7] rounded-xl border border-stone-200 font-editorial text-[#18181B] text-base leading-relaxed whitespace-pre-line italic">
                 <div className="text-xs font-sans-ui uppercase tracking-wider text-stone-500 font-bold mb-2 not-italic">
-                  Spoken Word Performance Script
+                  Performance Script
                 </div>
-                {piece.textContent}
+                {scriptText}
               </div>
             </motion.div>
           )}

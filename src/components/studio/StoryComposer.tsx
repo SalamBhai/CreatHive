@@ -10,7 +10,6 @@ import {
   CaretDown,
   PlayCircle,
   Code,
-  FilePdf,
   Minus,
   TextB,
   TextItalic,
@@ -30,8 +29,8 @@ interface StoryComposerProps {
   placeholder?: string;
 }
 
-type InsertKind = 'text' | 'heading' | 'quote' | 'image' | 'grid' | 'video' | 'embed' | 'pdf' | 'divider';
-type DialogKind = 'link' | 'video' | 'embed' | 'pdf';
+type InsertKind = 'text' | 'heading' | 'quote' | 'image' | 'grid' | 'video' | 'embed' | 'divider';
+type DialogKind = 'link' | 'video' | 'embed';
 
 const INSERT_OPTIONS: Array<{ kind: InsertKind; label: string; icon: React.ElementType }> = [
   { kind: 'text', label: 'Text', icon: TextT },
@@ -41,7 +40,6 @@ const INSERT_OPTIONS: Array<{ kind: InsertKind; label: string; icon: React.Eleme
   { kind: 'grid', label: 'Photo grid', icon: CaretRight },
   { kind: 'video', label: 'Video / Audio', icon: PlayCircle },
   { kind: 'embed', label: 'Embed', icon: Code },
-  { kind: 'pdf', label: 'PDF', icon: FilePdf },
   { kind: 'divider', label: 'Divider', icon: Minus },
 ];
 
@@ -154,14 +152,6 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
       exec('insertHTML', `<figure><div class="video-frame"><iframe src="${embed}" allowfullscreen></iframe></div></figure>`);
       return closeDialog();
     }
-    if (dialog === 'pdf') {
-      if (!url) return setError('Add a PDF URL.');
-      exec(
-        'insertHTML',
-        `<p><a class="pdf-link" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">View the case study PDF â†—</a></p>`
-      );
-      return closeDialog();
-    }
   };
 
   const upload = async (files: FileList | null) => {
@@ -199,7 +189,6 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
     link: { title: 'Add a link', hint: 'Paste the URL you want this text to point to.' },
     video: { title: 'Insert video or audio', hint: 'Paste a direct media URL or a YouTube/Vimeo link. Poster is optional.' },
     embed: { title: 'Insert an embed', hint: 'Paste a YouTube or Vimeo share URL.' },
-    pdf: { title: 'Insert a PDF link', hint: 'Paste a link to the case study PDF.' },
   };
 
   return (
@@ -299,7 +288,7 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
               className={inputClass}
               value={form.url}
               onChange={(e) => setForm({ ...form, url: e.target.value })}
-              placeholder={dialog === 'pdf' ? 'https://â€¦/case-study.pdf' : 'https://â€¦'}
+              placeholder="https://â€¦"
               aria-label="Media URL"
             />
             {dialog === 'video' ? (

@@ -11,6 +11,8 @@ import { NeoButton } from '../ui/NeoButton';
 import { useApplaudPiece } from '@/lib/store';
 import { StoryReader } from './StoryReader';
 import { ApplauseNotice } from './ApplauseNotice';
+import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
+
 
 interface VideoReelCardProps {
   piece: CreativePiece;
@@ -63,7 +65,7 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
           <video
             ref={videoRef}
             src={piece.mediaUrl}
-            poster={piece.coverImageUrl}
+            poster={cloudinaryImageUrl(piece.coverImageUrl, 1200)}
             preload="metadata"
             playsInline
             loop
@@ -72,7 +74,7 @@ export function VideoReelCard({ piece }: VideoReelCardProps) {
           />
         ) : (
           <Image
-            src={piece.coverImageUrl || '/images/scenes/hero.jpg'}
+            src={cloudinaryImageUrl(piece.coverImageUrl, 1200) || '/images/scenes/hero.jpg'}
             alt={piece.title}
             fill
             sizes="(max-width: 768px) 100vw, 640px"

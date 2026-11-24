@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
+import { thumbnailUrl } from '@/lib/cloudinary-image';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { useAddPiece, useAllPieces, useCampaigns, useCreateSubmission, useUpdatePiece } from '@/lib/store';
 import { notifyPush } from '@/lib/push';
@@ -19,7 +21,10 @@ interface PieceFormProps {
   onSuccess?: () => void;
 }
 
-type Step = 'details' | 'media' | 'story';
+type Step = 'details' | 'story';
+
+const MAX_IMAGES = 10;
+const MAX_IMAGE_BYTES_TOTAL = 20 * 1024 * 1024;
 
 const inputClass =
   'w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]';
@@ -35,7 +40,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [step, setStep] = useState<Step>('details');
   const [title, setTitle] = useState(piece?.title || '');
   const [subtitle, setSubtitle] = useState(piece?.subtitle || '');
-  const [discipline, setDiscipline] = useState<CreativeDiscipline>(piece?.discipline || 'SPOKEN_WORD');
+  const [discipline, setDiscipline] = useState<CreativeDiscipline>(piece?.discipline || 'SPOKEN_WORDS_POETRY');
+  const [spokenFormat, setSpokenFormat] = useState<'AUDIO' | 'TEXT'>(
+    piece?.mediaType === 'AUDIO' ? 'AUDIO' : 'TEXT'
+  );
   const [mediaUrl, setMediaUrl] = useState(piece?.mediaUrl || '');
   const [mediaPublicId, setMediaPublicId] = useState(piece?.mediaPublicId || '');
   const [textContent, setTextContent] = useState(piece?.textContent || '');
@@ -46,11 +54,19 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [galleryPublicIds, setGalleryPublicIds] = useState<string[]>(piece?.galleryPublicIds || []);
   const [bodyHtml, setBodyHtml] = useState(piece?.bodyHtml || '');
   const [pdfUrl, setPdfUrl] = useState(piece?.pdfUrl || '');
+  const [pdfPublicId, setPdfPublicId] = useState(piece?.pdfPublicId || '');
+  const [pdfPageImages, setPdfPageImages] = useState<string[]>(piece?.pdfPageImages || []);
+  const [pdfPagePublicIds, setPdfPagePublicIds] = useState<string[]>(piece?.pdfPagePublicIds || []);
+  const [pdfCoverPage, setPdfCoverPage] = useState<number | undefined>(piece?.pdfCoverPage);
+  const [imageSizes, setImageSizes] = useState<Record<string, number>>({});
+  const [mediaBusy, setMediaBusy] = useState(false);
+  const [mediaNotice, setMediaNotice] = useState('');
+  const [busyImageIndex, setBusyImageIndex] = useState<number | null>(null);
   const [status, setStatus] = useState<PieceStatus>(piece?.status || 'PUBLIC');
   const [campaignId, setCampaignId] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [draftSavedId, setDraftSavedId] = useState<string | null>(null);
-  const mediaType = mediaTypeForNiche(discipline);
+  const mediaType = discipline === 'SPOKEN_WORDS_POETRY' ? spokenFormat : mediaTypeForNiche(discipline);
   const addPieceMutation = useAddPiece();
   const updatePieceMutation = useUpdatePiece();
   const { data: allPieces } = useAllPieces();
@@ -78,7 +94,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   /** Shared upload handler — surfaces failures instead of storing `undefined`. */
   const handleUpload = async (
     file: File,
-    kind: 'media' | 'gallery' | 'cover',
+    kind: 'media' | 'gallery' | 'cover' | 'pdf',
     apply: (url: string, publicId: string) => void
   ) => {
     setUploadError('');
@@ -88,6 +104,101 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed.');
     }
+  };
+
+  /** One uploader for every file type. The route classifies the bytes and
+   *  tells us which handler should own the result. */
+  const addMedia = async (files: FileList | null) => {
+    const picked = Array.from(files || []);
+    if (!picked.length) return;
+    setUploadError('');
+    setMediaNotice('');
+
+    const images = picked.filter((file) => file.type.startsWith('image/'));
+    const imageCount = pdfPageImages.length + galleryImages.length;
+    if (imageCount + images.length > MAX_IMAGES) {
+      setUploadError(`Up to ${MAX_IMAGES} images per post.`);
+      return;
+    }
+    const existingBytes = Object.values(imageSizes).reduce((sum, size) => sum + size, 0);
+    const incomingBytes = images.reduce((sum, file) => sum + file.size, 0);
+    if (existingBytes + incomingBytes > MAX_IMAGE_BYTES_TOTAL) {
+      setUploadError('Images must total 20 MB or less.');
+      return;
+    }
+
+    setMediaBusy(true);
+    try {
+      const results = await Promise.all(picked.map((file) => uploadFile(file, 'media')));
+      const notes: string[] = [];
+      results.forEach((result, index) => {
+        const file = picked[index];
+        const kind =
+          result.resourceType ||
+          (file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'raw' : 'video');
+        if (kind === 'raw') {
+          setPdfUrl(result.url);
+          setPdfPublicId(result.publicId);
+          notes.push('PDF attached');
+        } else if (kind === 'video') {
+          setMediaUrl(result.url);
+          setMediaPublicId(result.publicId);
+          notes.push('Audio / video attached');
+        } else if (pdfUrl) {
+          setPdfPageImages((current) => [...current, result.url]);
+          setPdfPagePublicIds((current) => [...current, result.publicId]);
+          setImageSizes((current) => ({ ...current, [result.url]: file.size }));
+        } else {
+          setGalleryImages((current) => [...current, result.url]);
+          setGalleryPublicIds((current) => [...current, result.publicId]);
+          setImageSizes((current) => ({ ...current, [result.url]: file.size }));
+        }
+      });
+      setMediaNotice(Array.from(new Set(notes)).join(' · '));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setMediaBusy(false);
+    }
+  };
+
+  const uploadImageAt = async (file: File, index: number) => {
+    const existingBytes = Object.values(imageSizes).reduce((sum, size) => sum + size, 0);
+    if (existingBytes + file.size > MAX_IMAGE_BYTES_TOTAL) {
+      setUploadError('Images must total 20 MB or less.');
+      return;
+    }
+    setBusyImageIndex(index);
+    try {
+      const result = await uploadFile(file, 'gallery');
+      const images = [...galleryImages];
+      const ids = [...galleryPublicIds];
+      images[index] = result.url;
+      ids[index] = result.publicId;
+      setGalleryImages(images);
+      setGalleryPublicIds(ids);
+      setImageSizes((current) => ({ ...current, [result.url]: file.size }));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setBusyImageIndex(null);
+    }
+  };
+
+  const removeImage = (url: string) => {
+    const sizes = { ...imageSizes };
+    delete sizes[url];
+    setImageSizes(sizes);
+    setPdfPageImages((current) => current.filter((item) => item !== url));
+    setPdfPagePublicIds((current) => current.filter((_, index) => pdfPageImages[index] !== url));
+    setGalleryImages((current) => current.filter((item) => item !== url));
+    setGalleryPublicIds((current) => current.filter((_, index) => galleryImages[index] !== url));
+    if (coverImageUrl === url) {
+      setCoverImageUrl('');
+      setCoverPublicId('');
+    }
+    const pageIndex = pdfPageImages.indexOf(url);
+    if (pageIndex >= 0 && pdfCoverPage === pageIndex) setPdfCoverPage(undefined);
   };
 
   const addTag = (tag: string) => {
@@ -110,6 +221,13 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setCampaignId('');
     setBodyHtml('');
     setPdfUrl('');
+    setPdfPublicId('');
+    setPdfPageImages([]);
+    setPdfPagePublicIds([]);
+    setPdfCoverPage(undefined);
+    setImageSizes({});
+    setMediaNotice('');
+    setBusyImageIndex(null);
   };
 
   const handleSubmit = (
@@ -138,6 +256,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       textContent: textContent || undefined,
       bodyHtml: bodyHtml || undefined,
       pdfUrl: pdfUrl || undefined,
+      pdfPublicId: pdfPublicId || undefined,
+      pdfPageImages: pdfPageImages.filter(Boolean).length ? pdfPageImages.filter(Boolean) : undefined,
+      pdfPagePublicIds: pdfPagePublicIds.filter(Boolean).length ? pdfPagePublicIds.filter(Boolean) : undefined,
+      pdfCoverPage: pdfCoverPage,
       galleryImages: galleryImages.filter(Boolean).length ? galleryImages.filter(Boolean) : undefined,
       galleryPublicIds: galleryPublicIds.filter(Boolean).length ? galleryPublicIds : undefined,
       coverPublicId: coverPublicId || undefined,
@@ -185,8 +307,8 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   return (
     <form onSubmit={handleSubmit} className="pt-1">
       {/* Step switcher — shared on mobile and desktop */}
-      <div className="mx-auto mb-5 grid max-w-xl grid-cols-3 gap-1 rounded-xl border border-stone-200 bg-white p-1">
-        {(['details', 'media', 'story'] as const).map((id) => (
+      <div className="mx-auto mb-5 grid max-w-xl grid-cols-2 gap-1 rounded-xl border border-stone-200 bg-white p-1">
+        {(['details', 'story'] as const).map((id) => (
           <button
             key={id}
             type="button"
@@ -233,8 +355,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               onChange={(e) => setDiscipline(e.target.value as CreativeDiscipline)}
               className={inputClass}
             >
-              <option value="SPOKEN_WORD">Spoken Word</option>
-              <option value="POETRY">Poetry & Verse</option>
+              <option value="SPOKEN_WORDS_POETRY">Spoken Words & Poetry</option>
               <option value="UIUX_DESIGN">UI/UX Mobile Design</option>
               <option value="TECH_IMAGERY">Tech Imagery & 3D</option>
               <option value="DANCE">Dance & Performance</option>
@@ -252,6 +373,19 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               {MEDIA_LABELS[mediaType]}
             </div>
           </div>
+          {discipline === 'SPOKEN_WORDS_POETRY' ? (
+            <div className="col-span-2">
+              <label className={labelClass}>Format</label>
+              <select
+                value={spokenFormat}
+                onChange={(e) => setSpokenFormat(e.target.value as 'AUDIO' | 'TEXT')}
+                className={inputClass}
+              >
+                <option value="AUDIO">Audio / spoken word</option>
+                <option value="TEXT">Written / poem</option>
+              </select>
+            </div>
+          ) : null}
         </div>
 
         <div>
@@ -323,8 +457,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
         </div>
       </div>
 
-      {/* MEDIA */}
-      <div className={`${sectionClass('media')} pt-4 lg:pt-2`}>
+      {/* STORY */}
+      <div className={`${sectionClass('story')} pt-4 lg:pt-2`}>
+        {/* Media lives here too: one place for all content */}
+      <div className="space-y-4">
         {(mediaType === 'AUDIO' || mediaType === 'VIDEO') && (
           <div>
             <label className={labelClass}>Work link</label>
@@ -365,21 +501,6 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
           </div>
         )}
 
-        {(mediaType === 'TEXT' || mediaType === 'AUDIO' || mediaType === 'VIDEO') && (
-          <div>
-            <label className={labelClass}>
-              {mediaType === 'TEXT' ? 'Full text / Poem' : 'Script / Notes (Optional)'}
-            </label>
-            <textarea
-              rows={4}
-              value={textContent}
-              onChange={(e) => setTextContent(e.target.value)}
-              placeholder="Plain text version. Readers can also open the long-form story below."
-              className="w-full resize-none rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 font-editorial text-base italic outline-none"
-            />
-          </div>
-        )}
-
         {mediaType === 'IMAGE_GALLERY' ? (
           <div>
             <div className="mb-1 flex items-center justify-between">
@@ -416,10 +537,11 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
                   />
                   <button
                     type="button"
-                    className="ml-2 rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-600 hover:border-[#FF5A36]"
+                    disabled={busyImageIndex === index}
+                    className="ml-2 shrink-0 rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-600 hover:border-[#FF5A36] disabled:opacity-50"
                     onClick={() => document.getElementById(`gallery-file-${index}`)?.click()}
                   >
-                    Upload
+                    {busyImageIndex === index ? '…' : 'Upload'}
                   </button>
                   <input
                     type="file"
@@ -428,15 +550,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (!file) return;
-                      void handleUpload(file, 'gallery', (url, id) => {
-                        const images = [...galleryImages];
-                        const ids = [...galleryPublicIds];
-                        images[index] = url;
-                        ids[index] = id;
-                        setGalleryImages(images);
-                        setGalleryPublicIds(ids);
-                      });
+                      if (file) void uploadImageAt(file, index);
                     }}
                   />
                   <button
@@ -456,59 +570,97 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
           </div>
         ) : null}
 
-        {mediaType === 'IMAGE_GALLERY' ? (
-          <div>
-            <label className={labelClass}>Case study PDF (optional)</label>
-            <input
-              type="url"
-              value={pdfUrl}
-              onChange={(e) => setPdfUrl(e.target.value)}
-              placeholder="Link to a PDF. It renders in the full post view."
-              className={inputClass}
-            />
-          </div>
-        ) : null}
 
-        <div>
-          <label className={labelClass}>Cover Image URL</label>
-          <input
-            type="url"
-            value={coverImageUrl}
-            onChange={(e) => setCoverImageUrl(e.target.value)}
-            placeholder="https://..."
-            className={inputClass}
-          />
-          <button
-            type="button"
-            className="ml-2 rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-600 hover:border-[#FF5A36]"
-            onClick={() => document.getElementById('cover-file')?.click()}
-          >
-            Upload
-          </button>
-          <input
-            type="file"
-            id="cover-file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                void handleUpload(file, 'cover', (url, id) => {
-                  setCoverImageUrl(url);
-                  setCoverPublicId(id);
-                });
-              }
-            }}
-          />
-        </div>
       </div>
 
-      {/* STORY */}
-      <div className={`${sectionClass('story')} pt-4 lg:pt-2`}>
+        <div className="rounded-xl border border-stone-200 bg-[#FCFAF6] p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div>
+              <label className={labelClass}>Story</label>
+              <p className="text-[10px] text-stone-500">
+                {pdfPageImages.length + galleryImages.length}/{MAX_IMAGES} images ·{' '}
+                {(Object.values(imageSizes).reduce((sum, size) => sum + size, 0) / 1024 / 1024).toFixed(1)}/
+                {MAX_IMAGE_BYTES_TOTAL / 1024 / 1024} MB
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={mediaBusy}
+              className="rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-600 hover:border-[#FF5A36] disabled:opacity-50"
+              onClick={() => document.getElementById("add-media")?.click()}
+            >
+              {mediaBusy ? 'Uploading…' : '+ Add media'}
+            </button>
+            <input
+              type="file"
+              id="add-media"
+              accept="image/*,application/pdf,video/*,audio/*"
+              multiple
+              hidden
+              onChange={(e) => void addMedia(e.target.files)}
+            />
+          </div>
+
+          {uploadError ? <p className="mt-2 text-[11px] font-semibold text-red-600">{uploadError}</p> : null}
+          {mediaNotice && !uploadError ? (
+            <p className="mt-2 text-[11px] font-semibold text-emerald-700">{mediaNotice}</p>
+          ) : null}
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            {pdfUrl ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-[#FF5A36]">
+                <a href={pdfUrl} target="_blank" rel="noreferrer">PDF ↗</a>
+                <button type="button" aria-label="Remove PDF" onClick={() => { setPdfUrl(""); setPdfPublicId(""); }} className="text-stone-400 hover:text-red-600">×</button>
+              </span>
+            ) : null}
+
+            {mediaUrl ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-700">
+                <a href={mediaUrl} target="_blank" rel="noreferrer">Video / Audio ↗</a>
+                <button type="button" aria-label="Remove media" onClick={() => { setMediaUrl(""); setMediaPublicId(""); }} className="text-stone-400 hover:text-red-600">×</button>
+              </span>
+            ) : null}
+
+            {[...pdfPageImages, ...galleryImages].map((url, index) => {
+              const pageIndex = pdfPageImages.indexOf(url);
+              const isCover = url === coverImageUrl || (pageIndex >= 0 && pdfCoverPage === pageIndex);
+              return (
+                <div key={url + "-" + index} className="w-24 overflow-hidden rounded-lg border border-stone-200 bg-white">
+                  <Image src={thumbnailUrl(url)} alt="" width={96} height={110} unoptimized loading="lazy" className="h-24 w-full object-cover" />
+                  <div className="flex flex-col gap-1 border-t border-stone-100 p-1">
+                    <button
+                      type="button"
+                      title="Use as cover"
+                      onClick={() => {
+                        setCoverImageUrl(url);
+                        setCoverPublicId(pdfPagePublicIds[pageIndex] || galleryPublicIds[galleryImages.indexOf(url)] || "");
+                        if (pageIndex >= 0) setPdfCoverPage(pageIndex);
+                        setMediaNotice('Set as cover');
+                      }}
+                      className={`w-full whitespace-nowrap rounded py-1 text-[10px] font-bold ${
+                        isCover ? 'bg-[#FFF7ED] text-[#C2410C]' : 'text-[#FF5A36] hover:bg-[#FFF2EE]'
+                      }`}
+                    >
+                      {isCover ? 'Cover ✓' : 'Set cover'}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Remove image"
+                      onClick={() => removeImage(url)}
+                      className="w-full whitespace-nowrap rounded py-1 text-[10px] font-bold text-stone-500 hover:bg-red-50 hover:text-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <label className="block text-xs font-bold text-[#18181B]">Full post</label>
-            <span className="text-[10px] text-stone-400">Use + to add media, text, PDF</span>
+            <label className="block text-xs font-bold text-[#18181B]">Write</label>
+            <span className="text-[10px] text-stone-400">Use + for text, images, video and links</span>
           </div>
           <StoryComposer
             value={bodyHtml}
@@ -519,9 +671,9 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       </div>
 
       <div className="sticky bottom-0 mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
-        {uploadError || addPieceMutation.isError || updatePieceMutation.isError ? (
+        {addPieceMutation.isError || updatePieceMutation.isError ? (
           <p role="alert" className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
-            {uploadError || 'Could not save. Check your connection and try again.'}
+            Could not save. Check your connection and try again.
           </p>
         ) : null}
         {draftSavedId ? (

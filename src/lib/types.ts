@@ -1,4 +1,5 @@
 export type CreativeDiscipline =
+  | 'SPOKEN_WORDS_POETRY'
   | 'SPOKEN_WORD'
   | 'POETRY'
   | 'MUSIC'
@@ -85,7 +86,11 @@ export interface CreativePiece {
   textContent?: string; // Lyrics, spoken word script, or poem verses
   contentBlocks?: ContentBlock[]; // Long-form editorial post / article
   bodyHtml?: string; // WYSIWYG full-post body
-  pdfUrl?: string; // Attached case-study PDF
+  pdfUrl?: string; // Attached source PDF (brief, case study, call-to-work)
+  pdfPublicId?: string; // Cloudinary public_id for the uploaded PDF
+  pdfPageImages?: string[]; // Converted page images, in reading order
+  pdfPagePublicIds?: string[]; // Parallel to pdfPageImages
+  pdfCoverPage?: number; // Zero-based index of the page used as cover
   coverImageUrl?: string;
   coverPublicId?: string; // Cloudinary public_id for the uploaded cover
   galleryImages?: string[]; // For UI/UX designs, tech imagery & graphics

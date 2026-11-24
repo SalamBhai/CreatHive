@@ -33,14 +33,20 @@ export const DISCIPLINE_CONFIG: Record<
     color: '#18181B',
     bg: '#FFFFFF',
   },
+  SPOKEN_WORDS_POETRY: {
+    label: 'Spoken Words & Poetry',
+    icon: MicrophoneStage,
+    color: '#FF5A36',
+    bg: '#FFF2EE',
+  },
   SPOKEN_WORD: {
-    label: 'Spoken Word',
+    label: 'Spoken Words & Poetry',
     icon: MicrophoneStage,
     color: '#FF5A36',
     bg: '#FFF2EE',
   },
   POETRY: {
-    label: 'Poetry & Verse',
+    label: 'Spoken Words & Poetry',
     icon: Feather,
     color: '#8B5CF6',
     bg: '#F5F3FF',

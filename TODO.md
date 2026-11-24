@@ -41,8 +41,8 @@ _As of 2026-11-18. **Working tree is dirty** — the items marked "just fixed" b
 - Profile: editable details, socials, gigs toggle, avatar URL **or upload**, Save — with a live preview. Mobile uses **Edit / Preview** tabs.
 - Inquiries: read view from local store, with `PENDING → REVIEWED → RESPONDED` actions.
 - Add Piece: tabbed on mobile (**Details / Media / Story**), stacked on desktop; sticky Publish button.
-- Full-post composer: single WYSIWYG canvas with a `+` insert menu (text, heading, quote, image, photo grid, video/audio, embed, PDF, divider). No block chips.
-- Full-post view `/p/[id]` for UI/UX, video, galleries, PDFs — includes image grid, media, body HTML, tags.
+- Full-post composer: single WYSIWYG canvas with a `+` insert menu (text, heading, quote, image, photo grid, video/audio, embed, divider). PDFs are managed as a separate attachment, not an inline link.
+- Full-post view `/p/[id]` for all niches — includes image grid, media, sanitized body HTML, PDF source document with page-image reader, tags.
 - Admin-only items (Campaigns, Submissions) removed from creator nav — decision recorded in `docs/MIGRATION.md`.
 
 ### Plumbing
@@ -89,6 +89,7 @@ These were either falsified as "done" in the previous version of this file, or w
 ### Medium — Studio / UX
 - [x] Banner upload UI — URL field + upload in `ProfileEditor`, image shown in `ProfileHero` with the gradient as fallback. Needs migration `003_banner_upload.sql` on the live DB.
 - [x] Full-post composer — `+` image/grid can upload files (URLs still accepted), captions, left/centre/right alignment, and optional video poster URL.
+- [x] One WYSIWYG text field across all niches; plain-text excerpts and audio scripts derived from it. PDF attached as a source document with uploaded page images, selectable cover page and mobile page reader (migration `014`).
 - [x] `/admin` built: overview metrics, creators, pieces, campaigns, submissions, flags and audit log behind an admin gate. Inquiries are creator-only; no admin view. Needs migration `004` and `is_admin = true` on your profile.
 
 ### Large — data & platform (see `docs/MIGRATION.md`)

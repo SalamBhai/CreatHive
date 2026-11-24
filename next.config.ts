@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
+              // Audio/video links are user-supplied (Cloudinary or external hosts).
+              "media-src 'self' https: blob:",
               "connect-src 'self' https://*.supabase.co https://api.brevo.com",
               "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
               "font-src 'self' data:",

@@ -15,11 +15,12 @@ import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { useAllPieces, useAllProfiles } from '@/lib/store';
 import { searchPieces, searchProfiles } from '@/lib/search';
 import type { CreativeDiscipline } from '@/lib/types';
+import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
+
 
 const NICHES = [
   'ALL',
-  'SPOKEN_WORD',
-  'POETRY',
+  'SPOKEN_WORDS_POETRY',
   'DANCE',
   'MUSIC',
   'TECH_IMAGERY',
@@ -94,7 +95,15 @@ export default function ExplorePage() {
     return [...new Map([...matched, ...fromCreators].map((p) => [p.id, p])).values()];
   })();
   const visiblePieces = searched
-    .filter((piece) => niche === 'ALL' || piece.discipline === niche)
+    .filter((piece) =>
+      niche === 'ALL'
+        ? true
+        : niche === 'SPOKEN_WORDS_POETRY'
+          ? piece.discipline === 'SPOKEN_WORDS_POETRY' ||
+            piece.discipline === 'SPOKEN_WORD' ||
+            piece.discipline === 'POETRY'
+          : piece.discipline === niche
+    )
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 
   const shown = visiblePieces.slice(0, visibleCount);
@@ -163,7 +172,7 @@ export default function ExplorePage() {
                   className="group flex items-center gap-2 rounded-full border border-stone-200 bg-white py-1 pl-1 pr-3 transition-colors hover:border-[#FF5A36]"
                 >
                   <Image
-                    src={resolveAvatarUrl(profile.avatarUrl, profile.displayName || 'CreatHive')}
+                    src={cloudinaryImageUrl(resolveAvatarUrl(profile.avatarUrl, profile.displayName || 'CreatHive'), 96)}
                     alt=""
                     width={28}
                     height={28}
@@ -244,7 +253,7 @@ export default function ExplorePage() {
                     <Surface interactive className="flex h-full flex-col overflow-hidden">
                       <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
                         <Image
-                          src={piece.coverImageUrl || '/images/scenes/hero.jpg'}
+                          src={cloudinaryImageUrl(piece.coverImageUrl, 800) || '/images/scenes/hero.jpg'}
                           alt=""
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -285,7 +294,7 @@ export default function ExplorePage() {
                               aria-label={`View ${author.displayName}'s profile`}
                             >
                               <Image
-                                src={resolveAvatarUrl(author.avatarUrl, author.displayName || 'CreatHive')}
+                                src={cloudinaryImageUrl(resolveAvatarUrl(author.avatarUrl, author.displayName || 'CreatHive'), 96)}
                                 alt=""
                                 width={32}
                                 height={32}

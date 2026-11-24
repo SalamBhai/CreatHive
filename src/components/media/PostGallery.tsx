@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { cloudinaryImageUrl, thumbnailUrl } from '@/lib/cloudinary-image';
 
 /** Carousel for the structured gallery fields (not inline WYSIWYG images). */
 export function PostGallery({ images, title }: { images: string[]; title: string }) {
@@ -14,15 +15,16 @@ export function PostGallery({ images, title }: { images: string[]; title: string
 
   return (
     <div className="mt-8">
-      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-stone-200 bg-stone-100">
-        <Image
+      <div className="relative min-h-[240px] w-full overflow-hidden rounded-2xl border border-stone-200 bg-stone-100">
+        {/* Full-width display, right-sized bytes. Only the active slide loads large. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           key={images[index]}
-          src={images[index]}
+          src={cloudinaryImageUrl(images[index], 1200)}
           alt={`${title}, image ${index + 1} of ${total}`}
-          fill
-          sizes="(max-width: 768px) 100vw, 768px"
-          unoptimized
-          className="object-cover"
+          loading="eager"
+          decoding="async"
+          className="block h-auto w-full"
         />
         {total > 1 ? (
           <>
@@ -60,7 +62,7 @@ export function PostGallery({ images, title }: { images: string[]; title: string
                 i === index ? 'border-[#FF5A36]' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <Image src={src} alt="" fill sizes="80px" unoptimized className="object-cover" />
+              <Image src={thumbnailUrl(src)} alt="" fill sizes="80px" unoptimized loading="lazy" className="object-contain" />
             </button>
           ))}
         </div>

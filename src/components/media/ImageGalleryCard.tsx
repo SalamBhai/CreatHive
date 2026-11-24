@@ -9,6 +9,8 @@ import { CreativePiece } from '@/lib/types';
 import { NeoButton } from '../ui/NeoButton';
 import { useApplaudPiece } from '@/lib/store';
 import { ApplauseNotice } from './ApplauseNotice';
+import { cloudinaryImageUrl, thumbnailUrl } from '@/lib/cloudinary-image';
+
 
 interface ImageGalleryCardProps {
   piece: CreativePiece;
@@ -52,7 +54,7 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
       <div className="relative aspect-[16/10] w-full bg-[#18181B] overflow-hidden group">
         {images.length > 0 && (
           <Image
-            src={images[currentIndex]}
+            src={cloudinaryImageUrl(images[currentIndex], 1200)}
             alt={`${piece.title} - ${currentIndex + 1}`}
             fill
             priority
@@ -121,7 +123,7 @@ export function ImageGalleryCard({ piece }: ImageGalleryCardProps) {
                 idx === currentIndex ? 'border-[#FF5A36]' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <Image src={src} alt="" fill sizes="64px" className="object-cover" />
+              <Image src={thumbnailUrl(src)} alt="" fill sizes="64px" loading="lazy" className="object-cover" />
             </button>
           ))}
         </div>

@@ -2,9 +2,9 @@ import { v2 as cloudinary } from 'cloudinary';
 import { usingSupabase } from '@/lib/supabase';
 import { getUserFromRequest } from '@/lib/supabase-server';
 
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_MEDIA_BYTES = 100 * 1024 * 1024;
-const KINDS = ['avatar', 'media', 'gallery', 'cover', 'inquiry'] as const;
+const KINDS = ['avatar', 'media', 'gallery', 'cover', 'inquiry', 'pdf'] as const;
 type UploadKind = (typeof KINDS)[number];
 
 /** Best-effort in-memory throttle (per process). A hosted app should use Redis. */
@@ -73,6 +73,9 @@ export async function POST(request: Request) {
       415
     );
   }
+  if (kind === 'pdf' && (resourceType !== 'raw' || file.type !== 'application/pdf')) {
+    return json({ error: 'Only PDF files can be uploaded here.' }, 415);
+  }
   const limit = anonymous
     ? 5 * 1024 * 1024
     : resourceType === 'image'
@@ -94,13 +97,27 @@ export async function POST(request: Request) {
 
   try {
     const bytes = Buffer.from(await file.arrayBuffer());
-    const result = await cloudinary.uploader.upload(
-      `data:${file.type || 'application/octet-stream'};base64,${bytes.toString('base64')}`,
-      { folder, resource_type: resourceType, timestamp, signature, api_key: apiKey }
+    // Stream the bytes instead of a base64 data URI. A data URI inflates the
+    // payload by ~33% and breaks on larger PDFs/images.
+    const result = await new Promise<{ secure_url: string; public_id: string }>(
+      (resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder, resource_type: resourceType, timestamp, signature, api_key: apiKey } as never,
+          (uploadError, uploaded) => {
+            if (uploadError || !uploaded) {
+              reject(uploadError || new Error('Upload returned no result'));
+              return;
+            }
+            resolve({ secure_url: uploaded.secure_url, public_id: uploaded.public_id });
+          }
+        );
+        stream.end(bytes);
+      }
     );
-    return json({ url: result.secure_url, publicId: result.public_id }, 200);
+    return json({ url: result.secure_url, publicId: result.public_id, resourceType }, 200);
   } catch (error) {
     console.error('[cloudinary] upload failed:', error);
-    return json({ error: 'Upload failed. Please try again.' }, 500);
+    const detail = error instanceof Error ? error.message : 'Upload failed.';
+    return json({ error: `Upload failed: ${detail}` }, 500);
   }
 }

@@ -10,6 +10,8 @@ import { StudioLink } from '@/components/ui/StudioLink';
 import { VisualScene } from '@/components/landing/VisualScene';
 import { useAllProfiles } from '@/lib/store';
 import { resolveAvatarUrl } from '@/lib/avatar';
+import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
+
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -53,7 +55,7 @@ function SceneNote({ children }: { children: React.ReactNode }) {
   );
 }
 
-const SCENE_COUNT = 6;
+const SCENE_COUNT = 5;
 
 export default function HomePage() {
   const { data: profiles } = useAllProfiles();
@@ -172,14 +174,14 @@ export default function HomePage() {
         </div>
       </VisualScene>
 
-      {/* 01 — Spoken word */}
+      {/* 01 — Spoken words and poetry */}
       <VisualScene
-        label="Spoken Word"
+        label="Spoken Words & Poetry"
         image="/images/scenes/spoken-word.jpg"
         alt="A microphone lit by a warm spotlight in a dark room"
       >
         <SceneHeading>Let your voice be heard.</SceneHeading>
-        <SceneNote>Play your audio. Share your script.</SceneNote>
+        <SceneNote>Play your audio. Share your script. Read a poem.</SceneNote>
       </VisualScene>
 
       {/* 02 — Dance */}
@@ -191,16 +193,6 @@ export default function HomePage() {
       >
         <SceneHeading>Show your moves.</SceneHeading>
         <SceneNote>Watch full videos, with no clutter.</SceneNote>
-      </VisualScene>
-
-      {/* 03 — Poetry */}
-      <VisualScene
-        label="Poetry & Verse"
-        image="/images/scenes/poetry.jpg"
-        alt="A fountain pen writing on textured paper"
-      >
-        <SceneHeading>Let your words breathe.</SceneHeading>
-        <SceneNote>Read poems in a clean, calm space.</SceneNote>
       </VisualScene>
 
       {/* 04 — Design */}
@@ -236,7 +228,7 @@ export default function HomePage() {
                 className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 py-1.5 pl-1.5 pr-3 text-[11px] font-semibold text-white/80 backdrop-blur-sm transition-colors hover:border-white/60 hover:text-white"
               >
                 <Image
-                  src={resolveAvatarUrl(profile.avatarUrl, profile.displayName || 'CreatHive')}
+                  src={cloudinaryImageUrl(resolveAvatarUrl(profile.avatarUrl, profile.displayName || 'CreatHive'), 96)}
                   alt=""
                   width={24}
                   height={24}

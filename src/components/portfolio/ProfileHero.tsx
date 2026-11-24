@@ -8,6 +8,8 @@ import { DisciplineChip } from '../ui/DisciplineChip';
 import { resolveAvatarUrl } from '@/lib/avatar';
 import { VerifiedHiveBadge } from '@/components/brand/VerifiedHiveBadge';
 import { SocialQuickIcons, SocialMoreIcons } from './SocialLinks';
+import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
+
 
 interface ProfileHeroProps {
   profile: CreativeProfile;
@@ -24,7 +26,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
       >
         {profile.bannerUrl ? (
           <Image
-            src={profile.bannerUrl}
+            src={cloudinaryImageUrl(profile.bannerUrl, 1200)}
             alt=""
             fill
             sizes="100vw"
@@ -50,7 +52,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         <div className="-mt-12 md:-mt-16 mb-4 flex items-end justify-between">
           <div className="relative">
             <Image
-              src={resolveAvatarUrl(profile.avatarUrl, profile.displayName)}
+              src={cloudinaryImageUrl(resolveAvatarUrl(profile.avatarUrl, profile.displayName), 200)}
               alt={profile.displayName}
               width={112}
               height={112}

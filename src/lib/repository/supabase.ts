@@ -118,6 +118,10 @@ const toPiece = (r: PieceRow): CreativePiece => ({
   textContent: r.text_content ? String(r.text_content) : undefined,
   bodyHtml: r.body_html ? String(r.body_html) : undefined,
   pdfUrl: r.pdf_url ? String(r.pdf_url) : undefined,
+  pdfPublicId: r.pdf_public_id ? String(r.pdf_public_id) : undefined,
+  pdfPageImages: (r.pdf_page_images as string[]) || [],
+  pdfPagePublicIds: (r.pdf_page_public_ids as string[]) || [],
+  pdfCoverPage: r.pdf_cover_page == null ? undefined : Number(r.pdf_cover_page),
   coverImageUrl: r.cover_image_url ? String(r.cover_image_url) : undefined,
   coverPublicId: r.cover_public_id ? String(r.cover_public_id) : undefined,
   galleryImages: (r.gallery_images as string[]) || [],
@@ -147,6 +151,10 @@ const fromPiece = (p: NewPiece | CreativePiece) => ({
   text_content: p.textContent ?? null,
   body_html: p.bodyHtml ?? null,
   pdf_url: p.pdfUrl ?? null,
+  pdf_public_id: p.pdfPublicId ?? null,
+  pdf_page_images: p.pdfPageImages ?? [],
+  pdf_page_public_ids: p.pdfPagePublicIds ?? [],
+  pdf_cover_page: p.pdfCoverPage ?? null,
   cover_image_url: p.coverImageUrl ?? null,
   cover_public_id: p.coverPublicId ?? null,
   gallery_images: p.galleryImages ?? [],
@@ -170,6 +178,10 @@ const fromPiecePatch = (p: Partial<CreativePiece>) => {
   if (p.textContent !== undefined) patch.text_content = p.textContent ?? null;
   if (p.bodyHtml !== undefined) patch.body_html = p.bodyHtml ?? null;
   if (p.pdfUrl !== undefined) patch.pdf_url = p.pdfUrl ?? null;
+  if (p.pdfPublicId !== undefined) patch.pdf_public_id = p.pdfPublicId ?? null;
+  if (p.pdfPageImages !== undefined) patch.pdf_page_images = p.pdfPageImages ?? [];
+  if (p.pdfPagePublicIds !== undefined) patch.pdf_page_public_ids = p.pdfPagePublicIds ?? [];
+  if (p.pdfCoverPage !== undefined) patch.pdf_cover_page = p.pdfCoverPage ?? null;
   if (p.coverImageUrl !== undefined) patch.cover_image_url = p.coverImageUrl ?? null;
   if (p.coverPublicId !== undefined) patch.cover_public_id = p.coverPublicId ?? null;
   if (p.galleryImages !== undefined) patch.gallery_images = p.galleryImages ?? [];

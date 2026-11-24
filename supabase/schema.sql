@@ -41,6 +41,10 @@ create table if not exists public.pieces (
   text_content text,
   body_html text,
   pdf_url text,
+  pdf_public_id text,
+  pdf_page_images text[] not null default '{}',
+  pdf_page_public_ids text[] not null default '{}',
+  pdf_cover_page integer,
   cover_image_url text,
   cover_public_id text,
   gallery_images text[] not null default '{}',
@@ -534,3 +538,4 @@ alter table public.inquiries
 -- One-shot guard for the creator → recruiter reply email.
 alter table public.inquiries
   add column if not exists reply_email_sent_at timestamptz;
+
