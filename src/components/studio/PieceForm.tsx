@@ -10,6 +10,7 @@ import { MEDIA_LABELS, mediaTypeForNiche } from '@/lib/media-format';
 import { MAX_TAGS, normalizeTags } from '@/lib/tags';
 import { uploadFile } from '@/lib/upload';
 import { StoryComposer } from '@/components/studio/StoryComposer';
+import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Question } from '@phosphor-icons/react';
 import type { CreativeDiscipline, CreativePiece, CreativeProfile, PieceStatus } from '@/lib/types';
@@ -40,7 +41,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [step, setStep] = useState<Step>('details');
   const [title, setTitle] = useState(piece?.title || '');
   const [subtitle, setSubtitle] = useState(piece?.subtitle || '');
-  const [discipline, setDiscipline] = useState<CreativeDiscipline>(piece?.discipline || 'SPOKEN_WORDS_POETRY');
+  const [discipline, setDiscipline] = useState<CreativeDiscipline>(piece?.discipline || 'SPOKEN_WORD');
   const [spokenFormat, setSpokenFormat] = useState<'AUDIO' | 'TEXT'>(
     piece?.mediaType === 'AUDIO' ? 'AUDIO' : 'TEXT'
   );
@@ -339,13 +340,11 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
               onChange={(e) => setDiscipline(e.target.value as CreativeDiscipline)}
               className={inputClass}
             >
-              <option value="SPOKEN_WORDS_POETRY">Spoken Words, Thoughts & Poetry</option>
-              <option value="UIUX_DESIGN">UI/UX Mobile Design</option>
-              <option value="TECH_IMAGERY">Tech Imagery & 3D</option>
-              <option value="DANCE">Dance & Performance</option>
-              <option value="MOTION_ANIMATION">Motion Graphics</option>
-              <option value="MUSIC">Music & Vocals</option>
-              <option value="GRAPHIC_DESIGN">Brand & Visuals</option>
+              {(Object.keys(DISCIPLINE_CONFIG) as Array<CreativeDiscipline | 'ALL'>)
+                .filter((d) => d !== 'ALL' && d !== 'OTHER' && d !== 'SPOKEN_WORDS_POETRY')
+                .map((d) => (
+                  <option key={d} value={d}>{DISCIPLINE_CONFIG[d].label}</option>
+                ))}
             </select>
           </div>
           <div>
