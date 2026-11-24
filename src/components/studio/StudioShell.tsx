@@ -128,7 +128,7 @@ export function StudioShell({
             ) : null}
             {onSignOut ? (
               <Tooltip
-                label="Sign out of CreatHive"
+                label="Sign out"
                 side="bottom"
                 onClick={onSignOut}
                 triggerClassName="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]"
