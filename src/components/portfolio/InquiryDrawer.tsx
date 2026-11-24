@@ -74,6 +74,9 @@ export function InquiryDrawer({
         attachments,
       },
       {
+        onError: (error) => {
+          setUploadError(error instanceof Error ? error.message : 'Could not send. Please try again.');
+        },
         onSuccess: (sent) => {
           void notifyPush('new_inquiry', sent.id);
           setIsSuccess(true);
@@ -251,6 +254,9 @@ export function InquiryDrawer({
             >
               Send Performance Invitation
             </NeoButton>
+            {uploadError && inquiryMutation.isError ? (
+              <p role="alert" className="mt-2 text-center text-[11px] font-semibold text-red-600">{uploadError}</p>
+            ) : null}
           </div>
         </form>
       )}

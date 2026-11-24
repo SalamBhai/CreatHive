@@ -1,4 +1,5 @@
 import type { DataRepository, NewInquiry, NewPiece, PageOptions, Paged } from './types';
+import { disciplineInFilter } from '@/lib/types';
 import type {
   CreativeProfile,
   CreativePiece,
@@ -96,8 +97,8 @@ export const localRepository: DataRepository = {
     if (!options?.includeDrafts) {
       result = result.filter((p) => (p.status || 'PUBLIC') === 'PUBLIC');
     }
-    if (options?.discipline && options.discipline !== 'ALL') {
-      result = result.filter((p) => p.discipline === options.discipline);
+    if (options?.discipline) {
+      result = result.filter((p) => disciplineInFilter(p.discipline, options.discipline));
     }
     return options?.creativeId
       ? result.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))

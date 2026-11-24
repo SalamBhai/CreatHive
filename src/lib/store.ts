@@ -14,6 +14,7 @@ import type {
   ContentFlag,
   FlagStatus,
 } from './types';
+import { disciplineInFilter } from './types';
 import { repository } from './repository';
 import { ADMIN_PAGE_SIZE, type PageOptions } from './repository/types';
 import { useSession } from './auth';
@@ -101,8 +102,8 @@ export function useCreativePieces(
   initialData?: CreativePiece[]
 ) {
   const { data: profile } = useCreativeProfile(username);
-  const initial = initialData?.filter(
-    (p) => !filterDiscipline || filterDiscipline === 'ALL' || p.discipline === filterDiscipline
+  const initial = initialData?.filter((p) =>
+    disciplineInFilter(p.discipline, filterDiscipline)
   );
 
   return useQuery({

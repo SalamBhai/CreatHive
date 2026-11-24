@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { thumbnailUrl } from '@/lib/cloudinary-image';
 import { NeoButton } from '@/components/ui/NeoButton';
 import { useAddPiece, useAllPieces, useCampaigns, useCreateSubmission, useUpdatePiece } from '@/lib/store';
 import { notifyPush } from '@/lib/push';
-import { ALLOWED_EMBED_HOSTS } from '@/lib/media';
 import { MEDIA_LABELS, mediaTypeForNiche } from '@/lib/media-format';
 import { MAX_TAGS, normalizeTags } from '@/lib/tags';
 import { uploadFile } from '@/lib/upload';
@@ -62,7 +61,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
   const [pdfCoverPage, setPdfCoverPage] = useState<number | undefined>(piece?.pdfCoverPage);
   const [imageSizes, setImageSizes] = useState<Record<string, number>>({});
   const [mediaBusy, setMediaBusy] = useState(false);
-  const [busyImageIndex, setBusyImageIndex] = useState<number | null>(null);
+  const submittedCampaignId = useRef<string | null>(null);
   const [status, setStatus] = useState<PieceStatus>(piece?.status || 'PUBLIC');
   const [campaignId, setCampaignId] = useState('');
   const [uploadError, setUploadError] = useState('');
@@ -163,29 +162,6 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     }
   };
 
-  const uploadImageAt = async (file: File, index: number) => {
-    const existingBytes = Object.values(imageSizes).reduce((sum, size) => sum + size, 0);
-    if (existingBytes + file.size > MAX_IMAGE_BYTES_TOTAL) {
-      setUploadError('Images must total 20 MB or less.');
-      return;
-    }
-    setBusyImageIndex(index);
-    try {
-      const result = await uploadFile(file, 'gallery');
-      const images = [...galleryImages];
-      const ids = [...galleryPublicIds];
-      images[index] = result.url;
-      ids[index] = result.publicId;
-      setGalleryImages(images);
-      setGalleryPublicIds(ids);
-      setImageSizes((current) => ({ ...current, [result.url]: file.size }));
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Upload failed.');
-    } finally {
-      setBusyImageIndex(null);
-    }
-  };
-
   const removeImage = (url: string) => {
     const sizes = { ...imageSizes };
     delete sizes[url];
@@ -220,6 +196,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setGalleryImages([]);
     setGalleryPublicIds([]);
     setCampaignId('');
+    submittedCampaignId.current = null;
     setBodyHtml('');
     setPdfUrl('');
     setPdfPublicId('');
@@ -228,7 +205,6 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setPdfPagePublicIds([]);
     setPdfCoverPage(undefined);
     setImageSizes({});
-    setBusyImageIndex(null);
   };
 
   const handleSubmit = (
@@ -272,7 +248,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     };
 
     const onDone = (savedId?: string) => {
-      if (campaignId && savedId) {
+      // A campaign submission belongs to the published piece, not the draft
+      // checkpoint. Submit only on publish, and surface failures to the user.
+      if (campaignId && savedId && mode !== 'draft' && submittedCampaignId.current !== savedId) {
+        submittedCampaignId.current = savedId;
         submitToCampaign.mutate(
           {
             campaignId,
@@ -280,7 +259,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             pieceId: savedId,
             note: subtitle || undefined,
           },
-          { onSuccess: (submission) => void notifyPush('new_submission', submission.id) }
+          {
+            onSuccess: (submission) => void notifyPush('new_submission', submission.id),
+            onError: () => setUploadError('The piece was saved, but the campaign submission failed. Try again from the piece list.'),
+          }
         );
       }
       if (mode === 'draft') {
@@ -434,7 +416,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
           <input
             type="text"
             value={tagsInput}
-            onChange={(e) => setTagsInput(normalizeTags(e.target.value).join(', '))}
+            onChange={(e) => setTagsInput(e.target.value)}
             placeholder="Comma-separated: lagos, acoustic, voice"
             className={inputClass}
           />
@@ -457,6 +439,13 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             </div>
           ) : null}
         </div>
+        <button
+          type="button"
+          onClick={() => setStep('story')}
+          className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-[#FF5A36]/30 bg-[#FFF7ED] px-4 py-2 text-xs font-bold text-[#C2410C] transition-colors hover:border-[#FF5A36]"
+        >
+          Next: Story →
+        </button>
       </div>
 
       {/* STORY */}
@@ -471,7 +460,7 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
                 type="url"
                 value={mediaUrl}
                 onChange={(e) => setMediaUrl(e.target.value)}
-                placeholder="Paste a direct .mp3/.mp4 link, or a share URL"
+                placeholder="Paste an audio or video link"
                 className={inputClass}
               />
               <button
@@ -497,80 +486,9 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
                 }}
               />
             </div>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-stone-500">
-              Direct media files play natively. Video embeds are supported from {ALLOWED_EMBED_HOSTS} only.
-            </p>
           </div>
         )}
 
-        {mediaType === 'IMAGE_GALLERY' ? (
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="block text-xs font-bold text-[#18181B]">Gallery images</label>
-              <button
-                type="button"
-                onClick={() => {
-                  setGalleryImages([...galleryImages, '']);
-                  setGalleryPublicIds([...galleryPublicIds, '']);
-                }}
-                className="text-[11px] font-bold text-[#FF5A36] hover:underline"
-              >
-                + Add image
-              </button>
-            </div>
-            {galleryImages.length === 0 ? (
-              <p className="text-[11px] text-stone-500">
-                Add two or more image URLs to build a swipeable carousel.
-              </p>
-            ) : null}
-            <div className="space-y-2">
-              {galleryImages.map((url, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => {
-                      const next = [...galleryImages];
-                      next[index] = e.target.value;
-                      setGalleryImages(next);
-                    }}
-                    placeholder={`Image ${index + 1} URL`}
-                    className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs outline-none"
-                  />
-                  <button
-                    type="button"
-                    disabled={busyImageIndex === index}
-                    className="ml-2 shrink-0 rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-600 hover:border-[#FF5A36] disabled:opacity-50"
-                    onClick={() => document.getElementById(`gallery-file-${index}`)?.click()}
-                  >
-                    {busyImageIndex === index ? '…' : 'Upload'}
-                  </button>
-                  <input
-                    type="file"
-                    id={`gallery-file-${index}`}
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void uploadImageAt(file, index);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGalleryImages(galleryImages.filter((_, i) => i !== index));
-                      setGalleryPublicIds(galleryPublicIds.filter((_, i) => i !== index));
-                    }}
-                    aria-label={`Remove image ${index + 1}`}
-                    className="rounded-lg border border-stone-200 p-2 text-stone-500 hover:border-[#FF5A36] hover:text-[#FF5A36]"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
 
 
       </div>
@@ -642,7 +560,10 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             {pdfUrl ? (
               <span className="inline-flex h-fit items-center gap-1.5 self-start rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-[#FF5A36]">
                 <a href={pdfUrl} target="_blank" rel="noreferrer">PDF ↗</a>
-                <button type="button" aria-label="Remove PDF" onClick={() => { setPdfUrl(""); setPdfPublicId(""); setPdfPages(0); }} className="text-stone-400 hover:text-red-600">×</button>
+                <button type="button" aria-label="Remove PDF" onClick={() => {
+                  setPdfUrl(''); setPdfPublicId(''); setPdfPages(0);
+                  setPdfPageImages([]); setPdfPagePublicIds([]); setPdfCoverPage(undefined);
+                }} className="text-stone-400 hover:text-red-600">×</button>
               </span>
             ) : null}
 
@@ -683,35 +604,36 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
             placeholder={mediaType === 'IMAGE_GALLERY' ? 'Tell the story behind this case study…' : 'Tell your story…'}
           />
         </div>
-      </div>
 
       <div className="sticky bottom-0 mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 bg-[#FDFBF7]/95 pt-3 backdrop-blur">
-        {addPieceMutation.isError || updatePieceMutation.isError ? (
-          <p role="alert" className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
-            Could not save. Check your connection and try again.
-          </p>
+      {addPieceMutation.isError || updatePieceMutation.isError ? (
+        <p role="alert" className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
+          Could not save. Check your connection and try again.
+        </p>
+      ) : null}
+      {draftSavedId ? (
+        <p className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-700">
+          Draft saved. Your entries are still here. Publish to finalize, or find it under Pieces, draft.
+        </p>
+      ) : null}
+      <div className="ml-auto flex flex-wrap items-center gap-3">
+        {!piece ? (
+          <button
+            type="button"
+            disabled={isPending || !title}
+            onClick={(e) => handleSubmit(e, 'draft')}
+            className="rounded-xl border border-stone-200 px-5 py-2.5 text-xs font-bold text-stone-600 transition-colors hover:border-stone-400 disabled:opacity-50"
+          >
+            Save as draft
+          </button>
         ) : null}
-        {draftSavedId ? (
-          <p className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-700">
-            Draft saved. Your entries are still here. Publish to finalize, or find it under Pieces, draft.
-          </p>
-        ) : null}
-        <div className="ml-auto flex flex-wrap items-center gap-3">
-          {!piece ? (
-            <button
-              type="button"
-              disabled={isPending || !title}
-              onClick={(e) => handleSubmit(e, 'draft')}
-              className="rounded-xl border border-stone-200 px-5 py-2.5 text-xs font-bold text-stone-600 transition-colors hover:border-stone-400 disabled:opacity-50"
-            >
-              Save as draft
-            </button>
-          ) : null}
-          <NeoButton type="submit" variant="primary" size="lg" className="px-6">
-            {isPending ? 'Saving…' : 'Publish to Portfolio'}
-          </NeoButton>
-        </div>
+        <NeoButton type="submit" variant="primary" size="lg" className="px-6">
+          {isPending ? 'Saving…' : 'Publish to Portfolio'}
+        </NeoButton>
       </div>
+      </div>
+      </div>
+
     </form>
   );
 }

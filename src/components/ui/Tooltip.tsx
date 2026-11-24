@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
@@ -19,30 +19,47 @@ interface TooltipProps {
   triggerClassName?: string;
 }
 
-/**
- * A small, editorial tooltip: hairline border, paper surface, soft shadow and
- * a spring-in reveal with a matching arrow. Works on hover, focus and click
- * (so it's keyboard and touch accessible).
- */
+const WIDTH = 230;
+const GAP = 10;
+
+/** A small, editorial tooltip: hairline border, paper surface, soft shadow and
+ *  a spring-in reveal. Positioned against the viewport so it never slides off
+ *  screen, including for triggers near an edge. */
 export function Tooltip({ label, title, children, side = 'top', className, onClick, triggerClassName }: TooltipProps) {
   const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const show = () => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const left = Math.min(Math.max(rect.left + rect.width / 2 - WIDTH / 2, 12), window.innerWidth - WIDTH - 12);
+    const top = side === 'top' ? rect.top - GAP : rect.bottom + GAP;
+    setPosition({ left, top });
+    setOpen(true);
+  };
+
+  // A tap fires mouseenter then click. Treat click as "show" when the tooltip
+  // was closed by a previous focus/leave cycle, but don't flip it closed here.
+  const handleClick = () => {
+    if (!open) show();
+    onClick?.();
+  };
 
   return (
     <span
       className={clsx('relative inline-flex', className)}
-      onMouseEnter={() => setOpen(true)}
+      onMouseEnter={show}
       onMouseLeave={() => setOpen(false)}
     >
       <button
+        ref={triggerRef}
         type="button"
         aria-label={title || label}
         aria-expanded={open}
-        onFocus={() => setOpen(true)}
+        onFocus={show}
         onBlur={() => setOpen(false)}
-        onClick={() => {
-          setOpen((v) => !v);
-          onClick?.();
-        }}
+        onClick={handleClick}
         className={clsx(
           'inline-flex items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A36]/50',
           triggerClassName
@@ -53,31 +70,28 @@ export function Tooltip({ label, title, children, side = 'top', className, onCli
 
       <AnimatePresence>
         {open ? (
-          <motion.span
-            role="tooltip"
-            initial={{ opacity: 0, y: side === 'top' ? 6 : -6, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: side === 'top' ? 4 : -4, scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-            className={clsx(
-              'pointer-events-none absolute left-1/2 z-50 w-max max-w-[230px] -translate-x-1/2 rounded-xl border border-stone-200 bg-white px-3 py-2 text-left shadow-[0_10px_30px_rgba(24,24,27,0.14)]',
-              side === 'top' ? 'bottom-[calc(100%+10px)]' : 'top-[calc(100%+10px)]'
-            )}
+          <div
+            className="pointer-events-none fixed z-[80] w-[230px]"
+            style={{
+              left: position?.left ?? 12,
+              top: position?.top ?? 0,
+              transform: side === 'top' ? 'translateY(-100%)' : undefined,
+            }}
           >
-            {title ? (
-              <span className="mb-0.5 block font-editorial text-sm font-semibold text-[#18181B]">{title}</span>
-            ) : null}
-            <span className="block font-sans-ui text-[11px] leading-relaxed text-stone-600">{label}</span>
-            {/* arrow */}
-            <span
-              className={clsx(
-                'absolute left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-stone-200 bg-white',
-                side === 'top'
-                  ? '-bottom-1 border-b border-r'
-                  : '-top-1 border-l border-t'
-              )}
-            />
-          </motion.span>
+            <motion.span
+              role="tooltip"
+              initial={{ opacity: 0, y: side === 'top' ? 6 : -6, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: side === 'top' ? 4 : -4, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+              className="block rounded-xl border border-stone-200 bg-white px-3 py-2 text-left shadow-[0_10px_30px_rgba(24,24,27,0.14)]"
+            >
+              {title ? (
+                <span className="mb-0.5 block font-editorial text-sm font-semibold text-[#18181B]">{title}</span>
+              ) : null}
+              <span className="block font-sans-ui text-[11px] leading-relaxed text-stone-600">{label}</span>
+            </motion.span>
+          </div>
         ) : null}
       </AnimatePresence>
     </span>

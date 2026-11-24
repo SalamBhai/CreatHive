@@ -14,7 +14,7 @@ import { resolveAvatarUrl } from '@/lib/avatar';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { useAllPieces, useAllProfiles } from '@/lib/store';
 import { searchPieces, searchProfiles } from '@/lib/search';
-import type { CreativeDiscipline } from '@/lib/types';
+import { disciplineInFilter, type CreativeDiscipline } from '@/lib/types';
 import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
 
 
@@ -98,11 +98,7 @@ export default function ExplorePage() {
     .filter((piece) =>
       niche === 'ALL'
         ? true
-        : niche === 'SPOKEN_WORDS_POETRY'
-          ? piece.discipline === 'SPOKEN_WORDS_POETRY' ||
-            piece.discipline === 'SPOKEN_WORD' ||
-            piece.discipline === 'POETRY'
-          : piece.discipline === niche
+        : disciplineInFilter(piece.discipline as CreativeDiscipline, niche)
     )
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 

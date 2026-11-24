@@ -4,6 +4,15 @@ import { useState } from 'react';
 import { ArrowUpRight, CaretLeft, CaretRight, FilePdf, X } from '@phosphor-icons/react';
 import { Surface } from '@/components/ui/Surface';
 import { pdfPageUrl } from '@/lib/cloudinary-image';
+
+/** Cloudinary forces a download via fl_attachment; the HTML download attribute
+ *  is ignored for cross-origin URLs. */
+function downloadUrl(url: string): string {
+  const marker = '/image/upload/';
+  const i = url.indexOf(marker);
+  if (i < 0) return url;
+  return `${url.slice(0, i + marker.length)}fl_attachment/${url.slice(i + marker.length)}`;
+}
 import type { CreativePiece } from '@/lib/types';
 
 /** Renders the PDF itself as inline page images. PDFs are uploaded as image
@@ -26,12 +35,10 @@ export function PdfAttachment({ piece }: { piece: CreativePiece }) {
           Source document
         </p>
         <a
-          href={piece.pdfUrl}
-          target="_blank"
-          rel="noreferrer"
+          href={downloadUrl(piece.pdfUrl)}
           className="inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-500 hover:text-[#FF5A36]"
         >
-          Open original <ArrowUpRight size={12} weight="bold" />
+          Download <ArrowUpRight size={12} weight="bold" />
         </a>
       </div>
 

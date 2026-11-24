@@ -13,6 +13,7 @@ import { resolveAvatarUrl } from '@/lib/avatar';
 import { toEmbedUrl } from '@/lib/media';
 import { PostGallery } from '@/components/media/PostGallery';
 import { PdfAttachment } from '@/components/media/PdfAttachment';
+import { StudioLink } from '@/components/ui/StudioLink';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { cloudinaryImageUrl } from '@/lib/cloudinary-image';
 
@@ -99,6 +100,9 @@ export function PostView({ id }: { id: string }) {
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            <StudioLink className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-[11px] font-bold text-stone-600 transition-colors hover:border-[#FF5A36] hover:text-[#FF5A36]">
+              Studio ↗
+            </StudioLink>
             <button
               type="button"
               onClick={handleShare}

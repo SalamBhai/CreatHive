@@ -14,7 +14,12 @@ import { ProfileViewTracker } from '@/components/portfolio/ProfileViewTracker';
 import { DISCIPLINE_CONFIG } from '@/components/ui/DisciplineChip';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { useCreativeProfile, useCreativePieces } from '@/lib/store';
-import { CreativeDiscipline, CreativePiece, CreativeProfile } from '@/lib/types';
+import {
+  CreativeDiscipline,
+  CreativePiece,
+  CreativeProfile,
+  SPOKEN_POETRY_DISCIPLINES,
+} from '@/lib/types';
 
 interface PortfolioViewProps {
   username: string;
@@ -45,10 +50,20 @@ export function PortfolioView({ username, initialProfile, initialPieces }: Portf
   }
 
   // Filter list options: All + only the disciplines this creative has work in
-  const availableDisciplines: Array<CreativeDiscipline | 'ALL'> = [
-    'ALL',
-    ...profile.disciplines,
-  ];
+  const availableDisciplines: Array<CreativeDiscipline | 'ALL'> = ['ALL'];
+  for (const discipline of profile.disciplines) {
+    const value = SPOKEN_POETRY_DISCIPLINES.includes(discipline)
+      ? 'SPOKEN_WORDS_POETRY'
+      : discipline;
+    if (!availableDisciplines.includes(value)) availableDisciplines.push(value);
+  }
+  // Existing work may use a legacy discipline even if the profile doesn't list it.
+  for (const piece of pieces || []) {
+    const value = SPOKEN_POETRY_DISCIPLINES.includes(piece.discipline)
+      ? 'SPOKEN_WORDS_POETRY'
+      : piece.discipline;
+    if (!availableDisciplines.includes(value)) availableDisciplines.push(value);
+  }
 
   const filterOptions: Array<FilterOption<CreativeDiscipline | 'ALL'>> =
     availableDisciplines.map((discipline) => {

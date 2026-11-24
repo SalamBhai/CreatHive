@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { localRepository } from './local';
 import { INITIAL_PROFILES, INITIAL_PIECES } from '@/lib/sample-data';
 import type { DataRepository, NewInquiry, NewPiece, PageOptions, Paged } from './types';
+import { disciplineInFilter } from '@/lib/types';
 import type {
   CreativeProfile,
   CreativePiece,
@@ -362,7 +363,9 @@ export const supabaseRepository: DataRepository = {
       let query = getDb().from('pieces').select('*').eq('is_deleted', false);
       if (options?.creativeId) query = query.eq('creative_id', options.creativeId);
       if (!options?.includeDrafts) query = query.eq('status', 'PUBLIC');
-      if (options?.discipline && options.discipline !== 'ALL') {
+      if (options?.discipline === 'SPOKEN_WORDS_POETRY') {
+        query = query.in('discipline', ['SPOKEN_WORDS_POETRY', 'SPOKEN_WORD', 'POETRY']);
+      } else if (options?.discipline && options.discipline !== 'ALL') {
         query = query.eq('discipline', options.discipline);
       }
       const { data, error } = await query;
@@ -391,8 +394,8 @@ export const supabaseRepository: DataRepository = {
     });
     if (options?.creativeId) mocks = mocks.filter((p) => p.creativeId === options.creativeId);
     if (!options?.includeDrafts) mocks = mocks.filter((p) => (p.status || 'PUBLIC') === 'PUBLIC');
-    if (options?.discipline && options.discipline !== 'ALL') {
-      mocks = mocks.filter((p) => p.discipline === options.discipline);
+    if (options?.discipline) {
+      mocks = mocks.filter((p) => disciplineInFilter(p.discipline, options.discipline));
     }
 
     return mergeById(real, mocks).sort((a, b) =>

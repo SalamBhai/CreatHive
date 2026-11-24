@@ -12,6 +12,22 @@ export type CreativeDiscipline =
 
 export type MediaType = 'AUDIO' | 'VIDEO' | 'TEXT' | 'IMAGE_GALLERY';
 
+/** Disciplines shown as one niche. Existing values still match the group. */
+export const SPOKEN_POETRY_DISCIPLINES: CreativeDiscipline[] = [
+  'SPOKEN_WORDS_POETRY',
+  'SPOKEN_WORD',
+  'POETRY',
+];
+
+export function disciplineInFilter(
+  discipline: CreativeDiscipline,
+  filter?: CreativeDiscipline | 'ALL'
+): boolean {
+  if (!filter || filter === 'ALL') return true;
+  if (filter === 'SPOKEN_WORDS_POETRY') return SPOKEN_POETRY_DISCIPLINES.includes(discipline);
+  return discipline === filter;
+}
+
 export type PieceStatus = 'PUBLIC' | 'UNLISTED' | 'DRAFT';
 
 /** One block in a long-form post / article. */

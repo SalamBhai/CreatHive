@@ -23,8 +23,13 @@ export default function JoinPage() {
   const [disciplines, setDisciplines] = useState<CreativeDiscipline[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  // The picker lists real disciplines only — SPOKEN_WORDS_POETRY is a combined
+  // Explore filter, not something a person signs up as.
   const nicheOptions = (Object.keys(DISCIPLINE_CONFIG) as Array<CreativeDiscipline | 'ALL'>)
-    .filter((key): key is CreativeDiscipline => key !== 'ALL');
+    .filter(
+      (key): key is CreativeDiscipline =>
+        key !== 'ALL' && key !== 'SPOKEN_WORDS_POETRY'
+    );
 
   const toggleNiche = (key: CreativeDiscipline) =>
     setDisciplines((prev) =>
