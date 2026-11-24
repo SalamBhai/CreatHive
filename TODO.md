@@ -89,7 +89,7 @@ These were either falsified as "done" in the previous version of this file, or w
 ### Medium — Studio / UX
 - [x] Banner upload UI — URL field + upload in `ProfileEditor`, image shown in `ProfileHero` with the gradient as fallback. Needs migration `003_banner_upload.sql` on the live DB.
 - [x] Full-post composer — `+` image/grid can upload files (URLs still accepted), captions, left/centre/right alignment, and optional video poster URL.
-- [x] One WYSIWYG text field across all niches; plain-text excerpts and audio scripts derived from it. PDF attached as a source document with uploaded page images, selectable cover page and mobile page reader (migration `014`).
+- [x] One WYSIWYG text field across all niches; plain-text excerpts and audio scripts derived from it. PDF attached as a source document with uploaded page images, selectable cover page and mobile page reader (migration `014`). Per-file upload cap: 10 MB (images and PDFs).
 - [x] `/admin` built: overview metrics, creators, pieces, campaigns, submissions, flags and audit log behind an admin gate. Inquiries are creator-only; no admin view. Needs migration `004` and `is_admin = true` on your profile.
 
 ### Large — data & platform (see `docs/MIGRATION.md`)

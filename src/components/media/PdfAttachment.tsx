@@ -39,7 +39,7 @@ export function PdfAttachment({ piece }: { piece: CreativePiece }) {
             {/* Keep the page's natural aspect ratio, like a feed photo. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={cloudinaryImageUrl(pages[current], 1200)}
+              src={cloudinaryImageUrl(pages[current], 1200, { trim: true })}
               alt={`Page ${current + 1}`}
               loading="eager"
               decoding="async"

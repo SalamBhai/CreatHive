@@ -2,7 +2,10 @@ import { v2 as cloudinary } from 'cloudinary';
 import { usingSupabase } from '@/lib/supabase';
 import { getUserFromRequest } from '@/lib/supabase-server';
 
-const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+// Cloudinary (this plan) caps images and raw files at 10 MB per upload.
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_RAW_BYTES = 10 * 1024 * 1024;
+// Video/audio may allow more, but keep a sane ceiling.
 const MAX_MEDIA_BYTES = 100 * 1024 * 1024;
 const KINDS = ['avatar', 'media', 'gallery', 'cover', 'inquiry', 'pdf'] as const;
 type UploadKind = (typeof KINDS)[number];
@@ -80,10 +83,14 @@ export async function POST(request: Request) {
     ? 5 * 1024 * 1024
     : resourceType === 'image'
       ? MAX_IMAGE_BYTES
-      : MAX_MEDIA_BYTES;
+      : resourceType === 'raw'
+        ? MAX_RAW_BYTES
+        : MAX_MEDIA_BYTES;
   if (file.size === 0 || file.size > limit) {
     return json(
-      { error: `File must be between 1 byte and ${Math.round(limit / 1024 / 1024)} MB.` },
+      {
+        error: `${resourceType === 'raw' ? 'PDF' : 'File'} is ${(file.size / 1024 / 1024).toFixed(1)} MB. Maximum file size is ${Math.round(limit / 1024 / 1024)} MB.`,
+      },
       413
     );
   }
@@ -116,8 +123,22 @@ export async function POST(request: Request) {
     );
     return json({ url: result.secure_url, publicId: result.public_id, resourceType }, 200);
   } catch (error) {
-    console.error('[cloudinary] upload failed:', error);
-    const detail = error instanceof Error ? error.message : 'Upload failed.';
-    return json({ error: `Upload failed: ${detail}` }, 500);
+    const err = error as {
+      message?: string;
+      http_code?: number;
+      error?: { message?: string };
+    };
+    console.error('[cloudinary] upload failed:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      resourceType,
+      folder,
+      error,
+    });
+    // Cloudinary's SDK wraps the useful reason inside `error.error.message`.
+    const detail = err?.error?.message || err?.message || 'Unknown error.';
+    const code = err?.http_code ? ` (${err.http_code})` : '';
+    return json({ error: `Upload failed${code}: ${detail}` }, 500);
   }
 }

@@ -20,7 +20,7 @@ export function PostGallery({ images, title }: { images: string[]; title: string
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           key={images[index]}
-          src={cloudinaryImageUrl(images[index], 1200)}
+          src={cloudinaryImageUrl(images[index], 1200, { trim: true })}
           alt={`${title}, image ${index + 1} of ${total}`}
           loading="eager"
           decoding="async"

@@ -24,7 +24,8 @@ interface PieceFormProps {
 type Step = 'details' | 'story';
 
 const MAX_IMAGES = 10;
-const MAX_IMAGE_BYTES_TOTAL = 20 * 1024 * 1024;
+const MAX_IMAGE_BYTES_TOTAL = 20 * 1024 * 1024; // across all images
+const MAX_FILE_BYTES = 10 * 1024 * 1024; // per-file upload limit
 
 const inputClass =
   'w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs font-sans-ui outline-none focus:border-[#FF5A36]';
@@ -114,6 +115,11 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
     setUploadError('');
     setMediaNotice('');
 
+    const tooLarge = picked.find((file) => file.size > MAX_FILE_BYTES);
+    if (tooLarge) {
+      setUploadError(`${tooLarge.name} is ${(tooLarge.size / 1024 / 1024).toFixed(1)} MB. Maximum file size is 10 MB.`);
+      return;
+    }
     const images = picked.filter((file) => file.type.startsWith('image/'));
     const imageCount = pdfPageImages.length + galleryImages.length;
     if (imageCount + images.length > MAX_IMAGES) {
