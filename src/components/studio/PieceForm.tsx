@@ -455,7 +455,13 @@ export function PieceForm({ profile, piece, onSuccess }: PieceFormProps) {
       <div className="space-y-4">
         {(mediaType === 'AUDIO' || mediaType === 'VIDEO') && (
           <div>
-            <label className={labelClass}>Work link</label>
+            <div className="mb-1 flex items-center gap-1.5">
+              <label className={labelClass}>Work link</label>
+              {info(
+                'Supported links',
+                'Upload an audio or video file, or paste a direct .mp3/.mp4 link. YouTube, YouTu.be and Vimeo share links play as embeds.'
+              )}
+            </div>
             <div className="flex gap-2">
               <input
                 type="url"

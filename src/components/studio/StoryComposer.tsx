@@ -5,11 +5,7 @@ import {
   Plus,
   TextT,
   Quotes,
-  Image as ImageIcon,
-  CaretRight,
   CaretDown,
-  PlayCircle,
-  Code,
   Minus,
   TextB,
   TextItalic,
@@ -20,8 +16,6 @@ import {
   TextAlignRight,
   X,
 } from '@phosphor-icons/react';
-import { toEmbedUrl } from '@/lib/media';
-import { uploadFile } from '@/lib/upload';
 
 interface StoryComposerProps {
   value: string;
@@ -29,35 +23,27 @@ interface StoryComposerProps {
   placeholder?: string;
 }
 
-type InsertKind = 'text' | 'heading' | 'quote' | 'image' | 'grid' | 'video' | 'embed' | 'divider';
-type DialogKind = 'link' | 'video' | 'embed';
+type InsertKind = 'text' | 'heading' | 'quote' | 'divider';
+type DialogKind = 'link';
 
 const INSERT_OPTIONS: Array<{ kind: InsertKind; label: string; icon: React.ElementType }> = [
   { kind: 'text', label: 'Text', icon: TextT },
   { kind: 'heading', label: 'Heading', icon: TextT },
   { kind: 'quote', label: 'Quote', icon: Quotes },
-  { kind: 'image', label: 'Image', icon: ImageIcon },
-  { kind: 'grid', label: 'Photo grid', icon: CaretRight },
-  { kind: 'video', label: 'Video / Audio', icon: PlayCircle },
-  { kind: 'embed', label: 'Embed', icon: Code },
   { kind: 'divider', label: 'Divider', icon: Minus },
 ];
-
-const escapeHtml = (value: string) =>
-  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const inputClass =
   'w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs outline-none focus:border-[#FF5A36]';
 
+/** A text-only WYSIWYG: formatting, lists, alignment and links. Images, video,
+ *  audio and PDFs are managed in the Studio's media area instead. */
 export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ€¦' }: StoryComposerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const savedRange = useRef<Range | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dialog, setDialog] = useState<DialogKind | null>(null);
-  const [form, setForm] = useState({ url: '', caption: '', poster: '' });
-  const [pendingUpload, setPendingUpload] = useState<'image' | 'grid' | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ url: '' });
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -90,8 +76,7 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
 
   const closeDialog = () => {
     setDialog(null);
-    setForm({ url: '', caption: '', poster: '' });
-    setPendingUpload(null);
+    setForm({ url: '' });
     setError('');
   };
 
@@ -99,18 +84,8 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
     rememberSelection();
     setMenuOpen(false);
     setError('');
-    setForm({ url: '', caption: '', poster: '' });
-    setPendingUpload(null);
+    setForm({ url: '' });
     setDialog(kind);
-  };
-
-  /** Images/grids go straight to the OS file picker â€” no intermediate form. */
-  const pickFiles = (kind: 'image' | 'grid') => {
-    rememberSelection();
-    setMenuOpen(false);
-    setPendingUpload(kind);
-    setError('');
-    fileInput.current?.click();
   };
 
   const insert = (kind: InsertKind) => {
@@ -119,76 +94,13 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
     if (kind === 'heading') return exec('insertHTML', '<h2>A section heading</h2>');
     if (kind === 'quote') return exec('insertHTML', '<blockquote>A thought worth keeping.</blockquote>');
     if (kind === 'divider') return exec('insertHTML', '<hr />');
-    if (kind === 'image' || kind === 'grid') return pickFiles(kind);
-    openDialog(kind as DialogKind);
   };
 
-  const apply = () => {
-    if (!dialog) return;
+  const applyLink = () => {
     const url = form.url.trim();
-
-    if (dialog === 'link') {
-      if (!url) return setError('Enter a link URL.');
-      exec('createLink', url);
-      return closeDialog();
-    }
-    if (dialog === 'video') {
-      if (!url) return setError('Add a video or audio URL.');
-      const embed = toEmbedUrl(url);
-      if (embed) {
-        exec('insertHTML', `<figure><div class="video-frame"><iframe src="${embed}" allowfullscreen></iframe></div></figure>`);
-      } else {
-        const poster = form.poster.trim();
-        exec(
-          'insertHTML',
-          `<figure><video controls ${poster ? `poster="${escapeHtml(poster)}"` : ''} src="${escapeHtml(url)}"></video></figure>`
-        );
-      }
-      return closeDialog();
-    }
-    if (dialog === 'embed') {
-      const embed = toEmbedUrl(url);
-      if (!embed) return setError('Only YouTube and Vimeo links can be embedded.');
-      exec('insertHTML', `<figure><div class="video-frame"><iframe src="${embed}" allowfullscreen></iframe></div></figure>`);
-      return closeDialog();
-    }
-  };
-
-  const upload = async (files: FileList | null) => {
-    if (!files?.length || !dialog) return;
-    setBusy(true);
-    setError('');
-    try {
-      const results = await Promise.all(Array.from(files).map((file) => uploadFile(file, 'gallery')));
-      const urls = results.map((r) => r.url);
-      if (pendingUpload === 'grid') {
-        exec(
-          'insertHTML',
-          `<div class="photo-grid" data-story-image="true">${urls
-            .map((u) => `<img src="${escapeHtml(u)}" alt="" />`)
-            .join('')}</div>`
-        );
-      } else {
-        // An editable caption placeholder â€” the creator types straight into
-        // the figure; no extra panel or prompt needed.
-        exec(
-          'insertHTML',
-          `<figure data-story-image="true"><img src="${escapeHtml(urls[0])}" alt="" /><figcaption>Type a captionâ€¦</figcaption></figure>`
-        );
-      }
-      setPendingUpload(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed.');
-    } finally {
-      setBusy(false);
-      if (fileInput.current) fileInput.current.value = '';
-    }
-  };
-
-  const dialogCopy: Record<DialogKind, { title: string; hint: string }> = {
-    link: { title: 'Add a link', hint: 'Paste the URL you want this text to point to.' },
-    video: { title: 'Insert video or audio', hint: 'Paste a direct media URL or a YouTube/Vimeo link. Poster is optional.' },
-    embed: { title: 'Insert an embed', hint: 'Paste a YouTube or Vimeo share URL.' },
+    if (!url) return setError('Enter a link URL.');
+    exec('createLink', url);
+    closeDialog();
   };
 
   return (
@@ -222,7 +134,6 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
         <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec('justifyRight')} title="Align right" className="rounded p-1.5 text-stone-600 hover:bg-stone-100">
           <TextAlignRight size={16} weight="bold" />
         </button>
-        {busy ? <span className="ml-1 text-[10px] font-bold text-[#FF5A36]">Uploadingâ€¦</span> : null}
       </div>
 
       <div className="flex">
@@ -270,44 +181,32 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
         />
       </div>
 
-      {/* Inline insert panel â€” replaces native prompts/alerts */}
       {dialog ? (
         <div className="border-t border-stone-200 bg-[#FCFAF6] p-4">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <h4 className="font-editorial text-base font-semibold">{dialogCopy[dialog].title}</h4>
-              <p className="mt-0.5 text-[11px] text-stone-500">{dialogCopy[dialog].hint}</p>
+              <h4 className="font-editorial text-base font-semibold">Add a link</h4>
+              <p className="mt-0.5 text-[11px] text-stone-500">Paste the URL you want this text to point to.</p>
             </div>
             <button type="button" onClick={closeDialog} aria-label="Cancel insert" className="rounded-lg border border-stone-200 bg-white p-1.5 text-stone-500 hover:text-[#FF5A36]">
               <X size={15} weight="bold" />
             </button>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2">
-            <input
-              className={inputClass}
-              value={form.url}
-              onChange={(e) => setForm({ ...form, url: e.target.value })}
-              placeholder="https://â€¦"
-              aria-label="Media URL"
-            />
-            {dialog === 'video' ? (
-              <input
-                className={inputClass}
-                value={form.poster}
-                onChange={(e) => setForm({ ...form, poster: e.target.value })}
-                placeholder="Poster image URL (optional)"
-                aria-label="Poster URL"
-              />
-            ) : null}
-          </div>
+          <input
+            className={inputClass}
+            value={form.url}
+            onChange={(e) => setForm({ ...form, url: e.target.value })}
+            placeholder="https://â€¦"
+            aria-label="Link URL"
+          />
 
           {error ? <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{error}</p> : null}
 
           <div className="mt-3 flex gap-2">
             <button
               type="button"
-              onClick={apply}
+              onClick={applyLink}
               className="rounded-lg bg-[#18181B] px-4 py-2 text-xs font-bold text-white hover:bg-black"
             >
               Insert
@@ -318,15 +217,6 @@ export function StoryComposer({ value, onChange, placeholder = 'Tell your storyâ
           </div>
         </div>
       ) : null}
-
-      <input
-        ref={fileInput}
-        type="file"
-        accept="image/*"
-        multiple={pendingUpload === 'grid'}
-        className="hidden"
-        onChange={(e) => void upload(e.target.files)}
-      />
     </div>
   );
 }
