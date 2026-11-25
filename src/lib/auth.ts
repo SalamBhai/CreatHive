@@ -5,6 +5,7 @@ import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase, usingSupabase } from './supabase';
 import { repository } from './repository';
 import { clearQueryCache } from './query-persistence';
+import { logWarn } from './logger';
 import type { CreativeDiscipline } from './types';
 
 export interface AppSession {
@@ -107,7 +108,7 @@ function setRemote(app: AppSession | null, event?: AuthChangeEvent) {
   emitRemote();
   // Provision on session arrival only — not on TOKEN_REFRESHED etc.
   if (app && (!event || event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED')) {
-    void ensureProfile(app).catch((err) => console.warn('[auth] profile check failed', err));
+    void ensureProfile(app).catch((err) => logWarn('auth', 'Profile check failed', undefined, err));
   }
 }
 

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { logError } from './logger';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -21,6 +22,13 @@ export async function getUserFromRequest(request: Request) {
   const header = request.headers.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (!token) return null;
-  const { data, error } = await serverSupabase.auth.getUser(token);
-  return error ? null : data.user;
+  try {
+    const { data, error } = await serverSupabase.auth.getUser(token);
+    return error ? null : data.user;
+  } catch (error) {
+    // A failed auth-service call is a real incident, not "no user". Log it and
+    // let the caller report a service problem rather than a missing session.
+    logError('auth', 'Token verification failed', error);
+    return null;
+  }
 }

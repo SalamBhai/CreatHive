@@ -1,5 +1,6 @@
 import { Webhook } from 'standardwebhooks';
 import { sendAuthEmail } from '@/lib/auth-email';
+import { logWarn, logError } from '@/lib/logger';
 
 /**
  * Supabase Auth "Send Email" hook. Supabase generates the token, calls this
@@ -69,20 +70,20 @@ export async function POST(request: Request) {
       const wh = new Webhook(secret.replace(/^v1,whsec_/, ''));
       wh.verify(payload, Object.fromEntries(request.headers));
     } catch (error) {
-      console.error('[auth-email] invalid hook signature', error);
+      logWarn('auth', 'Invalid auth-email hook signature', undefined, error);
       return new Response(JSON.stringify({ error: 'Invalid signature' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
   } else if (process.env.NODE_ENV === 'production') {
-    console.error('[auth-email] SEND_EMAIL_HOOK_SECRET is not configured');
+    logError('auth', 'SEND_EMAIL_HOOK_SECRET is not configured');
     return new Response(JSON.stringify({ error: 'Not configured' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   } else {
-    console.warn('[auth-email] no hook secret configured — accepting unsigned payload in dev');
+    logWarn('auth', 'No hook secret configured; accepting unsigned payload in development');
   }
 
   let event: HookEvent;
@@ -135,7 +136,7 @@ export async function POST(request: Request) {
     );
     return sent ? ok() : retryable('Failed to send auth email');
   } catch (error) {
-    console.error('[auth-email] send failed', error);
+    logError('email', 'Auth email delivery failed', error);
     return retryable('Failed to send auth email');
   }
 }

@@ -1,6 +1,7 @@
 import { getUserFromRequest } from '@/lib/supabase-server';
 import { getAdminDb } from '@/lib/supabase-admin';
 import { sendPushToUsers } from '@/lib/server-push';
+import { logWarn } from '@/lib/logger';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EVENTS = ['new_inquiry', 'new_submission', 'submission_decision'] as const;
@@ -32,7 +33,10 @@ export async function POST(request: Request) {
   }
 
   const user = await getUserFromRequest(request);
-  if (event !== 'new_inquiry' && !user) return json({ error: 'Sign in first' }, 401);
+  if (event !== 'new_inquiry' && !user) {
+    logWarn('push', 'Notify rejected: unauthenticated', { event });
+    return json({ error: 'Sign in first' }, 401);
+  }
 
   const db = getAdminDb();
   if (!db) return json({ skipped: 'not configured' }); // push is optional

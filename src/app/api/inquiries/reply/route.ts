@@ -1,6 +1,7 @@
 import { getUserFromRequest } from '@/lib/supabase-server';
 import { getAdminDb } from '@/lib/supabase-admin';
 import { sendInquiryReplyEmail } from '@/lib/email';
+import { logWarn } from '@/lib/logger';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -12,7 +13,10 @@ function json(body: unknown, status = 200) {
  *  owning creative can trigger it, and a one-shot guard prevents duplicates. */
 export async function POST(request: Request) {
   const user = await getUserFromRequest(request);
-  if (!user) return json({ error: 'Sign in first' }, 401);
+  if (!user) {
+    logWarn('inquiry', 'Reply email rejected: unauthenticated');
+    return json({ error: 'Sign in first' }, 401);
+  }
 
   const body = await request.json().catch(() => null);
   const id = typeof body?.inquiryId === 'string' ? body.inquiryId : '';

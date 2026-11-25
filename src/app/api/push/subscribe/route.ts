@@ -1,5 +1,6 @@
 import { getUserFromRequest } from '@/lib/supabase-server';
 import { getAdminDb } from '@/lib/supabase-admin';
+import { logError } from '@/lib/logger';
 
 function json(body: unknown, status = 200) {
   return Response.json(body, { status });
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     { onConflict: 'endpoint' }
   );
   if (error) {
-    console.error('[push] could not store subscription', error.message);
+    logError('push', 'Could not store subscription', error);
     return json({ error: 'Could not save subscription' }, 500);
   }
   return json({ ok: true });

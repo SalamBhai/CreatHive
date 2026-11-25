@@ -4,6 +4,7 @@
  */
 
 import { serverSupabase } from './supabase-server';
+import { logError } from './logger';
 import type { CreativeDiscipline } from './types';
 
 export interface SignUpInput {
@@ -77,9 +78,7 @@ export async function signUpUser(input: SignUpInput): Promise<SignUpResult> {
     },
   });
   if (error) {
-    console.error(
-      '[signup] Supabase auth error raw — message: ' + error.message + ' | status: ' + error.status + ' | json: ' + JSON.stringify(error)
-    );
+    logError('auth', 'Supabase signup failed', error, { status: error.status ?? 0 });
     throw new Error(friendlyAuthError(error.message));
   }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { signUpUser, validateSignUpInput } from '@/lib/server-auth';
 import type { CreativeDiscipline } from '@/lib/types';
+import { logError } from '@/lib/logger';
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ status: 'created', user: result.user }, { status: 201 });
   } catch (err) {
-    console.error('[signup]', err);
+    logError('signup', 'Signup request failed', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Something went wrong.' },
       { status: 500 }

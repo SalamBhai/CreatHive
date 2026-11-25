@@ -1,4 +1,5 @@
 import { supabase, usingSupabase } from './supabase';
+import { logWarn } from './logger';
 
 /** Best-effort: email the recruiter after the creative decides an inquiry.
  *  Never blocks or fails the status change itself. */
@@ -13,7 +14,7 @@ export async function requestInquiryReplyEmail(inquiryId: string): Promise<void>
       headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
       body: JSON.stringify({ inquiryId }),
     });
-    if (!response.ok) console.warn('[inquiry] reply email request failed', response.status);
+    if (!response.ok) logWarn('inquiry', 'Reply email request failed', { status: response.status });
   } catch {
     // Email is best-effort by design.
   }

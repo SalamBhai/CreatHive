@@ -36,7 +36,11 @@ export async function uploadFile(file: File, kind: UploadKind): Promise<UploadRe
     error?: string;
   };
   if (!response.ok || !data.url) {
-    throw new Error(data.error || 'Upload failed. Please try again.');
+    // The server returns JSON errors; a non-JSON body means a proxy/HTML error.
+    throw new Error(
+      data.error ||
+        `Upload failed (${response.status}). Check your connection and try again.`
+    );
   }
   return {
     url: data.url,

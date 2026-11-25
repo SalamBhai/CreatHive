@@ -1,5 +1,6 @@
 import * as webpush from 'web-push';
 import { getAdminDb } from './supabase-admin';
+import { logWarn, logError } from './logger';
 
 export interface PushMessage {
   title: string;
@@ -39,7 +40,7 @@ export async function sendPushToUsers(userIds: string[], message: PushMessage): 
     .select('id, endpoint, p256dh, auth')
     .in('user_id', recipients);
   if (error) {
-    console.error('[push] subscription lookup failed', error.message);
+    logError('push', 'Subscription lookup failed', error);
     return 0;
   }
 
@@ -58,7 +59,7 @@ export async function sendPushToUsers(userIds: string[], message: PushMessage): 
         if (status === 410 || status === 404) {
           await db.from('push_subscriptions').delete().eq('id', sub.id);
         } else {
-          console.warn('[push] delivery failed', status ?? String(error));
+          logWarn('push', 'Delivery failed', { status: status ?? 0 }, error);
         }
       }
     })

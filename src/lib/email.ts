@@ -12,6 +12,7 @@
  */
 
 import type { Transporter } from 'nodemailer';
+import { logInfo, logWarn, logError } from './logger';
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://creathive.app';
@@ -76,7 +77,7 @@ let cachedTransporter: Promise<Transporter> | null = null;
 async function getTransporter(): Promise<Transporter | null> {
   const host = process.env.SMTP_HOST;
   if (!host) {
-    console.warn('[email] SMTP_HOST not configured — SMTP transport disabled');
+    logWarn('email', 'SMTP transport disabled: no host configured');
     return null;
   }
   if (!cachedTransporter) {
@@ -116,16 +117,16 @@ async function sendViaBrevo(options: SendEmailOptions): Promise<boolean> {
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    console.error('[email] Brevo API failed', {
+    logError('email', 'Brevo API failed', undefined, {
       to: options.to,
       subject: options.subject,
       status: response.status,
-      detail: detail.slice(0, 500),
+      detail: detail.slice(0, 200),
     });
     return false;
   }
 
-  console.log('[email] Sent via Brevo', { to: options.to, subject: options.subject });
+  logInfo('email', 'Sent via Brevo', { to: options.to, subject: options.subject });
   return true;
 }
 
@@ -142,7 +143,7 @@ async function sendViaSmtp(options: SendEmailOptions): Promise<boolean> {
     html: options.html,
     text: options.text || htmlToText(options.html),
   });
-  console.log('[email] Sent via SMTP', {
+  logInfo('email', 'Sent via SMTP', {
     to: options.to,
     subject: options.subject,
     messageId: info.messageId,
@@ -161,7 +162,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
     if (process.env.BREVO_API_KEY) return await sendViaBrevo(options);
     return await sendViaSmtp(options); // no API key — warns and returns false
   } catch (error) {
-    console.error('[email] Send failed', {
+    logError('email', 'Send failed', error, {
       to: options.to,
       subject: options.subject,
       message: error instanceof Error ? error.message : String(error),
