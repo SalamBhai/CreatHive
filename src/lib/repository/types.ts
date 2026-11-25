@@ -25,6 +25,15 @@ export interface Paged<T> {
   total: number;
 }
 
+export interface SystemLogEntry {
+  id: string;
+  level: 'info' | 'warn' | 'error';
+  source: string;
+  message: string;
+  context?: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface AdminStats {
   liveCreators: number;
   pieces: number;
@@ -93,4 +102,5 @@ export interface DataRepository {
   listSubmissionsPage(options: PageOptions): Promise<Paged<Submission>>;
   listFlagsPage(options: PageOptions): Promise<Paged<ContentFlag>>;
   listAuditLogPage(options: PageOptions): Promise<Paged<AuditLogEntry>>;
+  listSystemLogPage(options: PageOptions): Promise<Paged<SystemLogEntry>>;
 }

@@ -30,14 +30,16 @@ function getDb() {
 async function paged<T>(
   table: string,
   options: PageOptions,
-  map: (row: Record<string, unknown>) => T
+  map: (row: Record<string, unknown>) => T,
+  orderByCreatedOnly = false
 ): Promise<Paged<T>> {
   const from = options.page * options.pageSize;
-  const { data, count, error } = await getDb()
-    .from(table)
-    .select('*', { count: 'exact' })
-    // Last modified first; rows never modified fall back to creation date.
-    .order('updated_at', { ascending: false, nullsFirst: false })
+  let query = getDb().from(table).select('*', { count: 'exact' });
+  // Append-only tables such as audit_log have no updated_at column.
+  if (!orderByCreatedOnly) {
+    query = query.order('updated_at', { ascending: false, nullsFirst: false });
+  }
+  const { data, count, error } = await query
     .order('created_at', { ascending: false })
     .range(from, from + options.pageSize - 1);
   if (error) throw error;
@@ -678,7 +680,18 @@ export const supabaseRepository: DataRepository = {
   async listFlagsPage(options) {
     return paged('flags', options, (row) => toFlag(row as FlagRow));
   },
+  async listSystemLogPage(options) {
+    return paged('system_log', options, (r) => ({
+      id: String(r.id),
+      level: (r.level || 'info') as 'info' | 'warn' | 'error',
+      source: String(r.source || ''),
+      message: String(r.message || ''),
+      context: (r.context && typeof r.context === 'object' ? r.context : {}) as Record<string, unknown>,
+      createdAt: String(r.created_at),
+    }));
+  },
+
   async listAuditLogPage(options) {
-    return paged('audit_log', options, toAudit);
+    return paged('audit_log', options, toAudit, true);
   },
 };

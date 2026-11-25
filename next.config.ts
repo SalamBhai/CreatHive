@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https:",
               // Audio/video links are user-supplied (Cloudinary or external hosts).
               "media-src 'self' https: blob:",
-              "connect-src 'self' https://*.supabase.co https://api.brevo.com",
+              "connect-src 'self' https://*.supabase.co https://api.brevo.com https://api.cloudinary.com",
               "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
               "font-src 'self' data:",
               "object-src 'none'",

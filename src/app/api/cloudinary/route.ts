@@ -6,8 +6,8 @@ import { logError, logWarn } from '@/lib/logger';
 // Cloudinary (this plan) caps images and raw files at 10 MB per upload.
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_RAW_BYTES = 10 * 1024 * 1024;
-// Video/audio may allow more, but keep a sane ceiling.
-const MAX_MEDIA_BYTES = 100 * 1024 * 1024;
+// Cap video/audio below the provider limit to control abuse and storage.
+const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
 const KINDS = ['avatar', 'media', 'gallery', 'cover', 'inquiry', 'pdf'] as const;
 type UploadKind = (typeof KINDS)[number];
 

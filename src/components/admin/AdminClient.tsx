@@ -16,6 +16,7 @@ import {
   useAdminProfilesPage,
   useAdminStats,
   useAuditLogPage,
+  useSystemLogPage,
   useAllProfiles,
   useCampaigns,
   useCampaignsPage,
@@ -39,7 +40,8 @@ type Tab =
   | 'campaigns'
   | 'submissions'
   | 'flags'
-  | 'audit';
+  | 'audit'
+  | 'system';
 
 const TABS: Array<FilterOption<Tab>> = [
   { value: 'overview', label: 'Overview' },
@@ -49,6 +51,7 @@ const TABS: Array<FilterOption<Tab>> = [
   { value: 'submissions', label: 'Submissions' },
   { value: 'flags', label: 'Flags' },
   { value: 'audit', label: 'Audit log' },
+  { value: 'system', label: 'System log' },
 ];
 
 const inputClass =
@@ -109,6 +112,7 @@ export default function AdminPage() {
   const { data: submissionPage } = useSubmissionsPage(page, tab === 'submissions');
   const { data: flagPage } = useFlagsPage(page, tab === 'flags');
   const { data: auditPage } = useAuditLogPage(page, tab === 'audit');
+  const { data: systemPage } = useSystemLogPage(page, tab === 'system');
 
   const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaignStatus();
@@ -376,6 +380,40 @@ export default function AdminPage() {
           </Section>
         ) : null}
 
+        {tab === 'system' ? (
+          <Section title="System log" description="PWA and service events reported by browsers and servers.">
+            <Surface className="divide-y divide-stone-100 p-2">
+              {(systemPage?.items || []).map((entry) => (
+                <div key={entry.id} className="flex flex-wrap items-center gap-3 p-3">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${
+                      entry.level === 'error'
+                        ? 'bg-red-50 text-red-600'
+                        : entry.level === 'warn'
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-stone-100 text-stone-500'
+                    }`}
+                  >
+                    {entry.level} · {entry.source}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold">{entry.message}</p>
+                    {entry.context && Object.keys(entry.context).length ? (
+                      <p className="truncate text-[11px] text-stone-500">
+                        {Object.entries(entry.context).map(([k, v]) => `${k}: ${String(v)}`).join(', ')}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="text-[10px] text-stone-400">
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+              {!systemPage?.items.length ? <p className="p-6 text-center text-xs text-stone-500">No system events yet.</p> : null}
+            </Surface>
+          </Section>
+        ) : null}
+
         {tab !== 'overview' ? (
           <Pager
             total={
@@ -384,7 +422,7 @@ export default function AdminPage() {
               tab === 'campaigns' ? (campaignPage?.total || 0) :
               tab === 'submissions' ? (submissionPage?.total || 0) :
               tab === 'flags' ? (flagPage?.total || 0) :
-              (auditPage?.total || 0)
+              tab === 'audit' ? (auditPage?.total || 0) : (systemPage?.total || 0)
             }
             page={page}
             onPage={setPage}

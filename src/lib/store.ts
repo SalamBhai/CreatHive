@@ -178,6 +178,9 @@ export function useFlagsPage(page: number, enabled = true) {
 export function useAuditLogPage(page: number, enabled = true) {
   return useAdminPage('admin-audit-page', page, repository.listAuditLogPage, enabled);
 }
+export function useSystemLogPage(page: number, enabled = true) {
+  return useAdminPage('admin-system-page', page, repository.listSystemLogPage, enabled);
+}
 
 /* ---------- Mutations ---------- */
 

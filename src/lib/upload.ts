@@ -13,39 +13,76 @@ export interface UploadResult {
   pages?: number;
 }
 
-/** Upload a file through the signed Cloudinary route and surface errors to callers. */
+interface Signature {
+  cloudName: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  publicId: string;
+  resourceType: string;
+}
+
+function resourceTypeFor(file: File): 'image' | 'video' | 'raw' {
+  const type = file.type.toLowerCase();
+  if (type.startsWith('image/')) return 'image';
+  if (type.startsWith('video/') || type.startsWith('audio/')) return 'video';
+  if (type === 'application/pdf') return 'raw';
+  return 'image';
+}
+
+async function accessToken(): Promise<string | null> {
+  if (!usingSupabase || !supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
+/** Upload a file straight to Cloudinary using a short-lived server signature.
+ *  This avoids serverless request-body limits, so large PDFs and images work. */
 export async function uploadFile(file: File, kind: UploadKind): Promise<UploadResult> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('kind', kind);
+  const resourceType = kind === 'pdf' ? 'raw' : resourceTypeFor(file);
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  const token = await accessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
 
-  const headers: Record<string, string> = {};
-  if (usingSupabase && supabase) {
-    const { data } = await supabase.auth.getSession();
-    if (data.session?.access_token) {
-      headers.Authorization = `Bearer ${data.session.access_token}`;
-    }
-  }
-
-  const response = await fetch('/api/cloudinary', {
+  const signatureResponse = await fetch('/api/cloudinary/signature', {
     method: 'POST',
     headers,
-    body: formData,
+    body: JSON.stringify({ kind, resourceType }),
   });
-  const data = (await response.json().catch(() => ({}))) as Partial<UploadResult> & {
+  const signature = (await signatureResponse.json().catch(() => ({}))) as Signature & {
     error?: string;
   };
-  if (!response.ok || !data.url) {
-    // The server returns JSON errors; a non-JSON body means a proxy/HTML error.
-    throw new Error(
-      data.error ||
-        `Upload failed (${response.status}). Check your connection and try again.`
-    );
+  if (!signatureResponse.ok || !signature.signature) {
+    throw new Error(signature.error || `Upload failed (${signatureResponse.status}).`);
   }
+
+  const form = new FormData();
+  form.append('file', file);
+  form.append('api_key', signature.apiKey);
+  form.append('timestamp', String(signature.timestamp));
+  form.append('signature', signature.signature);
+  form.append('folder', signature.folder);
+  form.append('public_id', signature.publicId);
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${signature.cloudName}/${signature.resourceType}/upload`,
+    { method: 'POST', body: form }
+  );
+  const data = (await response.json().catch(() => ({}))) as {
+    secure_url?: string;
+    public_id?: string;
+    pages?: number;
+    error?: { message?: string };
+  };
+  if (!response.ok || !data.secure_url) {
+    throw new Error(data.error?.message || `Upload failed (${response.status}).`);
+  }
+
   return {
-    url: data.url,
-    publicId: data.publicId || '',
-    resourceType: data.resourceType || null,
+    url: data.secure_url,
+    publicId: data.public_id || signature.publicId,
+    resourceType: kind === 'pdf' ? 'pdf' : signature.resourceType as UploadResult['resourceType'],
     pages: data.pages,
   };
 }

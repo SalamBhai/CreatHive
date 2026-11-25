@@ -1,14 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { WifiSlash } from '@phosphor-icons/react';
+import { reportClientEvent } from '@/lib/client-log';
 
 /** Registers the offline service worker and shows a quiet connectivity hint. */
 export function PwaProvider() {
   const [offline, setOffline] = useState(false);
+  const offlineChange = useRef<boolean | null>(null);
 
   useEffect(() => {
-    const update = () => setOffline(!navigator.onLine);
+    const update = () => {
+      const offlineNow = !navigator.onLine;
+      setOffline(offlineNow);
+      if (typeof window !== 'undefined' && offlineChange.current !== offlineNow) {
+        offlineChange.current = offlineNow;
+        reportClientEvent('pwa', offlineNow ? 'Device went offline' : 'Device back online', offlineNow ? 'warn' : 'info');
+      }
+    };
     update();
     window.addEventListener('online', update);
     window.addEventListener('offline', update);
@@ -25,7 +34,12 @@ export function PwaProvider() {
     const register = () => {
       navigator.serviceWorker
         .register('/sw.js', { scope: '/' })
-        .catch((error) => console.warn('[pwa] service worker registration failed', error));
+        .then(() => reportClientEvent('pwa', 'Service worker registered'))
+        .catch((error) =>
+          reportClientEvent('pwa', 'Service worker registration failed', 'warn', {
+            message: error instanceof Error ? error.message : 'unknown',
+          })
+        );
     };
 
     if (document.readyState === 'complete') register();

@@ -283,6 +283,9 @@ export const localRepository: DataRepository = {
   async listFlagsPage(options) {
     return paginate(flags(), options);
   },
+  async listSystemLogPage(options) {
+    return paginate([], options);
+  },
   async listAuditLogPage() {
     return { items: [], total: 0 };
   },
